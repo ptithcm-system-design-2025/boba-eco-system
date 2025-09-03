@@ -6,21 +6,21 @@
     "git.inputValidationLength": 70,
     "[git-commit]": {
         "editor.rulers": [
-            50,
-            72
+            40,
+            50
         ],
         "editor.wordWrap": "bounded",
-        "editor.wordWrapColumn": 72,
+        "editor.wordWrapColumn": 60,
         "workbench.editor.restoreViewState": true,
         "editor.wrappingIndent": "same"
     },
     "[scminput]": {
         "editor.rulers": [
             50,
-            72
+            60
         ],
         "editor.wordWrap": "bounded",
-        "editor.wordWrapColumn": 72,
+        "editor.wordWrapColumn": 60,
         "workbench.editor.restoreViewState": true,
         "editor.wrappingIndent": "same"
     }
