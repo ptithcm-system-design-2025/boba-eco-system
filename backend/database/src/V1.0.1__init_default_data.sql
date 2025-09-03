@@ -2,10 +2,10 @@
 
 -- Dữ liệu cho bảng product_size
 INSERT INTO product_size (unit, name, quantity, description)
-VALUES ('cái', 'S', 1, 'Đơn vị (cái/phần)'),
-       ('cái', 'M', 1, 'Đơn vị (cái/phần)'),
-       ('cái', 'L', 1, 'Đơn vị (cái/phần)'),
-       ('cái', 'NA', 1, 'Đơn vị (cái/phần)');
+VALUES ('ml', 'S', 350, 'Đơn vị (ml)'),
+       ('ml', 'M', 650, 'Đơn vị (ml)'),
+       ('ml', 'L', 800, 'Đơn vị (ml)'),
+       ('ml', 'NA', 0, 'Không áp dụng');
 
 -- Dữ liệu cho bảng membership_type
 INSERT INTO membership_type (type, discount_value, required_point, description, is_active, valid_until)
@@ -25,17 +25,17 @@ VALUES ('MANAGER', 'Quản trị viên - có toàn quyền quản lý hệ thố
 -- Dữ liệu cho bảng payment_method
 INSERT INTO payment_method (name, description)
 VALUES ('CASH', 'Thanh toán bằng tiền mặt'),
-       ('VNPAY', 'Thanh toán bằng VNPAY');
+       ('STRIPE', 'Thanh toán bằng STRIPE');
 -- Dữ liệu cho bảng store
 INSERT INTO store (name, address, phone, opening_time, closing_time, email, opening_date, tax_code)
-    VALUES ('Bánh Ngọt Nhà Làm',
-           '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
+    VALUES ('Boba House',
+           '456 Lê Lợi, Quận 3, TP. Hồ Chí Minh',
            '0987654321',
-           '11:00:00',
-           '22:00:00',
-           'info@banhngotnhalam.com',
+           '09:00:00',
+           '23:00:00',
+           'contact@bobahouse.com',
            '2023-01-01',
-           '0123456789');
+           '9876543210');
 
 -- PostgreSQL Trigger Functions and Triggers
 
@@ -102,8 +102,8 @@ CREATE TRIGGER protect_default_role_delete_trigger
 CREATE OR REPLACE FUNCTION protect_default_payment_method_on_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.payment_name IN ('CASH', 'VNPAY') THEN
-        IF NEW.payment_name IS DISTINCT FROM OLD.payment_name THEN
+    IF OLD.name IN ('CASH', 'STRIPE') THEN
+        IF NEW.name IS DISTINCT FROM OLD.name THEN
             RAISE EXCEPTION 'Không thể thay đổi tên phương thức thanh toán mặc định' USING ERRCODE = '45000';
         END IF;
     END IF;
@@ -118,7 +118,7 @@ CREATE TRIGGER protect_default_payment_method_update_trigger
 CREATE OR REPLACE FUNCTION protect_default_payment_method_on_delete()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.payment_name IN ('CASH', 'VNPAY') THEN
+    IF OLD.name IN ('CASH', 'STRIPE') THEN
         RAISE EXCEPTION 'Không thể xóa phương thức thanh toán mặc định' USING ERRCODE = '45000';
     END IF;
     RETURN OLD;
@@ -203,15 +203,15 @@ INSERT INTO account (role_id, username, password_hash, is_active, is_locked) VAL
 
 -- Tạo thông tin Manager
 INSERT INTO manager (account_id, last_name, first_name, gender, phone, email) VALUES
-((SELECT account_id FROM account WHERE username = 'manager1'), 'Nguyễn', 'Văn Minh', 'MALE', '0901234567', 'nguyenvanminh@banhngotnhalam.com'),
-((SELECT account_id FROM account WHERE username = 'manager2'), 'Trần', 'Thị Lan', 'FEMALE', '0901234568', 'tranthilan@banhngotnhalam.com'),
-((SELECT account_id FROM account WHERE username = 'manager3'), 'Lê', 'Văn Hùng', 'MALE', '0901234569', 'levanhung@banhngotnhalam.com');
+((SELECT account_id FROM account WHERE username = 'manager1'), 'Nguyễn', 'Văn Minh', 'MALE', '0901234567', 'nguyenvanminh@bobahouse.com'),
+((SELECT account_id FROM account WHERE username = 'manager2'), 'Trần', 'Thị Lan', 'FEMALE', '0901234568', 'tranthilan@bobahouse.com'),
+((SELECT account_id FROM account WHERE username = 'manager3'), 'Lê', 'Văn Hùng', 'MALE', '0901234569', 'levanhung@bobahouse.com');
 
 -- Tạo thông tin Employee
 INSERT INTO employee (account_id, position, last_name, first_name, gender, phone, email) VALUES
-((SELECT account_id FROM account WHERE username = 'staff1'), 'Nhân viên phục vụ', 'Phạm', 'Thị Mai', 'FEMALE', '0902345678', 'phamthimai@banhngotnhalam.com'),
-((SELECT account_id FROM account WHERE username = 'staff2'), 'Nhân viên pha chế', 'Hoàng', 'Văn Nam', 'MALE', '0902345679', 'hoangvannam@banhngotnhalam.com'),
-((SELECT account_id FROM account WHERE username = 'staff3'), 'Nhân viên thu ngân', 'Võ', 'Thị Hoa', 'FEMALE', '0902345680', 'vothihoa@banhngotnhalam.com');
+((SELECT account_id FROM account WHERE username = 'staff1'), 'Nhân viên phục vụ', 'Phạm', 'Thị Mai', 'FEMALE', '0902345678', 'phamthimai@bobahouse.com'),
+((SELECT account_id FROM account WHERE username = 'staff2'), 'Nhân viên pha chế', 'Hoàng', 'Văn Nam', 'MALE', '0902345679', 'hoangvannam@bobahouse.com'),
+((SELECT account_id FROM account WHERE username = 'staff3'), 'Nhân viên thu ngân', 'Võ', 'Thị Hoa', 'FEMALE', '0902345680', 'vothihoa@bobahouse.com');
 
 -- Tạo thông tin Customer
 INSERT INTO customer (membership_type_id, account_id, last_name, first_name, phone, current_points, gender) VALUES

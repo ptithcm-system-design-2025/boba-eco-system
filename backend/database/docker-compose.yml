@@ -1,0 +1,28 @@
+
+services:
+  boba-core-db:
+    image:  postgres:17
+    container_name:  boba-core-db
+    environment:
+      POSTGRES_USER: ${PG_USER:-user}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-user}
+      POSTGRES_DB: ${PG_DATABASE:-boba-core}
+    ports:
+      - ${PG_PORT:-5432}:5432
+    volumes:
+     - pgdata:/var/lib/postgresql/data
+     - ./src/:/docker-entrypoint-initdb.d/
+    networks:
+      - boba-network
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+        interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+networks:
+  boba-network:
+    driver: bridge
