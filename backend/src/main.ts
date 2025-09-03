@@ -22,7 +22,8 @@ async function bootstrap() {
     origin: [
       `${process.env.VNP_IPN_URL}`,
       `${process.env.POS_URL}`,
-      `${process.env.MANAGER_URL}`    ],
+      `${process.env.MANAGER_URL}`,
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Set-Cookie'],
