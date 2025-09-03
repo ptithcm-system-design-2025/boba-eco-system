@@ -1,0 +1,11 @@
+[general]
+ignore=title-trailing-punctuation
+
+[title-max-length]
+line-length=75
+
+[body-max-line-length]
+line-length=72
+
+[body-min-length]
+min-length=20
