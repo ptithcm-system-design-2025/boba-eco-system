@@ -1,0 +1,27 @@
+{
+    "editor.formatOnSave": true,
+    "editor.fontFamily": "SF Pro Display",
+    "workbench.colorTheme": "Tranquility Base Light",
+    "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+    "git.inputValidationLength": 70,
+    "[git-commit]": {
+        "editor.rulers": [
+            50,
+            72
+        ],
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 72,
+        "workbench.editor.restoreViewState": true,
+        "editor.wrappingIndent": "same"
+    },
+    "[scminput]": {
+        "editor.rulers": [
+            50,
+            72
+        ],
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 72,
+        "workbench.editor.restoreViewState": true,
+        "editor.wrappingIndent": "same"
+    }
+}
