@@ -16,8 +16,12 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
-import { category } from '../generated/prisma/client'; // Đã import
+import {
+  PaginationDto,
+  PaginatedResult,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
+import { category } from '../generated/prisma/client';
 import {
   ApiTags,
   ApiOperation,
@@ -37,6 +41,10 @@ import { ROLES } from '../auth/constants/roles.constant';
 @Controller('categories')
 @ApiBearerAuth()
 @ApiExtraModels(PaginationMetadata)
+/**
+ * Controller responsible for handling category-related API endpoints.
+ * Provides CRUD operations and bulk deletion for categories.
+ */
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -44,42 +52,59 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ 
-    summary: 'Tạo danh mục mới - Chỉ MANAGER và STAFF',
-    description: 'Tạo một danh mục sản phẩm mới trong hệ thống với tên và mô tả'
+  @ApiOperation({
+    summary: 'Create a new category - MANAGER and STAFF only',
+    description: 'Create a new product category with a name and description',
   })
   @ApiBody({ type: CreateCategoryDto })
   @ApiResponse({
     status: 201,
-    description: 'Danh mục được tạo thành công',
+    description: 'Category created successfully',
     schema: {
       type: 'object',
       properties: {
-        category_id: { type: 'number', description: 'ID của danh mục' },
-        name: { type: 'string', description: 'Tên danh mục' },
-        description: { type: 'string', description: 'Mô tả danh mục', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động' },
-        created_at: { type: 'string', format: 'date-time', description: 'Thời gian tạo' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        category_id: { type: 'number', description: 'Category ID' },
+        name: { type: 'string', description: 'Category name' },
+        description: {
+          type: 'string',
+          description: 'Category description',
+          nullable: true,
+        },
+        is_active: { type: 'boolean', description: 'Active status' },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Creation timestamp',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Last update timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu đầu vào không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid input data format',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER và STAFF mới có thể tạo danh mục',
+    description: 'Forbidden - Only MANAGER and STAFF can create categories',
   })
   @ApiResponse({
     status: 409,
-    description: 'Xung đột dữ liệu - Tên danh mục đã tồn tại',
+    description: 'Conflict - Category name already exists',
   })
+  /**
+   * Create a new category.
+   * @param createCategoryDto Data transfer object containing category details.
+   * @returns The created category entity.
+   */
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<category> {
@@ -89,27 +114,28 @@ export class CategoryController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ 
-    summary: 'Lấy danh sách danh mục với phân trang - Tất cả role',
-    description: 'Trả về danh sách tất cả danh mục sản phẩm với hỗ trợ phân trang'
+  @ApiOperation({
+    summary: 'Get a paginated list of categories - All roles',
+    description:
+      'Returns a list of all product categories with pagination support',
   })
   @ApiQuery({
     name: 'page',
     required: false,
     type: Number,
-    description: 'Số trang (mặc định: 1)',
-    example: 1
+    description: 'Page number (default: 1)',
+    example: 1,
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
-    description: 'Số lượng bản ghi trên mỗi trang (mặc định: 10)',
-    example: 10
+    description: 'Number of records per page (default: 10)',
+    example: 10,
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Danh sách danh mục được phân trang thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of categories retrieved successfully',
     schema: {
       type: 'object',
       properties: {
@@ -123,20 +149,25 @@ export class CategoryController {
               description: { type: 'string', nullable: true },
               is_active: { type: 'boolean' },
               created_at: { type: 'string', format: 'date-time' },
-              updated_at: { type: 'string', format: 'date-time' }
-            }
-          }
+              updated_at: { type: 'string', format: 'date-time' },
+            },
+          },
         },
         pagination: {
           $ref: '#/components/schemas/PaginationMetadata',
-        }
-      }
-    }
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
+  /**
+   * Retrieve all categories with pagination.
+   * @param paginationDto Pagination parameters.
+   * @returns Paginated list of categories.
+   */
   async findAll(
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResult<category>> {
@@ -146,39 +177,56 @@ export class CategoryController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ 
-    summary: 'Lấy thông tin danh mục theo ID - Tất cả role',
-    description: 'Lấy thông tin chi tiết của một danh mục cụ thể bằng ID'
+  @ApiOperation({
+    summary: 'Get category information by ID - All roles',
+    description: 'Get detailed information of a specific category by its ID',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của danh mục cần lấy thông tin', 
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the category to retrieve',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiResponse({
     status: 200,
-    description: 'Thông tin chi tiết danh mục',
+    description: 'Detailed category information',
     schema: {
       type: 'object',
       properties: {
-        category_id: { type: 'number', description: 'ID của danh mục' },
-        name: { type: 'string', description: 'Tên danh mục' },
-        description: { type: 'string', description: 'Mô tả danh mục', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động' },
-        created_at: { type: 'string', format: 'date-time', description: 'Thời gian tạo' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        category_id: { type: 'number', description: 'Category ID' },
+        name: { type: 'string', description: 'Category name' },
+        description: {
+          type: 'string',
+          description: 'Category description',
+          nullable: true,
+        },
+        is_active: { type: 'boolean', description: 'Active status' },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Creation timestamp',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Last update timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy danh mục với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Category with the provided ID not found',
   })
+  /**
+   * Retrieve a category by its ID.
+   * @param id Category ID.
+   * @returns The category entity or null if not found.
+   */
   async findOne(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<category | null> {
@@ -188,51 +236,69 @@ export class CategoryController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
-  @ApiOperation({ 
-    summary: 'Cập nhật thông tin danh mục - Chỉ MANAGER và STAFF',
-    description: 'Cập nhật thông tin của một danh mục cụ thể như tên, mô tả hoặc trạng thái hoạt động'
+  @ApiOperation({
+    summary: 'Update category information - MANAGER and STAFF only',
+    description:
+      'Update the information of a specific category, such as name, description, or active status',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của danh mục cần cập nhật', 
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the category to update',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiBody({ type: UpdateCategoryDto })
   @ApiResponse({
     status: 200,
-    description: 'Danh mục được cập nhật thành công',
+    description: 'Category updated successfully',
     schema: {
       type: 'object',
       properties: {
-        category_id: { type: 'number', description: 'ID của danh mục' },
-        name: { type: 'string', description: 'Tên danh mục đã cập nhật' },
-        description: { type: 'string', description: 'Mô tả danh mục đã cập nhật', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động đã cập nhật' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        category_id: { type: 'number', description: 'Category ID' },
+        name: { type: 'string', description: 'Updated category name' },
+        description: {
+          type: 'string',
+          description: 'Updated category description',
+          nullable: true,
+        },
+        is_active: {
+          type: 'boolean',
+          description: 'Updated active status',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Last update timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu đầu vào không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid input data format',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER và STAFF mới có thể cập nhật danh mục',
+    description: 'Forbidden - Only MANAGER and STAFF can update categories',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy danh mục với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Category with the provided ID not found',
   })
   @ApiResponse({
     status: 409,
-    description: 'Xung đột dữ liệu - Tên danh mục đã tồn tại',
+    description: 'Conflict - Category name already exists',
   })
+  /**
+   * Update an existing category.
+   * @param id Category ID.
+   * @param updateCategoryDto Data transfer object containing updated category details.
+   * @returns The updated category entity.
+   */
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -245,55 +311,77 @@ export class CategoryController {
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Xóa nhiều danh mục cùng lúc - Chỉ MANAGER',
-    description: 'Xóa nhiều danh mục cùng lúc. Các danh mục có sản phẩm liên quan sẽ không thể xóa và sẽ được báo lỗi',
+    summary: 'Bulk delete categories - MANAGER only',
+    description:
+      'Deletes multiple categories at once. Categories with associated products cannot be deleted and will be reported as errors.',
   })
   @ApiBody({ type: BulkDeleteCategoryDto })
   @ApiResponse({
     status: 200,
-    description: 'Quá trình xóa hàng loạt hoàn thành với kết quả chi tiết',
+    description: 'Bulk deletion process completed with detailed results',
     schema: {
       type: 'object',
       properties: {
         deleted: {
           type: 'array',
           items: { type: 'number' },
-          description: 'Danh sách ID các danh mục đã xóa thành công'
+          description: 'List of successfully deleted category IDs',
         },
         failed: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              id: { type: 'number', description: 'ID danh mục không thể xóa' },
-              reason: { type: 'string', description: 'Lý do không thể xóa' }
-            }
+              id: {
+                type: 'number',
+                description: 'ID of the category that could not be deleted',
+              },
+              reason: {
+                type: 'string',
+                description: 'Reason for deletion failure',
+              },
+            },
           },
-          description: 'Danh sách các danh mục không thể xóa và lý do'
+          description:
+            'List of categories that could not be deleted and the reasons',
         },
         summary: {
           type: 'object',
           properties: {
-            total: { type: 'number', description: 'Tổng số danh mục được yêu cầu xóa' },
-            success: { type: 'number', description: 'Số danh mục xóa thành công' },
-            failed: { type: 'number', description: 'Số danh mục không thể xóa' }
-          }
-        }
-      }
-    }
+            total: {
+              type: 'number',
+              description: 'Total number of categories requested for deletion',
+            },
+            success: {
+              type: 'number',
+              description: 'Number of successfully deleted categories',
+            },
+            failed: {
+              type: 'number',
+              description: 'Number of categories that failed to delete',
+            },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Danh sách ID không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid ID list format',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa danh mục',
+    description: 'Forbidden - Only MANAGER can delete categories',
   })
+  /**
+   * Bulk delete categories.
+   * @param bulkDeleteDto Data transfer object containing list of category IDs to delete.
+   * @returns Result of bulk deletion including deleted and failed IDs.
+   */
   async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCategoryDto): Promise<{
     deleted: number[];
     failed: { id: number; reason: string }[];
@@ -305,44 +393,56 @@ export class CategoryController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ 
-    summary: 'Xóa danh mục theo ID - Chỉ MANAGER',
-    description: 'Xóa vĩnh viễn một danh mục khỏi hệ thống. Lưu ý: Không thể xóa danh mục đang có sản phẩm liên quan'
+  @ApiOperation({
+    summary: 'Delete a category by ID - MANAGER only',
+    description:
+      'Permanently deletes a category from the system. Note: A category with associated products cannot be deleted.',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của danh mục cần xóa', 
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the category to delete',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiResponse({
     status: 200,
-    description: 'Danh mục được xóa thành công',
+    description: 'Category deleted successfully',
     schema: {
       type: 'object',
       properties: {
-        category_id: { type: 'number', description: 'ID của danh mục đã xóa' },
-        name: { type: 'string', description: 'Tên danh mục đã xóa' },
-        message: { type: 'string', description: 'Thông báo xác nhận xóa thành công' }
-      }
-    }
+        category_id: {
+          type: 'number',
+          description: 'ID of the deleted category',
+        },
+        name: { type: 'string', description: 'Name of the deleted category' },
+        message: {
+          type: 'string',
+          description: 'Confirmation message for successful deletion',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa danh mục',
+    description: 'Forbidden - Only MANAGER can delete categories',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy danh mục với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Category with the provided ID not found',
   })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Xung đột dữ liệu - Danh mục đang được sử dụng bởi các sản phẩm khác' 
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - The category is being used by other products',
   })
+  /**
+   * Delete a category by its ID.
+   * @param id Category ID.
+   * @returns The deleted category entity.
+   */
   async remove(@Param('id', ParseIntPipe) id: number): Promise<category> {
     return this.categoryService.remove(id);
   }
@@ -351,31 +451,36 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @ApiOperation({
-    summary: 'Kiểm tra hoạt động của Category Controller - Chỉ MANAGER',
-    description: 'Endpoint để kiểm tra xem Category Controller có hoạt động bình thường không (smoke test)',
+    summary: 'Smoke test for Category Controller - MANAGER only',
+    description:
+      'Endpoint to check if the Category Controller is working correctly (smoke test)',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Kiểm tra thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Test successful',
     schema: {
       type: 'object',
       properties: {
-        message: { 
-          type: 'string', 
-          description: 'Thông báo xác nhận controller hoạt động bình thường',
-          example: 'Category controller is working!'
-        }
-      }
-    }
+        message: {
+          type: 'string',
+          description: 'Confirmation message that the controller is working',
+          example: 'Category controller is working!',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể thực hiện kiểm tra',
+    description: 'Forbidden - Only MANAGER can perform this test',
   })
+  /**
+   * Smoke test endpoint for CategoryController.
+   * @returns Confirmation message that the controller is working.
+   */
   adminTest(): { message: string } {
     return { message: 'Category controller is working!' };
   }
