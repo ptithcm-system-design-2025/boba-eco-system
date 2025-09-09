@@ -17,7 +17,7 @@ export class AuthExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest();
 
     const status = exception.getStatus();
-    const message = exception.message || 'Không có quyền';
+    const message = exception.message || 'Unauthorized';
 
     this.logger.warn(
       `Unauthorized access attempt: ${request.method} ${request.url} - IP: ${request.ip}`,

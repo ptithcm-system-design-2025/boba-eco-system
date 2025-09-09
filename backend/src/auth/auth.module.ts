@@ -9,6 +9,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 
+/**
+ * AuthModule is responsible for providing authentication and authorization features.
+ * It integrates JWT, Passport, Prisma, and provides related services, controllers, and guards.
+ */
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),

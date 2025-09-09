@@ -26,7 +26,6 @@ export class RolesGuard implements CanActivate {
     const userRole = user.role_name as RoleType;
     const allowedRoles = ROLE_HIERARCHY[userRole] || [userRole];
 
-    // Kiểm tra xem user có role được phép thực hiện action này không
     return requiredRoles.some((requiredRole) =>
       allowedRoles.includes(requiredRole),
     );

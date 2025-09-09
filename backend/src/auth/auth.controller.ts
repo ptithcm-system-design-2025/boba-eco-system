@@ -20,8 +20,18 @@ import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
+/**
+ * Controller responsible for handling authentication and user profile operations.
+ * Provides endpoints for register, login, logout, refresh token, revoke token, and profile management.
+ */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -32,83 +42,97 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ 
-    summary: 'Đăng ký tài khoản mới',
-    description: 'Tạo tài khoản mới cho khách hàng với thông tin cá nhân và thông tin đăng nhập'
+  @ApiOperation({
+    summary: 'Register a new account',
+    description:
+      'Create a new customer account with personal and login information',
   })
   @ApiBody({ type: RegisterDto })
   @ApiResponse({
     status: 201,
-    description: 'Đăng ký thành công',
+    description: 'Registration successful',
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', description: 'Thông báo đăng ký thành công' },
+        message: {
+          type: 'string',
+          description: 'Success message for registration',
+        },
         user: {
           type: 'object',
           properties: {
-            account_id: { type: 'number', description: 'ID tài khoản' },
-            username: { type: 'string', description: 'Tên đăng nhập' },
+            account_id: { type: 'number', description: 'Account ID' },
+            username: { type: 'string', description: 'Username' },
             email: { type: 'string', description: 'Email' },
-            customer_id: { type: 'number', description: 'ID khách hàng' },
-            full_name: { type: 'string', description: 'Họ và tên' },
-            phone: { type: 'string', description: 'Số điện thoại' }
-          }
-        }
-      }
-    }
+            customer_id: { type: 'number', description: 'Customer ID' },
+            full_name: { type: 'string', description: 'Full name' },
+            phone: { type: 'string', description: 'Phone number' },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu đầu vào không đúng định dạng hoặc thiếu thông tin bắt buộc' 
+  @ApiResponse({
+    status: 400,
+    description:
+      'Bad Request - Invalid input data format or missing required fields',
   })
   @ApiResponse({
     status: 409,
-    description: 'Xung đột dữ liệu - Tên đăng nhập, email hoặc số điện thoại đã tồn tại',
+    description: 'Conflict - Username, email, or phone number already exists',
   })
+  /**
+   * Register a new user account.
+   * @param registerDto Registration data transfer object
+   * @returns Created user with account details and tokens
+   */
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Đăng nhập vào hệ thống',
-    description: 'Xác thực thông tin đăng nhập và trả về access token cùng với thông tin người dùng'
+  @ApiOperation({
+    summary: 'Login to the system',
+    description:
+      'Authenticate login credentials and return an access token along with user information',
   })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
-    description: 'Đăng nhập thành công',
+    description: 'Login successful',
     schema: {
       type: 'object',
       properties: {
-        access_token: { type: 'string', description: 'JWT access token để xác thực các API khác' },
+        access_token: {
+          type: 'string',
+          description: 'JWT access token for authenticating other APIs',
+        },
         user: {
           type: 'object',
           properties: {
-            account_id: { type: 'number', description: 'ID tài khoản' },
-            username: { type: 'string', description: 'Tên đăng nhập' },
+            account_id: { type: 'number', description: 'Account ID' },
+            username: { type: 'string', description: 'Username' },
             email: { type: 'string', description: 'Email' },
-            phone: { type: 'string', description: 'Số điện thoại' },
-            role: { type: 'string', description: 'Vai trò của người dùng' },
-            full_name: { type: 'string', description: 'Họ và tên' }
-          }
-        }
-      }
-    }
+            phone: { type: 'string', description: 'Phone number' },
+            role: { type: 'string', description: 'User role' },
+            full_name: { type: 'string', description: 'Full name' },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Thiếu thông tin đăng nhập' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Missing login credentials',
   })
   @ApiResponse({
     status: 401,
-    description: 'Thông tin đăng nhập không chính xác - Tên đăng nhập hoặc mật khẩu sai',
+    description: 'Unauthorized - Incorrect username or password',
   })
   @ApiResponse({
     status: 404,
-    description: 'Không tìm thấy tài khoản - Tài khoản không tồn tại hoặc đã bị vô hiệu hóa',
+    description: 'Not Found - Account does not exist or has been disabled',
   })
   async login(
     @Body() loginDto: LoginDto,
@@ -116,18 +140,17 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto);
 
-    // Set refresh token as HTTP-only cookie
     res.cookie('refresh_token', result.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Gọi getProfile để lấy thông tin đầy đủ của user
-    const userProfile = await this.authService.getProfile(result.user.account_id);
+    const userProfile = await this.authService.getProfile(
+      result.user.account_id,
+    );
 
-    // Trả về access token và thông tin user đầy đủ
     return {
       access_token: result.access_token,
       user: userProfile,
@@ -138,66 +161,81 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
-    summary: 'Đăng xuất khỏi hệ thống',
-    description: 'Xóa refresh token và đăng xuất người dùng khỏi hệ thống'
+  @ApiOperation({
+    summary: 'Logout from the system',
+    description: 'Clear the refresh token and log the user out',
   })
   @ApiResponse({
     status: 200,
-    description: 'Đăng xuất thành công',
+    description: 'Logout successful',
     schema: {
       type: 'object',
       properties: {
-        message: { 
-          type: 'string', 
-          description: 'Thông báo đăng xuất thành công',
-          example: 'Đăng xuất thành công'
-        }
-      }
-    }
+        message: {
+          type: 'string',
+          description: 'Success message for logout',
+          example: 'Logout successful',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ hoặc đã hết hạn' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or expired token',
   })
+  /**
+   * Logout the currently authenticated user by clearing refresh token cookie.
+   * @param req Express request object
+   * @param res Express response object
+   * @returns A success message
+   */
   async logout(@Request() req, @Res({ passthrough: true }) res: Response) {
-    // Xóa refresh token cookie
     res.clearCookie('refresh_token');
-    return { message: 'Đăng xuất thành công' };
+    return { message: 'Logout successful' };
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
-    summary: 'Lấy thông tin profile của người dùng hiện tại',
-    description: 'Trả về thông tin chi tiết của người dùng đang đăng nhập dựa trên access token'
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description:
+      'Return detailed information of the currently logged-in user based on the access token',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Thông tin profile của người dùng',
+  @ApiResponse({
+    status: 200,
+    description: 'User profile information',
     schema: {
       type: 'object',
       properties: {
-        account_id: { type: 'number', description: 'ID tài khoản' },
-        username: { type: 'string', description: 'Tên đăng nhập' },
+        account_id: { type: 'number', description: 'Account ID' },
+        username: { type: 'string', description: 'Username' },
         email: { type: 'string', description: 'Email' },
-        phone: { type: 'string', description: 'Số điện thoại' },
-        role: { type: 'string', description: 'Vai trò của người dùng' },
-        full_name: { type: 'string', description: 'Họ và tên' },
-        avatar: { type: 'string', description: 'URL ảnh đại diện', nullable: true },
-        created_at: { type: 'string', format: 'date-time', description: 'Thời gian tạo tài khoản' }
-      }
-    }
+        phone: { type: 'string', description: 'Phone number' },
+        role: { type: 'string', description: 'User role' },
+        full_name: { type: 'string', description: 'Full name' },
+        avatar: { type: 'string', description: 'Avatar URL', nullable: true },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Account creation timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ hoặc đã hết hạn' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or expired token',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy thông tin người dùng' 
+  @ApiResponse({
+    status: 404,
+    description: 'User information not found',
   })
+  /**
+   * Get current authenticated user's profile.
+   * @param user Current authenticated user injected by decorator
+   * @returns User profile data
+   */
   async getProfile(@CurrentUser() user: any) {
     return this.authService.getProfile(user.account_id);
   }
@@ -205,48 +243,60 @@ export class AuthController {
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
-    summary: 'Cập nhật thông tin profile của người dùng hiện tại',
-    description: 'Cho phép người dùng cập nhật thông tin cá nhân như họ tên, email, số điện thoại, và thay đổi mật khẩu'
+  @ApiOperation({
+    summary: 'Update current user profile',
+    description:
+      'Allows the user to update personal information such as full name, email, phone number, and change password',
   })
   @ApiBody({ type: UpdateProfileDto })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Cập nhật profile thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', description: 'Thông báo cập nhật thành công' },
+        message: { type: 'string', description: 'Success message for update' },
         user: {
           type: 'object',
           properties: {
-            account_id: { type: 'number', description: 'ID tài khoản' },
-            username: { type: 'string', description: 'Tên đăng nhập' },
-            email: { type: 'string', description: 'Email đã cập nhật' },
-            phone: { type: 'string', description: 'Số điện thoại đã cập nhật' },
-            full_name: { type: 'string', description: 'Họ và tên đã cập nhật' },
-            updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-          }
-        }
-      }
-    }
+            account_id: { type: 'number', description: 'Account ID' },
+            username: { type: 'string', description: 'Username' },
+            email: { type: 'string', description: 'Updated email' },
+            phone: { type: 'string', description: 'Updated phone number' },
+            full_name: { type: 'string', description: 'Updated full name' },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Update timestamp',
+            },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu đầu vào không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid input data format',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ hoặc đã hết hạn' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or expired token',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy thông tin người dùng' 
+  @ApiResponse({
+    status: 404,
+    description: 'User information not found',
   })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Xung đột dữ liệu - Email hoặc số điện thoại đã được sử dụng bởi tài khoản khác' 
+  @ApiResponse({
+    status: 409,
+    description:
+      'Conflict - Email or phone number is already in use by another account',
   })
+  /**
+   * Update profile information for the current authenticated user.
+   * @param user Current authenticated user
+   * @param updateProfileDto DTO containing updated profile data
+   * @returns The updated user profile
+   */
   async updateProfile(
     @CurrentUser() user: any,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -256,26 +306,28 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Làm mới access token',
-    description: 'Sử dụng refresh token để tạo access token mới khi token cũ đã hết hạn'
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description:
+      'Use the refresh token to generate a new access token when the old one has expired',
   })
   @ApiResponse({
     status: 200,
-    description: 'Làm mới token thành công',
+    description: 'Token refreshed successfully',
     schema: {
       type: 'object',
       properties: {
-        access_token: { 
-          type: 'string', 
-          description: 'JWT access token mới để xác thực các API khác' 
-        }
-      }
-    }
+        access_token: {
+          type: 'string',
+          description: 'New JWT access token for authenticating other APIs',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 401,
-    description: 'Không thể làm mới token - Refresh token không hợp lệ, đã hết hạn hoặc không tồn tại',
+    description:
+      'Cannot refresh token - Refresh token is invalid, expired, or does not exist',
   })
   async refreshToken(
     @Req() req: ExpressRequest,
@@ -284,20 +336,18 @@ export class AuthController {
     const refresh_token = req.cookies.refresh_token;
 
     if (!refresh_token) {
-      throw new UnauthorizedException('Refresh token không tìm thấy');
+      throw new UnauthorizedException('Refresh token not found');
     }
 
     const result = await this.authTokenService.refreshToken(refresh_token);
 
-    // Set refresh token mới vào cookie
     res.cookie('refresh_token', result.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Chỉ trả về access token
     return {
       access_token: result.access_token,
     };
@@ -307,54 +357,64 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
-    summary: 'Thu hồi token',
-    description: 'Thu hồi refresh token hiện tại, buộc người dùng phải đăng nhập lại'
+  @ApiOperation({
+    summary: 'Revoke token',
+    description:
+      'Revoke the current refresh token, forcing the user to log in again',
   })
   @ApiResponse({
     status: 200,
-    description: 'Thu hồi token thành công',
+    description: 'Token revoked successfully',
     schema: {
       type: 'object',
       properties: {
-        message: { 
-          type: 'string', 
-          description: 'Thông báo thu hồi token thành công',
-          example: 'Token đã được thu hồi thành công'
-        }
-      }
-    }
+        message: {
+          type: 'string',
+          description: 'Success message for token revocation',
+          example: 'Token has been revoked successfully',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ hoặc đã hết hạn' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or expired token',
   })
+  /**
+   * Revoke the current refresh token forcing the user to re-login.
+   * @param res Express response object
+   * @returns A success message
+   */
   async revokeToken(@Res({ passthrough: true }) res: Response) {
-    // Xóa refresh token cookie  
     res.clearCookie('refresh_token');
-    return { message: 'Token đã được thu hồi thành công' };
+    return { message: 'Token has been revoked successfully' };
   }
 
   @Get('test')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Kiểm tra hoạt động của Auth Controller',
-    description: 'Endpoint để kiểm tra xem Auth Controller có hoạt động bình thường không (smoke test)'
+  @ApiOperation({
+    summary: 'Test Auth Controller',
+    description:
+      'Endpoint to check if the Auth Controller is working correctly (smoke test)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Kiểm tra thành công',
+    description: 'Test successful',
     schema: {
       type: 'object',
       properties: {
-        message: { 
-          type: 'string', 
-          description: 'Thông báo xác nhận controller hoạt động bình thường',
-          example: 'Auth controller is working!'
-        }
-      }
-    }
+        message: {
+          type: 'string',
+          description: 'Confirmation message that the controller is working',
+          example: 'Auth controller is working!',
+        },
+      },
+    },
   })
+  /**
+   * Smoke test endpoint for verifying that Auth Controller is working.
+   * @returns A success message
+   */
   async test() {
     return { message: 'Auth controller is working!' };
   }

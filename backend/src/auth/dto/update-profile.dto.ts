@@ -8,7 +8,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { gender_enum } from '../../generated/prisma/client';
+import { gender_enum } from '../../generated/prisma';
 
 export class UpdateProfileDto {
   @ApiProperty({
@@ -79,8 +79,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString({ message: 'Số điện thoại phải là chuỗi ký tự' })
   @MaxLength(15, { message: 'Số điện thoại không được vượt quá 15 ký tự' })
-  @Matches(/^[0-9+\-\s()]{10,15}$/, { 
-    message: 'Số điện thoại không hợp lệ' 
+  @Matches(/^[0-9+\-\s()]{10,15}$/, {
+    message: 'Số điện thoại không hợp lệ',
   })
   phone?: string;
 
@@ -107,4 +107,4 @@ export class UpdateProfileDto {
   @IsString({ message: 'Chức vụ phải là chuỗi ký tự' })
   @MaxLength(50, { message: 'Chức vụ không được vượt quá 50 ký tự' })
   position?: string;
-} 
+}

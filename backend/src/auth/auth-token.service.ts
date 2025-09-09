@@ -3,6 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
+/**
+ * Service responsible for generating and refreshing authentication tokens.
+ */
 @Injectable()
 export class AuthTokenService {
   constructor(
@@ -10,7 +13,14 @@ export class AuthTokenService {
     private jwtService: JwtService,
   ) {}
 
-  async generateTokens(account: any) {
+  /**
+   * Generate access and refresh tokens for a given account.
+   * @param account The account object containing account_id, username, and role.
+   * @returns An object with access_token and refresh_token.
+   */
+  async generateTokens(
+    account: any,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const payload: JwtPayload = {
       sub: account.account_id,
       username: account.username,
@@ -27,11 +37,17 @@ export class AuthTokenService {
     };
   }
 
-  async refreshToken(refresh_token: string) {
+  /**
+   * Refresh access and refresh tokens using a valid refresh token.
+   * @param refresh_token The refresh token to validate and exchange.
+   * @throws UnauthorizedException if the refresh token is invalid or the account is inactive/locked.
+   * @returns A new set of access_token and refresh_token.
+   */
+  async refreshToken(
+    refresh_token: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     try {
       const payload = this.jwtService.verify(refresh_token);
-
-      // Kiểm tra account vẫn còn active và không bị khóa
       const account = await this.prisma.account.findFirst({
         where: {
           account_id: payload.sub,
@@ -45,16 +61,13 @@ export class AuthTokenService {
 
       if (!account) {
         throw new UnauthorizedException(
-          'Tài khoản không hợp lệ hoặc đã bị khóa',
+          'Invalid account or account has been locked',
         );
       }
 
-      // Tạo tokens mới
       return this.generateTokens(account);
     } catch (error) {
-      throw new UnauthorizedException(
-        'Refresh token không hợp lệ hoặc đã hết hạn',
-      );
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 }
