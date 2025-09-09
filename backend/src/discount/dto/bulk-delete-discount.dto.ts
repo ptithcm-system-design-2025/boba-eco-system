@@ -1,16 +1,16 @@
-import { IsArray, IsInt, ArrayMinSize } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import {ArrayMinSize, IsArray, IsInt} from 'class-validator';
+import {Type} from 'class-transformer';
+import {ApiProperty} from '@nestjs/swagger';
 
 export class BulkDeleteDiscountDto {
   @ApiProperty({
-    description: 'Danh sách ID của các chương trình giảm giá cần xóa',
+    description: 'A list of discount IDs to be deleted.',
     example: [1, 2, 3],
     type: [Number],
   })
   @IsArray()
-  @ArrayMinSize(1, { message: 'Danh sách ID không được rỗng' })
-  @IsInt({ each: true, message: 'Mỗi ID phải là số nguyên' })
+  @ArrayMinSize(1, { message: 'The ID list cannot be empty.' })
+  @IsInt({ each: true, message: 'Each ID must be an integer.' })
   @Type(() => Number)
   ids: number[];
 } 

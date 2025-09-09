@@ -1,18 +1,15 @@
 import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsNumber,
-  Min,
-  IsBoolean,
-  IsDateString,
-  Matches,
+    IsBoolean,
+    IsDateString,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    Matches,
+    MaxLength,
+    Min,
 } from 'class-validator';
-import { Type } from 'class-transformer'; // Để chuyển đổi sang Decimal nếu cần
-
-// Có thể định nghĩa một enum cho loại giảm giá nếu cần
-// export enum DiscountType { PERCENTAGE = 'PERCENTAGE', FIXED_AMOUNT = 'FIXED_AMOUNT' }
+import {Type} from 'class-transformer';
 
 export class CreateDiscountDto {
   @IsString()
@@ -31,12 +28,12 @@ export class CreateDiscountDto {
   @Matches(/^[A-Z0-9]+$/, {
     message: 'Coupon code must be uppercase alphanumeric and unique.',
   })
-  coupon_code: string; // Mã coupon sẽ được dùng để tạo/kết nối với Coupon entity
+  coupon_code: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  @Type(() => Number) // Đảm bảo chuyển đổi đúng cách nếu dữ liệu đến từ JSON string
-  discount_value: number; // Prisma model dùng Decimal, NestJS/class-validator dùng number
+  @Type(() => Number)
+  discount_value: number;
 
   @IsNumber()
   @Min(0)
@@ -56,15 +53,15 @@ export class CreateDiscountDto {
 
   @IsOptional()
   @IsDateString()
-  valid_from?: string; // ISO 8601 date string
+  valid_from?: string;
 
   @IsDateString()
   @IsNotEmpty()
-  valid_until: string; // ISO 8601 date string
+  valid_until: string;
 
   @IsOptional()
   @IsNumber()
-  @Min(1) // Max uses phải ít nhất là 1 nếu được cung cấp
+  @Min(1)
   @Type(() => Number)
   max_uses?: number;
 

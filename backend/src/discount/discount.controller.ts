@@ -1,50 +1,61 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ParseIntPipe,
-  HttpCode,
-  HttpStatus,
-  Query,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
-import { DiscountService } from './discount.service';
-import { CreateDiscountDto } from './dto/create-discount.dto';
-import { UpdateDiscountDto } from './dto/update-discount.dto';
-import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
-import { discount } from '../generated/prisma/client';
+import {DiscountService} from './discount.service';
+import {CreateDiscountDto} from './dto/create-discount.dto';
+import {UpdateDiscountDto} from './dto/update-discount.dto';
+import {BulkDeleteDiscountDto} from './dto/bulk-delete-discount.dto';
+import {PaginatedResult, PaginationDto, PaginationMetadata} from '../common/dto/pagination.dto';
+import {discount} from '../generated/prisma/client';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBody,
-  ApiBearerAuth,
-  ApiExtraModels,
+    ApiBearerAuth,
+    ApiBody,
+    ApiExtraModels,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard';
+import {RolesGuard} from '../auth/guards/roles.guard';
+import {Roles} from '../auth/decorators/roles.decorator';
+import {ROLES} from '../auth/constants/roles.constant';
 
 @ApiTags('discounts')
 @Controller('discounts')
 @ApiBearerAuth()
 @ApiExtraModels(PaginationMetadata)
+/**
+ * Controller for handling discount-related API requests.
+ */
 export class DiscountController {
+  /**
+   * @param discountService The service for discount-related operations.
+   */
   constructor(private readonly discountService: DiscountService) {}
 
+  /**
+   * Creates a new discount.
+   * @param createDiscountDto The data for creating the discount.
+   * @returns The newly created discount.
+   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new discount - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Create a new discount (Manager only)' })
   @ApiBody({ type: CreateDiscountDto })
   @ApiResponse({
     status: 201,
@@ -66,10 +77,15 @@ export class DiscountController {
     return this.discountService.create(createDiscountDto);
   }
 
+  /**
+   * Retrieves a paginated list of all discounts.
+   * @param paginationDto The pagination parameters.
+   * @returns A paginated list of discounts.
+   */
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Get all discounts with pagination - Tất cả role' })
+  @ApiOperation({ summary: 'Get all discounts with pagination (All roles)' })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -106,11 +122,16 @@ export class DiscountController {
   }
 
 
+  /**
+   * Performs a bulk deletion of discounts.
+   * @param bulkDeleteDto The DTO containing the IDs of discounts to delete.
+   * @returns An object with the results of the bulk delete operation.
+   */
   @Delete('bulk')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Bulk delete discounts - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Bulk delete discounts (Manager only)' })
   @ApiBody({ type: BulkDeleteDiscountDto })
   @ApiResponse({
     status: 200,
@@ -130,10 +151,15 @@ export class DiscountController {
     return this.discountService.bulkDelete(bulkDeleteDto);
   }
 
+  /**
+   * Retrieves a single discount by its ID.
+   * @param id The ID of the discount to retrieve.
+   * @returns The discount with the specified ID, or null if not found.
+   */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Get a discount by ID - Tất cả role' })
+  @ApiOperation({ summary: 'Get a discount by ID (All roles)' })
   @ApiParam({ name: 'id', description: 'The ID of the discount', type: Number })
   @ApiResponse({ status: 200, description: 'Return the discount.' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -144,10 +170,15 @@ export class DiscountController {
     return this.discountService.findOne(id);
   }
 
+  /**
+   * Retrieves a single discount by its coupon code.
+   * @param couponCode The coupon code of the discount to retrieve.
+   * @returns The discount with the specified coupon code, or null if not found.
+   */
   @Get('coupon/:couponCode')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Get a discount by Coupon Code - Tất cả role' })
+  @ApiOperation({ summary: 'Get a discount by Coupon Code (All roles)' })
   @ApiParam({
     name: 'couponCode',
     description: 'The coupon code associated with the discount',
@@ -165,10 +196,16 @@ export class DiscountController {
     return this.discountService.findByCouponCode(couponCode);
   }
 
+  /**
+   * Updates an existing discount.
+   * @param id The ID of the discount to update.
+   * @param updateDiscountDto The data for updating the discount.
+   * @returns The updated discount.
+   */
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ summary: 'Update a discount by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Update a discount by ID (Manager only)' })
   @ApiParam({
     name: 'id',
     description: 'The ID of the discount to update',
@@ -196,11 +233,15 @@ export class DiscountController {
     return this.discountService.update(id, updateDiscountDto);
   }
 
+  /**
+   * Deletes a discount by its ID.
+   * @param id The ID of the discount to delete.
+   */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a discount by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Delete a discount by ID (Manager only)' })
   @ApiParam({
     name: 'id',
     description: 'The ID of the discount to delete',

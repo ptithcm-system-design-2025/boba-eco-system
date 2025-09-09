@@ -1,25 +1,32 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { discount, Prisma } from '../generated/prisma/client';
-import { CreateDiscountDto } from './dto/create-discount.dto';
-import { UpdateDiscountDto } from './dto/update-discount.dto';
-import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
-import { Decimal } from '@prisma/client/runtime/library';
+import {ConflictException, Injectable, NotFoundException,} from '@nestjs/common';
+import {PrismaService} from '../prisma/prisma.service';
+import {discount, Prisma} from '../generated/prisma/client';
+import {CreateDiscountDto} from './dto/create-discount.dto';
+import {UpdateDiscountDto} from './dto/update-discount.dto';
+import {BulkDeleteDiscountDto} from './dto/bulk-delete-discount.dto';
+import {PaginatedResult, PaginationDto} from '../common/dto/pagination.dto';
+import {Decimal} from '@prisma/client/runtime/library';
 
 @Injectable()
+/**
+ * Service for managing discounts.
+ */
 export class DiscountService {
+  /**
+   * @param prisma The Prisma service for database interactions.
+   */
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new discount.
+   * @param createDiscountDto The data for the new discount.
+   * @returns The created discount.
+   * @throws {ConflictException} If a discount with the same name or coupon code already exists.
+   */
   async create(createDiscountDto: CreateDiscountDto): Promise<discount> {
     const { coupon_code, valid_from, valid_until, ...restOfDto } =
       createDiscountDto;
 
-    // Kiểm tra coupon_code đã tồn tại chưa
     const existingDiscountWithCouponCode = await this.prisma.discount.findFirst(
       {
         where: {
@@ -30,7 +37,7 @@ export class DiscountService {
 
     if (existingDiscountWithCouponCode) {
       throw new ConflictException(
-        `Mã coupon '${coupon_code}' đã được sử dụng cho chương trình khuyến mãi khác.`,
+        `Coupon code '${coupon_code}' is already used by another promotion.`,
       );
     }
 
@@ -58,24 +65,29 @@ export class DiscountService {
           const targetFields = error.meta.target as string[];
           if (targetFields.includes('name') && createDiscountDto.name) {
             throw new ConflictException(
-              `Giảm giá với tên '${createDiscountDto.name}' đã tồn tại.`,
+              `Discount with name '${createDiscountDto.name}' already exists.`,
             );
           }
           if (targetFields.includes('coupon_code') && coupon_code) {
             throw new ConflictException(
-              `Mã coupon '${coupon_code}' đã tồn tại.`,
+              `Coupon code '${coupon_code}' already exists.`,
             );
           }
           throw new ConflictException(
-            `Vi phạm ràng buộc duy nhất trên: ${targetFields.join(', ')}.`,
+            `Unique constraint violation on: ${targetFields.join(', ')}.`,
           );
         }
       }
-      console.error('Lỗi khi tạo chương trình giảm giá:', error);
+      console.error('Error creating discount:', error);
       throw error;
     }
   }
 
+  /**
+   * Retrieves all discounts with pagination.
+   * @param paginationDto The pagination parameters.
+   * @returns A paginated result of discounts.
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<discount>> {
@@ -106,18 +118,28 @@ export class DiscountService {
     };
   }
 
+  /**
+   * Finds a single discount by its ID.
+   * @param discount_id The ID of the discount to find.
+   * @returns The discount, or null if not found.
+   * @throws {NotFoundException} If the discount is not found.
+   */
   async findOne(discount_id: number): Promise<discount | null> {
     const discountDetails = await this.prisma.discount.findUnique({
       where: { discount_id },
     });
     if (!discountDetails) {
-      throw new NotFoundException(
-        `Giảm giá với ID ${discount_id} không tồn tại`,
-      );
+      throw new NotFoundException(`Discount with ID ${discount_id} not found`);
     }
     return discountDetails;
   }
 
+  /**
+   * Finds a single discount by its coupon code.
+   * @param couponCode The coupon code of the discount to find.
+   * @returns The discount, or null if not found.
+   * @throws {NotFoundException} If the discount is not found.
+   */
   async findByCouponCode(couponCode: string): Promise<discount | null> {
     const discountDetails = await this.prisma.discount.findFirst({
       where: { coupon_code: couponCode },
@@ -125,12 +147,20 @@ export class DiscountService {
 
     if (!discountDetails) {
       throw new NotFoundException(
-        `Giảm giá với mã coupon '${couponCode}' không tồn tại.`,
+        `Discount with coupon code '${couponCode}' not found.`,
       );
     }
     return discountDetails;
   }
 
+  /**
+   * Updates an existing discount.
+   * @param discount_id The ID of the discount to update.
+   * @param updateDiscountDto The new data for the discount.
+   * @returns The updated discount.
+   * @throws {NotFoundException} If the discount is not found.
+   * @throws {ConflictException} If the updated coupon code is already in use.
+   */
   async update(
     discount_id: number,
     updateDiscountDto: UpdateDiscountDto,
@@ -148,12 +178,9 @@ export class DiscountService {
     });
 
     if (!existingDiscount) {
-      throw new NotFoundException(
-        `Giảm giá với ID ${discount_id} không tồn tại.`,
-      );
+      throw new NotFoundException(`Discount with ID ${discount_id} not found.`);
     }
 
-    // Kiểm tra coupon_code mới có bị trùng không (nếu có thay đổi)
     if (coupon_code && coupon_code !== existingDiscount.coupon_code) {
       const conflictingDiscountWithNewCoupon =
         await this.prisma.discount.findFirst({
@@ -164,7 +191,7 @@ export class DiscountService {
         });
       if (conflictingDiscountWithNewCoupon) {
         throw new ConflictException(
-          `Mã coupon '${coupon_code}' đã được sử dụng bởi chương trình khuyến mãi khác.`,
+          `Coupon code '${coupon_code}' is already used by another promotion.`,
         );
       }
     }
@@ -187,37 +214,40 @@ export class DiscountService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new NotFoundException(
-            `Giảm giá với ID ${discount_id} không tồn tại.`,
-          );
+          throw new NotFoundException(`Discount with ID ${discount_id} not found.`);
         }
         if (error.code === 'P2002' && error.meta?.target) {
           const targetFields = error.meta.target as string[];
           let fieldName = targetFields.join(', ');
           if (targetFields.includes('name') && updateDiscountDto.name)
-            fieldName = `tên '${updateDiscountDto.name}'`;
+            fieldName = `name '${updateDiscountDto.name}'`;
           else if (targetFields.includes('coupon_code') && coupon_code)
-            fieldName = `mã coupon '${coupon_code}'`;
+            fieldName = `coupon code '${coupon_code}'`;
 
           throw new ConflictException(
-            `Giá trị cho ${fieldName} đã được sử dụng hoặc xảy ra xung đột.`,
+            `The value for ${fieldName} is already in use or a conflict occurred.`,
           );
         }
       }
-      console.error(`Lỗi khi cập nhật giảm giá ${discount_id}:`, error);
+      console.error(`Error updating discount ${discount_id}:`, error);
       throw error;
     }
   }
 
+  /**
+   * Removes a discount.
+   * @param discount_id The ID of the discount to remove.
+   * @returns The removed discount.
+   * @throws {NotFoundException} If the discount is not found.
+   * @throws {ConflictException} If the discount is in use and cannot be deleted.
+   */
   async remove(discount_id: number): Promise<discount> {
     const existingDiscount = await this.prisma.discount.findUnique({
       where: { discount_id },
     });
 
     if (!existingDiscount) {
-      throw new NotFoundException(
-        `Giảm giá với ID ${discount_id} không tồn tại`,
-      );
+      throw new NotFoundException(`Discount with ID ${discount_id} not found`);
     }
 
     try {
@@ -227,21 +257,24 @@ export class DiscountService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new NotFoundException(
-            `Giảm giá với ID ${discount_id} không tồn tại`,
-          );
+          throw new NotFoundException(`Discount with ID ${discount_id} not found`);
         }
         if (error.code === 'P2003') {
           throw new ConflictException(
-            `Giảm giá với ID ${discount_id} không thể xóa vì đang được sử dụng trong các đơn hàng khác.`,
+            `Discount with ID ${discount_id} cannot be deleted as it is associated with other orders.`,
           );
         }
       }
-      console.error(`Lỗi khi xóa giảm giá ${discount_id}:`, error);
+      console.error(`Error deleting discount ${discount_id}:`, error);
       throw error;
     }
   }
 
+  /**
+   * Performs a bulk deletion of discounts.
+   * @param bulkDeleteDto The DTO containing the IDs of discounts to delete.
+   * @returns An object with the results of the bulk delete operation.
+   */
   async bulkDelete(bulkDeleteDto: BulkDeleteDiscountDto): Promise<{
     deleted: number[];
     failed: { id: number; reason: string }[];
@@ -250,7 +283,7 @@ export class DiscountService {
     const { ids } = bulkDeleteDto;
 
     try {
-      const deleteResult = await this.prisma.discount.deleteMany({
+      await this.prisma.discount.deleteMany({
         where: { discount_id: { in: ids } },
       });
 
@@ -268,7 +301,7 @@ export class DiscountService {
         deleted: [],
         failed: ids.map((id) => ({
           id,
-          reason: `Lỗi khi xóa chương trình giảm giá: ${error.message}`,
+          reason: `Error deleting discount: ${(error as Error).message}`,
         })),
         summary: {
           total: ids.length,
