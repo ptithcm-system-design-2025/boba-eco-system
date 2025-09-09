@@ -1,15 +1,12 @@
 import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsEnum,
-  IsPhoneNumber,
-  MinLength,
   IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { gender_enum } from '../../generated/prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCustomerDto {
   @ApiProperty({
