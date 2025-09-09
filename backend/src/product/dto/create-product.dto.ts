@@ -16,70 +16,70 @@ import { CreateProductPriceForNewProductDto } from './create-product-price-for-n
 
 export class CreateProductDto {
   @ApiProperty({
-    description: 'Tên sản phẩm',
-    example: 'Bánh kem dâu',
+    description: 'The name of the product',
+    example: 'Strawberry Cake',
     maxLength: 100,
     type: String,
   })
-  @IsString({ message: 'Tên sản phẩm phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Tên sản phẩm không được để trống' })
-  @MaxLength(100, { message: 'Tên sản phẩm không được vượt quá 100 ký tự' })
+  @IsString({ message: 'Product name must be a string' })
+  @IsNotEmpty({ message: 'Product name cannot be empty' })
+  @MaxLength(100, { message: 'Product name cannot exceed 100 characters' })
   name: string;
 
   @ApiPropertyOptional({
-    description: 'Mô tả sản phẩm',
-    example: 'Bánh kem tươi với dâu tự nhiên',
+    description: 'A description of the product',
+    example: 'Fresh cream cake with natural strawberries',
     maxLength: 1000,
     type: String,
   })
   @IsOptional()
-  @IsString({ message: 'Mô tả phải là chuỗi ký tự' })
-  @MaxLength(1000, { message: 'Mô tả không được vượt quá 1000 ký tự' })
+  @IsString({ message: 'Description must be a string' })
+  @MaxLength(1000, { message: 'Description cannot exceed 1000 characters' })
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Đánh dấu sản phẩm là đặc trưng hay không',
+    description: 'Whether the product is a signature item',
     example: false,
     type: Boolean,
     default: false,
   })
   @IsOptional()
-  @IsBoolean({ message: 'Trạng thái đặc trưng phải là boolean' })
+  @IsBoolean({ message: 'Signature status must be a boolean' })
   is_signature?: boolean = false;
 
   @ApiPropertyOptional({
-    description: 'Đường dẫn hình ảnh sản phẩm',
+    description: 'The path to the product image',
     example: '/uploads/products/cake-strawberry.jpg',
     maxLength: 255,
     type: String,
   })
   @IsOptional()
-  @IsString({ message: 'Đường dẫn hình ảnh phải là chuỗi ký tự' })
+  @IsString({ message: 'Image path must be a string' })
   @MaxLength(255, {
-    message: 'Đường dẫn hình ảnh không được vượt quá 255 ký tự',
+    message: 'Image path cannot exceed 255 characters',
   })
   image_path?: string;
 
   @ApiPropertyOptional({
-    description: 'ID của danh mục sản phẩm',
+    description: 'The ID of the product category',
     example: 1,
     type: Number,
     minimum: 1,
   })
-  @IsInt({ message: 'ID danh mục phải là số nguyên' })
-  @Min(1, { message: 'ID danh mục phải lớn hơn 0' })
+  @IsInt({ message: 'Category ID must be an integer' })
+  @Min(1, { message: 'Category ID must be greater than 0' })
   @Type(() => Number)
   category_id: number;
 
   @ApiProperty({
-    description: 'Danh sách giá cho các kích thước khác nhau của sản phẩm',
+    description: 'A list of prices for different sizes of the product',
     type: [CreateProductPriceForNewProductDto],
     isArray: true,
     minItems: 1,
   })
-  @ArrayNotEmpty({ message: 'Danh sách giá không được để trống' })
-  @ArrayMinSize(1, { message: 'Sản phẩm phải có ít nhất một giá' })
-  @ValidateNested({ each: true, message: 'Dữ liệu giá không hợp lệ' })
+  @ArrayNotEmpty({ message: 'Price list cannot be empty' })
+  @ArrayMinSize(1, { message: 'Product must have at least one price' })
+  @ValidateNested({ each: true, message: 'Invalid price data' })
   @Type(() => CreateProductPriceForNewProductDto)
-  prices: CreateProductPriceForNewProductDto[]; // Một sản phẩm phải có ít nhất một giá
+  prices: CreateProductPriceForNewProductDto[];
 }

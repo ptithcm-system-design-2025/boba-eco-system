@@ -6,13 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  Prisma,
-  product,
-  product_price,
-  product_size,
-  category,
-} from '../generated/prisma/client';
+import { Prisma, product, product_price } from '../generated/prisma/client';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductPriceDto } from './dto/create-product-price.dto';
@@ -25,17 +19,26 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new product along with its prices.
+   * It handles creating or connecting product sizes and ensures category existence.
+   * @param createProductDto - The data to create a new product.
+   * @returns The newly created product with its category and prices.
+   * @throws {NotFoundException} If the specified category_id does not exist.
+   * @throws {BadRequestException} If price data is invalid (e.g., missing size info).
+   * @throws {ConflictException} If a product with the same name already exists or if there's a duplicate price for the same size.
+   * @throws {InternalServerErrorException} If there's an unexpected error during product size upsertion.
+   */
   async create(createProductDto: CreateProductDto): Promise<product> {
     const { name, category_id, prices, ...restProductData } = createProductDto;
 
-    // Kiểm tra Category tồn tại nếu category_id được cung cấp
     if (category_id) {
       const categoryExists = await this.prisma.category.findUnique({
         where: { category_id },
       });
       if (!categoryExists) {
         throw new NotFoundException(
-          `Danh mục với ID ${category_id} không tồn tại.`,
+          `Category with ID ${category_id} does not exist.`,
         );
       }
     }
@@ -45,7 +48,7 @@ export class ProductService {
       ...restProductData,
       category: { connect: { category_id } },
       product_price: {
-        create: [], // Sẽ điền vào dưới đây
+        create: [],
       },
     };
 
@@ -73,14 +76,14 @@ export class ProductService {
         } = size_data;
         try {
           const upsertedSize = await this.prisma.product_size.upsert({
-            where: { unit_name: { unit: sizeUnit, name: sizeName } }, // Unique constraint
+            where: { unit_name: { unit: sizeUnit, name: sizeName } },
             create: {
               name: sizeName,
               unit: sizeUnit,
               quantity: sizeQuantity,
               description: sizeDescription,
             },
-            update: { quantity: sizeQuantity, description: sizeDescription }, // Có thể không cần update gì nếu chỉ muốn connect or create
+            update: { quantity: sizeQuantity, description: sizeDescription },
           });
           productSizeId = upsertedSize.size_id;
         } catch (e) {
@@ -88,20 +91,19 @@ export class ProductService {
             e instanceof Prisma.PrismaClientKnownRequestError &&
             e.code === 'P2002'
           ) {
-            // Nếu upsert thất bại do unique constraint, thử tìm lại size đó
             const existingSize = await this.prisma.product_size.findUnique({
               where: { unit_name: { unit: sizeUnit, name: sizeName } },
             });
             if (!existingSize) {
               throw new InternalServerErrorException(
-                `Thất bại khi tạo hoặc tìm kích thước sản phẩm: ${sizeName} (${sizeUnit}) sau khi thử upsert.`,
+                `Failed to create or find product size: ${sizeName} (${sizeUnit}) after upsert attempt.`,
               );
             }
             productSizeId = existingSize.size_id;
           } else {
             console.error('Error upserting product size:', e);
             throw new InternalServerErrorException(
-              'Lỗi khi xử lý dữ liệu kích thước sản phẩm.',
+              'Error processing product size data.',
             );
           }
         }
@@ -111,14 +113,14 @@ export class ProductService {
         });
         if (!existingSize) {
           throw new NotFoundException(
-            `Kích thước sản phẩm với ID ${size_id} không tồn tại.`,
+            `Product size with ID ${size_id} does not exist.`,
           );
         }
         productSizeId = existingSize.size_id;
       } else {
         throw new BadRequestException(
-          'Thiếu size_id hoặc size_data cho mục giá.',
-        ); // Should not happen due to earlier checks
+          'Missing size_id or size_data for price item.',
+        );
       }
 
       (
@@ -147,9 +149,10 @@ export class ProductService {
           error.code === 'P2002' &&
           (error.meta?.target as string[])?.includes('name')
         ) {
-          throw new ConflictException(`Sản phẩm với tên '${name}' đã tồn tại.`);
+          throw new ConflictException(
+            `Product with name '${name}' already exists.`,
+          );
         }
-        // Xử lý các lỗi P2002 khác từ product_price (product_id_size_id_key)
         if (
           error.code === 'P2002' &&
           (error.meta?.target as string[])?.includes('product_id') &&
@@ -165,6 +168,11 @@ export class ProductService {
     }
   }
 
+  /**
+   * Retrieves a paginated list of all products.
+   * @param paginationDto - Pagination parameters (page, limit).
+   * @returns A paginated result object containing the list of products and pagination metadata.
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<product>> {
@@ -201,6 +209,12 @@ export class ProductService {
     };
   }
 
+  /**
+   * Finds a single product by its ID.
+   * @param product_id - The ID of the product to find.
+   * @returns The found product object or null if not found.
+   * @throws {NotFoundException} If the product with the specified ID does not exist.
+   */
   async findOne(product_id: number): Promise<product | null> {
     const product = await this.prisma.product.findUnique({
       where: { product_id },
@@ -211,12 +225,20 @@ export class ProductService {
     });
     if (!product) {
       throw new NotFoundException(
-        `Sản phẩm với ID ${product_id} không tồn tại`,
+        `Product with ID ${product_id} does not exist`,
       );
     }
     return product;
   }
 
+  /**
+   * Updates an existing product's details.
+   * @param product_id - The ID of the product to update.
+   * @param updateProductDto - The data to update the product with.
+   * @returns The updated product object.
+   * @throws {NotFoundException} If the product or category with the specified ID does not exist.
+   * @throws {ConflictException} If a product with the new name already exists.
+   */
   async update(
     product_id: number,
     updateProductDto: UpdateProductDto,
@@ -228,7 +250,7 @@ export class ProductService {
     });
     if (!existingProduct) {
       throw new NotFoundException(
-        `Sản phẩm với ID ${product_id} không tồn tại.`,
+        `Product with ID ${product_id} does not exist.`,
       );
     }
 
@@ -238,7 +260,7 @@ export class ProductService {
       });
       if (!categoryExists) {
         throw new NotFoundException(
-          `Danh mục với ID ${category_id} không tồn tại.`,
+          `Category with ID ${category_id} does not exist.`,
         );
       }
     }
@@ -264,7 +286,9 @@ export class ProductService {
           error.code === 'P2002' &&
           (error.meta?.target as string[])?.includes('name')
         ) {
-          throw new ConflictException(`Sản phẩm với tên '${name}' đã tồn tại.`);
+          throw new ConflictException(
+            `Product with name '${name}' already exists.`,
+          );
         }
         if (error.code === 'P2025') {
           throw new NotFoundException(
@@ -277,6 +301,12 @@ export class ProductService {
     }
   }
 
+  /**
+   * Deletes multiple products in bulk.
+   * This operation is transactional, deleting associated product prices first.
+   * @param bulkDeleteDto - An object containing an array of product IDs to delete.
+   * @returns An object summarizing the deletion result.
+   */
   async bulkDelete(bulkDeleteDto: BulkDeleteProductDto): Promise<{
     deleted: number[];
     failed: { id: number; reason: string }[];
@@ -286,12 +316,10 @@ export class ProductService {
 
     try {
       await this.prisma.$transaction(async (tx) => {
-        // Xóa tất cả product_price trước
         await tx.product_price.deleteMany({
           where: { product_id: { in: ids } },
         });
 
-        // Xóa tất cả sản phẩm
         await tx.product.deleteMany({
           where: { product_id: { in: ids } },
         });
@@ -311,7 +339,7 @@ export class ProductService {
         deleted: [],
         failed: ids.map((id) => ({
           id,
-          reason: `Lỗi khi xóa sản phẩm: ${error.message}`,
+          reason: `Error deleting product: ${error.message}`,
         })),
         summary: {
           total: ids.length,
@@ -322,25 +350,30 @@ export class ProductService {
     }
   }
 
+  /**
+   * Removes a single product and its associated prices.
+   * This operation is transactional.
+   * @param product_id - The ID of the product to remove.
+   * @returns The deleted product object.
+   * @throws {NotFoundException} If the product with the specified ID does not exist.
+   * @throws {ConflictException} If the product cannot be deleted due to foreign key constraints (e.g., used in orders).
+   */
   async remove(product_id: number): Promise<product> {
     const product = await this.prisma.product.findUnique({
       where: { product_id },
     });
     if (!product) {
       throw new NotFoundException(
-        `Sản phẩm với ID ${product_id} không tồn tại.`,
+        `Product with ID ${product_id} does not exist.`,
       );
     }
 
-    // Xóa các product_price liên quan trước, sau đó xóa product
-    // Điều này cần thiết nếu không có onDelete: Cascade trong schema
-    // Prisma sẽ thực hiện các thao tác này trong một transaction
     try {
       return await this.prisma.$transaction(async (tx) => {
         await tx.product_price.deleteMany({ where: { product_id } });
         return tx.product.delete({
           where: { product_id },
-          include: { product_price: true }, // Trả về product đã xóa cùng các price (lúc này sẽ rỗng)
+          include: { product_price: true },
         });
       });
     } catch (error) {
@@ -350,10 +383,6 @@ export class ProductService {
             `Product with ID ${product_id} not found during delete operation.`,
           );
         }
-        // P2003: Foreign key constraint failed on the field: `...` (ví dụ nếu product_price vẫn còn liên kết đến order_item)
-        // Hiện tại product_price có liên kết với order_product, nên nếu không xóa order_product trước thì không xóa được product_price.
-        // Logic này đang giả định là việc xóa product_price không bị cản trở bởi order_product.
-        // Nếu có, cần phải xử lý phức tạp hơn hoặc không cho phép xóa product nếu đã có order.
         if (error.code === 'P2003') {
           throw new ConflictException(
             `Product with ID ${product_id} cannot be deleted as its associated prices might be in use (e.g., in orders).`,
@@ -365,6 +394,12 @@ export class ProductService {
     }
   }
 
+  /**
+   * Finds all products belonging to a specific category, with pagination.
+   * @param category_id - The ID of the category.
+   * @param paginationDto - Pagination parameters (page, limit).
+   * @returns A paginated result of products in the specified category.
+   */
   async findByCategory(
     category_id: number,
     paginationDto: PaginationDto,
@@ -405,6 +440,12 @@ export class ProductService {
     };
   }
 
+  /**
+   * Finds products in a category that have at least one active price.
+   * @param category_id - The ID of the category.
+   * @param paginationDto - Pagination parameters (page, limit).
+   * @returns A paginated result of products with active prices in the specified category.
+   */
   async findByCategoryWithActivePrices(
     category_id: number,
     paginationDto: PaginationDto,
@@ -412,8 +453,7 @@ export class ProductService {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
-    // Điều kiện where cho category
-    const categoryCondition = { category_id: category_id }; // Lấy sản phẩm thuộc danh mục
+    const categoryCondition = { category_id: category_id };
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -421,7 +461,7 @@ export class ProductService {
           ...categoryCondition,
           product_price: {
             some: {
-              is_active: true, // Có ít nhất 1 product_price active
+              is_active: true,
             },
           },
         },
@@ -456,30 +496,38 @@ export class ProductService {
     };
   }
 
-  // === PRODUCT PRICE MANAGEMENT METHODS ===
-
+  /**
+   * Creates a new price for an existing product.
+   * @param createProductPriceDto - The data for the new product price.
+   * @returns The newly created product price object.
+   * @throws {NotFoundException} If the product or product size does not exist.
+   * @throws {BadRequestException} If size information is invalid.
+   * @throws {ConflictException} If a price already exists for the given product and size.
+   * @throws {InternalServerErrorException} If there's an error processing size data.
+   */
   async createProductPrice(
     createProductPriceDto: CreateProductPriceDto,
   ): Promise<product_price> {
     const { product_id, size_id, size_data, price, is_active } =
       createProductPriceDto;
 
-    // Kiểm tra product tồn tại
     const product = await this.prisma.product.findUnique({
       where: { product_id },
     });
     if (!product) {
       throw new NotFoundException(
-        `Sản phẩm với ID ${product_id} không tồn tại.`,
+        `Product with ID ${product_id} does not exist.`,
       );
     }
 
     if (!size_id && !size_data) {
-      throw new BadRequestException('Phải cung cấp size_id hoặc size_data.');
+      throw new BadRequestException(
+        'Either size_id or size_data must be provided.',
+      );
     }
     if (size_id && size_data) {
       throw new BadRequestException(
-        'Không thể cung cấp cả size_id và size_data.',
+        'Cannot provide both size_id and size_data.',
       );
     }
 
@@ -514,14 +562,14 @@ export class ProductService {
           });
           if (!existingSize) {
             throw new InternalServerErrorException(
-              `Thất bại khi tạo hoặc tìm kích thước sản phẩm: ${sizeName} (${sizeUnit}).`,
+              `Failed to create or find product size: ${sizeName} (${sizeUnit}).`,
             );
           }
           productSizeId = existingSize.size_id;
         } else {
           console.error('Error upserting product size:', e);
           throw new InternalServerErrorException(
-            'Lỗi khi xử lý dữ liệu kích thước sản phẩm.',
+            'Error processing product size data.',
           );
         }
       }
@@ -531,12 +579,12 @@ export class ProductService {
       });
       if (!existingSize) {
         throw new NotFoundException(
-          `Kích thước sản phẩm với ID ${size_id} không tồn tại.`,
+          `Product size with ID ${size_id} does not exist.`,
         );
       }
       productSizeId = existingSize.size_id;
     } else {
-      throw new BadRequestException('Thiếu size_id hoặc size_data.');
+      throw new BadRequestException('Missing size_id or size_data.');
     }
 
     try {
@@ -559,7 +607,9 @@ export class ProductService {
           (error.meta?.target as string[])?.includes('product_id') &&
           (error.meta?.target as string[])?.includes('size_id')
         ) {
-          throw new ConflictException('Sản phẩm đã có giá cho kích thước này.');
+          throw new ConflictException(
+            'This product already has a price for this size.',
+          );
         }
       }
       console.error('Error creating product price:', error);
@@ -567,6 +617,13 @@ export class ProductService {
     }
   }
 
+  /**
+   * Updates an existing product price.
+   * @param priceId - The ID of the product price to update.
+   * @param updateProductPriceDto - The data to update the price with.
+   * @returns The updated product price object.
+   * @throws {NotFoundException} If the product price with the specified ID does not exist.
+   */
   async updateProductPrice(
     priceId: number,
     updateProductPriceDto: UpdateProductPriceDto,
@@ -577,7 +634,7 @@ export class ProductService {
 
     if (!existingPrice) {
       throw new NotFoundException(
-        `Giá sản phẩm với ID ${priceId} không tồn tại.`,
+        `Product price with ID ${priceId} does not exist.`,
       );
     }
 
@@ -594,7 +651,7 @@ export class ProductService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Giá sản phẩm với ID ${priceId} không tồn tại.`,
+            `Product price with ID ${priceId} does not exist.`,
           );
         }
       }
@@ -603,6 +660,13 @@ export class ProductService {
     }
   }
 
+  /**
+   * Removes a specific product price.
+   * @param priceId - The ID of the product price to remove.
+   * @returns The deleted product price object.
+   * @throws {NotFoundException} If the product price with the specified ID does not exist.
+   * @throws {ConflictException} If the price is in use and cannot be deleted.
+   */
   async removeProductPrice(priceId: number): Promise<product_price> {
     const existingPrice = await this.prisma.product_price.findUnique({
       where: { product_price_id: priceId },
@@ -610,7 +674,7 @@ export class ProductService {
 
     if (!existingPrice) {
       throw new NotFoundException(
-        `Giá sản phẩm với ID ${priceId} không tồn tại.`,
+        `Product price with ID ${priceId} does not exist.`,
       );
     }
 
@@ -626,12 +690,12 @@ export class ProductService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Giá sản phẩm với ID ${priceId} không tồn tại.`,
+            `Product price with ID ${priceId} does not exist.`,
           );
         }
         if (error.code === 'P2003') {
           throw new ConflictException(
-            `Giá sản phẩm với ID ${priceId} không thể xóa vì đang được sử dụng trong đơn hàng.`,
+            `Product price with ID ${priceId} cannot be deleted as it is currently in use (e.g., in an order).`,
           );
         }
       }
@@ -640,6 +704,11 @@ export class ProductService {
     }
   }
 
+  /**
+   * Deletes multiple product prices in bulk.
+   * @param bulkDeleteDto - An object containing an array of product price IDs to delete.
+   * @returns An object summarizing the deletion result.
+   */
   async bulkDeleteProductPrices(
     bulkDeleteDto: BulkDeleteProductPriceDto,
   ): Promise<{
@@ -656,8 +725,7 @@ export class ProductService {
         await this.removeProductPrice(priceId);
         deleted.push(priceId);
       } catch (error) {
-        const reason =
-          error instanceof Error ? error.message : 'Lỗi không xác định';
+        const reason = error instanceof Error ? error.message : 'Unknown error';
         failed.push({ id: priceId, reason });
       }
     }
@@ -673,6 +741,12 @@ export class ProductService {
     };
   }
 
+  /**
+   * Retrieves all prices for a specific product.
+   * @param productId - The ID of the product.
+   * @returns A list of product prices for the given product.
+   * @throws {NotFoundException} If the product with the specified ID does not exist.
+   */
   async getProductPrices(productId: number): Promise<product_price[]> {
     const product = await this.prisma.product.findUnique({
       where: { product_id: productId },
@@ -680,7 +754,7 @@ export class ProductService {
 
     if (!product) {
       throw new NotFoundException(
-        `Sản phẩm với ID ${productId} không tồn tại.`,
+        `Product with ID ${productId} does not exist.`,
       );
     }
 
@@ -689,10 +763,7 @@ export class ProductService {
       include: {
         product_size: true,
       },
-      orderBy: [
-        { is_active: 'desc' }, // Active prices first
-        { product_size: { name: 'asc' } }, // Then by size name
-      ],
+      orderBy: [{ is_active: 'desc' }, { product_size: { name: 'asc' } }],
     });
   }
 }

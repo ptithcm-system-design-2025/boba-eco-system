@@ -11,16 +11,16 @@ import { CreateProductSizeForProductDto } from './create-product-size.dto';
 
 export class CreateProductPriceForNewProductDto {
   @ApiPropertyOptional({
-    description: 'ID kích thước sản phẩm (nếu sử dụng kích thước có sẵn)',
+    description: 'The ID of the product size (if using an existing size)',
     example: 1,
     type: Number,
   })
   @IsOptional()
-  @IsInt({ message: 'size_id phải là số nguyên' })
+  @IsInt({ message: 'size_id must be an integer' })
   size_id?: number;
 
   @ApiPropertyOptional({
-    description: 'Thông tin kích thước mới (nếu tạo kích thước mới)',
+    description: 'New size information (if creating a new size)',
     type: CreateProductSizeForProductDto,
   })
   @IsOptional()
@@ -29,21 +29,21 @@ export class CreateProductPriceForNewProductDto {
   size_data?: CreateProductSizeForProductDto;
 
   @ApiProperty({
-    description: 'Giá sản phẩm (VND)',
+    description: 'The price of the product (in VND)',
     example: 50000,
     type: Number,
   })
-  @IsNotEmpty({ message: 'price không được để trống' })
-  @IsInt({ message: 'price phải là số nguyên' })
+  @IsNotEmpty({ message: 'price cannot be empty' })
+  @IsInt({ message: 'price must be an integer' })
   price: number;
 
   @ApiPropertyOptional({
-    description: 'Trạng thái hoạt động của giá',
+    description: 'The active status of the price',
     example: true,
     default: true,
     type: Boolean,
   })
   @IsOptional()
-  @IsBoolean({ message: 'is_active phải là giá trị boolean' })
+  @IsBoolean({ message: 'is_active must be a boolean value' })
   is_active?: boolean;
 }

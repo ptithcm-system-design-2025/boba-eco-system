@@ -19,7 +19,11 @@ import { CreateProductPriceDto } from './dto/create-product-price.dto';
 import { UpdateProductPriceDto } from './dto/update-product-price.dto';
 import { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto';
 import { BulkDeleteProductDto } from './dto/bulk-delete-product.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
+import {
+  PaginationDto,
+  PaginatedResult,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
 import { product, product_price } from '../generated/prisma/client';
 import {
   ApiTags,
@@ -49,7 +53,7 @@ export class ProductController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary:
-      'Create a new product with prices and sizes - Chỉ MANAGER và STAFF',
+      'Create a new product with prices and sizes - MANAGER and STAFF only',
   })
   @ApiResponse({
     status: 201,
@@ -80,7 +84,7 @@ export class ProductController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Get all products with pagination - Tất cả role' })
+  @ApiOperation({ summary: 'Get all products with pagination - All roles' })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -93,8 +97,8 @@ export class ProductController {
     type: Number,
     description: 'Items per page',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Paginated list of products',
     schema: {
       type: 'object',
@@ -120,9 +124,9 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @ApiOperation({
-    summary: 'Get a product by ID with its prices - Tất cả role',
+    summary: 'Get a product by ID with its prices - All roles',
     description:
-      'Lấy chi tiết sản phẩm bao gồm danh sách giá (không bao gồm thông tin kích thước)',
+      'Retrieves product details including a list of prices (size information is not included)',
   })
   @ApiParam({ name: 'id', description: 'The ID of the product', type: Number })
   @ApiResponse({ status: 200, description: 'Return the product with prices.' })
@@ -138,9 +142,9 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Update product information only - Chỉ MANAGER và STAFF',
+    summary: 'Update product information only - MANAGER and STAFF only',
     description:
-      'Chỉ cập nhật thông tin sản phẩm. Để quản lý giá sản phẩm, sử dụng các endpoint riêng biệt.',
+      'Updates product information only. To manage product prices, use the dedicated price endpoints.',
   })
   @ApiParam({
     name: 'id',
@@ -174,14 +178,14 @@ export class ProductController {
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Xóa nhiều sản phẩm - Chỉ MANAGER',
+    summary: 'Bulk delete products - MANAGER only',
     description:
-      'Xóa nhiều sản phẩm cùng lúc. Các sản phẩm có giá đang được sử dụng trong đơn hàng sẽ không thể xóa.',
+      'Deletes multiple products at once. Products with prices currently in use in orders cannot be deleted.',
   })
   @ApiBody({ type: BulkDeleteProductDto })
   @ApiResponse({
     status: 200,
-    description: 'Bulk delete hoàn thành với kết quả chi tiết',
+    description: 'Bulk delete completed with detailed results',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -203,7 +207,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a product by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Delete a product by ID - MANAGER only' })
   @ApiParam({
     name: 'id',
     description: 'The ID of the product to delete',
@@ -231,12 +235,12 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER, ROLES.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy sản phẩm theo danh mục với pagination - TẤT CẢ ROLES',
+    summary: 'Get products by category with pagination - ALL ROLES',
   })
   @ApiParam({ name: 'categoryId', description: 'Category ID', type: Number })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Danh sách sản phẩm theo danh mục',
+  @ApiResponse({
+    status: 200,
+    description: 'List of products in the category',
     schema: {
       type: 'object',
       properties: {
@@ -262,18 +266,19 @@ export class ProductController {
     return this.productService.findByCategory(categoryId, paginationDto);
   }
 
-  // === PRODUCT PRICE ENDPOINTS ===
-
   @Post('prices')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Tạo giá mới cho sản phẩm - Chỉ MANAGER và STAFF',
-    description: 'Thêm giá mới cho sản phẩm với kích thước cụ thể',
+    summary: 'Create a new price for a product - MANAGER and STAFF only',
+    description: 'Adds a new price for a product with a specific size',
   })
   @ApiBody({ type: CreateProductPriceDto })
-  @ApiResponse({ status: 201, description: 'Giá sản phẩm được tạo thành công' })
+  @ApiResponse({
+    status: 201,
+    description: 'Product price created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -295,18 +300,18 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Cập nhật giá sản phẩm - Chỉ MANAGER và STAFF',
-    description: 'Cập nhật giá hoặc trạng thái của một giá sản phẩm cụ thể',
+    summary: 'Update a product price - MANAGER and STAFF only',
+    description: 'Updates the price or status of a specific product price',
   })
   @ApiParam({
     name: 'priceId',
-    description: 'ID của giá sản phẩm',
+    description: 'The ID of the product price',
     type: Number,
   })
   @ApiBody({ type: UpdateProductPriceDto })
   @ApiResponse({
     status: 200,
-    description: 'Giá sản phẩm được cập nhật thành công',
+    description: 'Product price updated successfully',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -330,15 +335,18 @@ export class ProductController {
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Xóa giá sản phẩm - Chỉ MANAGER và STAFF',
-    description: 'Xóa một giá sản phẩm cụ thể',
+    summary: 'Delete a product price - MANAGER and STAFF only',
+    description: 'Deletes a specific product price',
   })
   @ApiParam({
     name: 'priceId',
-    description: 'ID của giá sản phẩm',
+    description: 'The ID of the product price',
     type: Number,
   })
-  @ApiResponse({ status: 204, description: 'Giá sản phẩm được xóa thành công' })
+  @ApiResponse({
+    status: 204,
+    description: 'Product price deleted successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 403,
@@ -360,13 +368,13 @@ export class ProductController {
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Xóa nhiều giá sản phẩm - Chỉ MANAGER và STAFF',
-    description: 'Xóa nhiều giá sản phẩm cùng lúc',
+    summary: 'Bulk delete product prices - MANAGER and STAFF only',
+    description: 'Deletes multiple product prices at once',
   })
   @ApiBody({ type: BulkDeleteProductPriceDto })
   @ApiResponse({
     status: 200,
-    description: 'Bulk delete hoàn thành với kết quả chi tiết',
+    description: 'Bulk delete completed with detailed results',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -388,11 +396,16 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy danh sách giá của sản phẩm - Tất cả role',
-    description: 'Lấy tất cả giá (active và inactive) của một sản phẩm cụ thể',
+    summary: 'Get all prices for a product - All roles',
+    description:
+      'Retrieves all prices (active and inactive) for a specific product',
   })
-  @ApiParam({ name: 'productId', description: 'ID của sản phẩm', type: Number })
-  @ApiResponse({ status: 200, description: 'Danh sách giá của sản phẩm' })
+  @ApiParam({
+    name: 'productId',
+    description: 'The ID of the product',
+    type: Number,
+  })
+  @ApiResponse({ status: 200, description: 'List of prices for the product' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async getProductPrices(

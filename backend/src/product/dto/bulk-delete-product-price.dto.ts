@@ -3,12 +3,12 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BulkDeleteProductPriceDto {
   @ApiProperty({
-    description: 'Danh sách ID các giá sản phẩm cần xóa',
+    description: 'A list of product price IDs to be deleted',
     example: [1, 2, 3],
     type: [Number],
   })
-  @IsArray({ message: 'ids phải là mảng' })
-  @ArrayNotEmpty({ message: 'Danh sách ID không được để trống' })
-  @IsInt({ each: true, message: 'Mỗi ID phải là số nguyên' })
+  @IsArray({ message: 'ids must be an array' })
+  @ArrayNotEmpty({ message: 'The ID list cannot be empty' })
+  @IsInt({ each: true, message: 'Each ID must be an integer' })
   ids: number[];
 }

@@ -3,20 +3,20 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateProductPriceDto {
   @ApiPropertyOptional({
-    description: 'Giá sản phẩm mới (VND)',
+    description: 'The new price of the product (in VND)',
     example: 60000,
     type: Number,
   })
   @IsOptional()
-  @IsInt({ message: 'price phải là số nguyên' })
+  @IsInt({ message: 'price must be an integer' })
   price?: number;
 
   @ApiPropertyOptional({
-    description: 'Trạng thái hoạt động của giá',
+    description: 'The active status of the price',
     example: false,
     type: Boolean,
   })
   @IsOptional()
-  @IsBoolean({ message: 'is_active phải là giá trị boolean' })
+  @IsBoolean({ message: 'is_active must be a boolean value' })
   is_active?: boolean;
 }

@@ -11,38 +11,38 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductSizeForProductDto {
   @ApiProperty({
-    description: 'Tên kích thước sản phẩm',
+    description: 'The name of the product size',
     example: 'S',
     maxLength: 50,
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  name: string; // e.g., "S", "M", "L", "10 inch"
+  name: string;
 
   @ApiProperty({
-    description: 'Đơn vị đo lường',
+    description: 'The unit of measurement',
     example: 'inch',
     maxLength: 20,
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
-  unit: string; // e.g., "cái", "phần", "inch", "cm"
+  unit: string;
 
   @ApiProperty({
-    description: 'Số lượng/kích thước',
+    description: 'The quantity or size value',
     example: 10,
     minimum: 1,
   })
   @IsInt()
   @Min(1)
   @Type(() => Number)
-  quantity: number; // e.g., if name="10 inch", unit="inch", then quantity=10
+  quantity: number;
 
   @ApiProperty({
-    description: 'Mô tả kích thước sản phẩm',
-    example: 'Bánh kích thước 10 inch phù hợp cho 8-10 người',
+    description: 'A description of the product size',
+    example: 'A 10-inch cake suitable for 8-10 people',
     required: false,
     maxLength: 255,
   })
