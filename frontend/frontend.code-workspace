@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": "./manager"
 		},
 		{
-			"path": "../../backend"
+			"path": "./pos"
 		}
 	],
 	"settings": {}
