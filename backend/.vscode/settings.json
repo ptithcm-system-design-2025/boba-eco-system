@@ -4,24 +4,14 @@
     "workbench.colorTheme": "Tranquility Base Light",
     "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
     "git.inputValidationLength": 70,
-    "[git-commit]": {
-        "editor.rulers": [
-            40,
-            50
-        ],
-        "editor.wordWrap": "bounded",
-        "editor.wordWrapColumn": 60,
-        "workbench.editor.restoreViewState": true,
-        "editor.wrappingIndent": "same"
-    },
     "[scminput]": {
         "editor.rulers": [
             50,
-            60
+            72
         ],
-        "editor.wordWrap": "bounded",
+        "editor.wrappingStrategy": "advanced",
+        "editor.wordWrap": "wordWrapColumn",
         "editor.wordWrapColumn": 60,
-        "workbench.editor.restoreViewState": true,
-        "editor.wrappingIndent": "same"
-    }
+    },
+    "scm.inputFontFamily": "mono",
 }
