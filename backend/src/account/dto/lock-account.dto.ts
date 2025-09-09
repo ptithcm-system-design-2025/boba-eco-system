@@ -1,13 +1,18 @@
 import { IsBoolean, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * DTO for locking or unlocking an account.
+ * Used to specify the lock status of an account.
+ */
 export class LockAccountDto {
   @ApiProperty({
-    description: 'Trạng thái khóa tài khoản (true = khóa, false = mở khóa)',
+    description:
+      'The lock status of the account (true = locked, false = unlocked).',
     example: true,
     type: Boolean,
   })
-  @IsBoolean({ message: 'is_locked phải là giá trị boolean' })
-  @IsNotEmpty({ message: 'is_locked không được để trống' })
+  @IsBoolean({ message: 'is_locked must be a boolean value.' })
+  @IsNotEmpty({ message: 'is_locked is required.' })
   is_locked: boolean;
 }

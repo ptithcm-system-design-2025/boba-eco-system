@@ -1,15 +1,15 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service'; // TODO: Ensure PrismaService exists at this path and is correctly configured.
+import { PrismaService } from '../prisma/prisma.service';
 import { account, Prisma } from '../generated/prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'; // Import specific error type
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { PaginatedResult, PaginationDto } from '../common/dto/pagination.dto';
 import * as bcrypt from 'bcrypt';
 
 type AccountResponse = Omit<account, 'password_hash'> & {
@@ -19,10 +19,21 @@ type AccountResponse = Omit<account, 'password_hash'> & {
   manager?: any;
 };
 
+/**
+ * Service responsible for handling account-related business logic.
+ * Interacts with the Prisma service to perform database operations.
+ */
 @Injectable()
 export class AccountService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new account.
+   * @param createAccountDto - The data for creating the new account.
+   * @returns The created account.
+   * @throws {ConflictException} If the username already exists.
+   * @throws {NotFoundException} If the specified role does not exist.
+   */
   async create(createAccountDto: CreateAccountDto): Promise<account> {
     const { username, password, role_id, is_active } = createAccountDto;
 
@@ -30,7 +41,7 @@ export class AccountService {
       where: { username },
     });
     if (existingUser) {
-      throw new ConflictException('Tên đăng nhập đã tồn tại');
+      throw new ConflictException('Username already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,10 +58,9 @@ export class AccountService {
       });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        // Use imported error type
         if (error.code === 'P2003') {
           throw new NotFoundException(
-            `Vai trò với ID ${role_id} không tồn tại.`,
+            `Role with ID ${role_id} does not exist.`,
           );
         }
       }
@@ -58,6 +68,11 @@ export class AccountService {
     }
   }
 
+  /**
+   * Retrieves a paginated list of accounts.
+   * @param paginationDto - Pagination options (page, limit).
+   * @returns A paginated result of accounts.
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<AccountResponse>> {
@@ -98,6 +113,12 @@ export class AccountService {
     };
   }
 
+  /**
+   * Finds a single account by its ID.
+   * @param id - The ID of the account to find.
+   * @returns The account object or null if not found.
+   * @throws {NotFoundException} If the account with the specified ID does not exist.
+   */
   async findOne(id: number): Promise<AccountResponse | null> {
     const acc = await this.prisma.account.findUnique({
       where: { account_id: id },
@@ -117,11 +138,16 @@ export class AccountService {
       },
     });
     if (!acc) {
-      throw new NotFoundException(`Tài khoản với ID ${id} không tồn tại`);
+      throw new NotFoundException(`Account with ID ${id} does not exist`);
     }
     return acc;
   }
 
+  /**
+   * Finds a single account by its username.
+   * @param username - The username of the account to find.
+   * @returns The account object or null if not found.
+   */
   async findByUsername(username: string): Promise<account | null> {
     const acc = await this.prisma.account.findUnique({
       where: { username },
@@ -132,24 +158,30 @@ export class AccountService {
     return acc;
   }
 
+  /**
+   * Updates an existing account.
+   * @param id - The ID of the account to update.
+   * @param updateAccountDto - The data to update the account with.
+   * @returns The updated account.
+   * @throws {BadRequestException} If attempting to update the role.
+   * @throws {NotFoundException} If the account does not exist.
+   * @throws {ConflictException} If the new username is already taken.
+   */
   async update(
     id: number,
     updateAccountDto: UpdateAccountDto,
   ): Promise<account> {
     const { password, role_id, ...otherData } = updateAccountDto;
 
-    // Không cho phép cập nhật role
     if (role_id !== undefined) {
-      throw new BadRequestException(
-        'Không được phép cập nhật vai trò của tài khoản',
-      );
+      throw new BadRequestException('Updating the account role is not allowed');
     }
 
     const existingAccount = await this.prisma.account.findUnique({
       where: { account_id: id },
     });
     if (!existingAccount) {
-      throw new NotFoundException(`Tài khoản với ID ${id} không tồn tại`);
+      throw new NotFoundException(`Account with ID ${id} does not exist`);
     }
 
     if (
@@ -161,7 +193,7 @@ export class AccountService {
       });
       if (conflictingUser) {
         throw new ConflictException(
-          `Tên đăng nhập '${updateAccountDto.username}' đã tồn tại.`,
+          `Username '${updateAccountDto.username}' already exists.`,
         );
       }
     }
@@ -182,15 +214,14 @@ export class AccountService {
       });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        // Use imported error type
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Tài khoản với ID ${id} không tồn tại để cập nhật.`,
+            `Account with ID ${id} not found for update.`,
           );
         }
         if (error.code === 'P2003' && updateAccountDto.role_id) {
           throw new NotFoundException(
-            `Vai trò với ID ${updateAccountDto.role_id} không tồn tại.`,
+            `Role with ID ${updateAccountDto.role_id} does not exist.`,
           );
         }
       }
@@ -198,6 +229,12 @@ export class AccountService {
     }
   }
 
+  /**
+   * Removes an account by its ID.
+   * @param id - The ID of the account to remove.
+   * @returns The removed account.
+   * @throws {NotFoundException} If the account with the specified ID does not exist.
+   */
   async remove(id: number): Promise<account> {
     try {
       return await this.prisma.account.delete({
@@ -205,9 +242,8 @@ export class AccountService {
       });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        // Use imported error type
         if (error.code === 'P2025') {
-          throw new NotFoundException(`Tài khoản với ID ${id} không tồn tại`);
+          throw new NotFoundException(`Account with ID ${id} not found`);
         }
       }
       throw error;

@@ -5,51 +5,48 @@ import {
   MinLength,
   IsOptional,
   IsBoolean,
-  IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAccountDto {
   @ApiProperty({
-    description: 'ID vai trò của tài khoản',
+    description: 'The role ID for the account.',
     example: 1,
     type: Number,
   })
-  @IsInt({ message: 'role_id phải là số nguyên' })
-  @IsNotEmpty({ message: 'role_id không được để trống' })
+  @IsInt({ message: 'role_id must be an integer.' })
+  @IsNotEmpty({ message: 'role_id is required.' })
   role_id: number;
 
   @ApiProperty({
-    description: 'Tên đăng nhập (tối thiểu 3 ký tự)',
+    description: 'The username (minimum 3 characters).',
     example: 'user123',
     minLength: 3,
     type: String,
   })
-  @IsString({ message: 'username phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'username không được để trống' })
-  @MinLength(3, { message: 'username phải có ít nhất 3 ký tự' })
+  @IsString({ message: 'username must be a string.' })
+  @IsNotEmpty({ message: 'username is required.' })
+  @MinLength(3, { message: 'username must be at least 3 characters long.' })
   username: string;
 
   @ApiProperty({
-    description: 'Mật khẩu (tối thiểu 8 ký tự)',
+    description: 'The password (minimum 8 characters).',
     example: 'password123',
     minLength: 8,
     type: String,
   })
-  @IsString({ message: 'password phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'password không được để trống' })
-  @MinLength(8, { message: 'password phải có ít nhất 8 ký tự' })
-  password: string; // Password will be hashed in the service layer
+  @IsString({ message: 'password must be a string.' })
+  @IsNotEmpty({ message: 'password is required.' })
+  @MinLength(8, { message: 'password must be at least 8 characters long.' })
+  password: string;
 
   @ApiProperty({
-    description: 'Trạng thái hoạt động của tài khoản',
+    description: 'The active status of the account.',
     example: true,
     required: false,
     type: Boolean,
   })
   @IsOptional()
-  @IsBoolean({ message: 'is_active phải là giá trị boolean' })
+  @IsBoolean({ message: 'is_active must be a boolean value.' })
   is_active?: boolean;
-
-  // is_locked is not typically set on creation, defaults to false in schema
 }
