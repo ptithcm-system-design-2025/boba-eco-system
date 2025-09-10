@@ -9,7 +9,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateImageDto {
   @ApiProperty({
-    description: 'URL ảnh cũ cần xóa',
+    description: 'The URL of the old image to be deleted',
     example:
       'https://storage.googleapis.com/your-bucket/products/old-image.jpg',
   })
@@ -19,7 +19,7 @@ export class UpdateImageDto {
   oldImageUrl: string;
 
   @ApiProperty({
-    description: 'Tên file mới tùy chọn',
+    description: 'Optional new file name',
     required: false,
     maxLength: 100,
     example: 'new-product-image.jpg',
@@ -30,7 +30,7 @@ export class UpdateImageDto {
   fileName?: string;
 
   @ApiProperty({
-    description: 'Thư mục lưu trữ (mặc định: products)',
+    description: 'Storage folder (default: products)',
     required: false,
     maxLength: 50,
     example: 'products',

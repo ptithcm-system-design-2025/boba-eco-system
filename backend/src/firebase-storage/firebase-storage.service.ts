@@ -16,9 +16,13 @@ export class FirebaseStorageService {
     this.initializeFirebase();
   }
 
+  /**
+   * Initializes the Firebase Admin SDK.
+   * @private
+   * @throws {InternalServerErrorException} If Firebase initialization fails.
+   */
   private initializeFirebase() {
     try {
-      // Kiểm tra xem Firebase đã được khởi tạo chưa
       if (!admin.apps.length) {
         const serviceAccount = require(path.join(__dirname, 'key.json'));
 
@@ -35,7 +39,7 @@ export class FirebaseStorageService {
       this.bucket = admin.storage();
     } catch (error) {
       console.error('Firebase initialization error:', error);
-      throw new InternalServerErrorException('Lỗi khởi tạo Firebase');
+      throw new InternalServerErrorException('Firebase initialization failed');
     }
   }
 
@@ -52,7 +56,6 @@ export class FirebaseStorageService {
     folder: string = 'products',
   ): Promise<string> {
     try {
-      // Validate file type
       const allowedMimeTypes = [
         'image/jpeg',
         'image/jpg',
@@ -65,24 +68,20 @@ export class FirebaseStorageService {
         );
       }
 
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         throw new BadRequestException(
           'Kích thước file không được vượt quá 5MB',
         );
       }
 
-      // Generate unique filename if not provided
       const fileExtension = file.originalname.split('.').pop();
       const uniqueFileName = fileName || `${uuidv4()}.${fileExtension}`;
       const filePath = `${folder}/${uniqueFileName}`;
 
-      // Get bucket reference
       const bucketRef = this.bucket.bucket();
       const fileRef = bucketRef.file(filePath);
 
-      // Upload file
       await fileRef.save(file.buffer, {
         metadata: {
           contentType: file.mimetype,
@@ -93,10 +92,8 @@ export class FirebaseStorageService {
         },
       });
 
-      // Make file publicly accessible
       await fileRef.makePublic();
 
-      // Return public URL
       const publicUrl = fileRef.publicUrl();
       return publicUrl;
     } catch (error) {
@@ -104,40 +101,36 @@ export class FirebaseStorageService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new InternalServerErrorException('Lỗi khi upload ảnh');
+      throw new InternalServerErrorException('Error uploading image');
     }
   }
 
   /**
-   * Xóa ảnh sản phẩm từ Firebase Storage
-   * @param imageUrl - URL của ảnh cần xóa
-   * @returns boolean - true nếu xóa thành công
+   * Deletes a product image from Firebase Storage.
+   * @param imageUrl - The URL of the image to delete.
+   * @returns boolean - true if deletion is successful.
    */
   async deleteProductImage(imageUrl: string): Promise<boolean> {
     try {
-      // Extract file path from URL
       const bucketName = this.configService.get<string>(
         'FIREBASE_STORAGE_BUCKET',
       );
       const baseUrl = `https://storage.googleapis.com/${bucketName}/`;
 
       if (!imageUrl.startsWith(baseUrl)) {
-        throw new BadRequestException('URL ảnh không hợp lệ');
+        throw new BadRequestException('Invalid image URL');
       }
 
       const filePath = imageUrl.replace(baseUrl, '');
 
-      // Get bucket reference
       const bucketRef = this.bucket.bucket();
       const fileRef = bucketRef.file(filePath);
 
-      // Check if file exists
       const [exists] = await fileRef.exists();
       if (!exists) {
-        throw new BadRequestException('File không tồn tại');
+        throw new BadRequestException('File not found');
       }
 
-      // Delete file
       await fileRef.delete();
       return true;
     } catch (error) {
@@ -145,14 +138,14 @@ export class FirebaseStorageService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new InternalServerErrorException('Lỗi khi xóa ảnh');
+      throw new InternalServerErrorException('Error deleting image');
     }
   }
 
   /**
-   * Lấy danh sách tất cả ảnh trong thư mục
-   * @param folder - Thư mục cần lấy danh sách
-   * @returns Array URL của các ảnh
+   * Lists all images in a specified folder.
+   * @param folder - The folder to list images from.
+   * @returns An array of image URLs.
    */
   async listProductImages(folder: string = 'products'): Promise<string[]> {
     try {
@@ -171,17 +164,17 @@ export class FirebaseStorageService {
       return imageUrls;
     } catch (error) {
       console.error('List images error:', error);
-      throw new InternalServerErrorException('Lỗi khi lấy danh sách ảnh');
+      throw new InternalServerErrorException('Error listing images');
     }
   }
 
   /**
-   * Cập nhật ảnh sản phẩm (xóa ảnh cũ và upload ảnh mới)
-   * @param oldImageUrl - URL ảnh cũ cần xóa
-   * @param newFile - File ảnh mới
-   * @param fileName - Tên file mới (optional)
-   * @param folder - Thư mục lưu trữ
-   * @returns URL của ảnh mới
+   * Updates a product image by deleting the old one and uploading a new one.
+   * @param oldImageUrl - The URL of the old image to delete.
+   * @param newFile - The new image file.
+   * @param fileName - Optional new file name.
+   * @param folder - The storage folder.
+   * @returns The URL of the new image.
    */
   async updateProductImage(
     oldImageUrl: string,
@@ -190,27 +183,24 @@ export class FirebaseStorageService {
     folder: string = 'products',
   ): Promise<string> {
     try {
-      // Upload ảnh mới trước
       const newImageUrl = await this.uploadProductImage(
         newFile,
         fileName,
         folder,
       );
 
-      // Xóa ảnh cũ (nếu có)
       if (oldImageUrl) {
         try {
           await this.deleteProductImage(oldImageUrl);
         } catch (error) {
           console.warn('Warning: Could not delete old image:', error.message);
-          // Không throw error ở đây vì ảnh mới đã upload thành công
         }
       }
 
       return newImageUrl;
     } catch (error) {
       console.error('Update image error:', error);
-      throw error; // Re-throw để controller xử lý
+      throw error;
     }
   }
 }

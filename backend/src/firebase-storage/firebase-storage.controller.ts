@@ -44,32 +44,33 @@ export class FirebaseStorageController {
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Upload ảnh sản phẩm lên Firebase Storage' })
+  @ApiOperation({ summary: 'Upload a product image to Firebase Storage' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'File ảnh cần upload',
+    description: 'Image file to upload',
     schema: {
       type: 'object',
       properties: {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'File ảnh (JPEG, PNG, WebP, tối đa 5MB)',
+          description: 'Image file (JPEG, PNG, WebP, max 5MB)',
         },
         fileName: {
           type: 'string',
-          description: 'Tên file tùy chọn (sẽ tự generate nếu không có)',
+          description:
+            'Optional file name (will be auto-generated if not provided)',
         },
         folder: {
           type: 'string',
-          description: 'Thư mục lưu trữ (mặc định: products)',
+          description: 'Storage folder (default: products)',
         },
       },
     },
   })
   @ApiResponse({
     status: 201,
-    description: 'Upload thành công',
+    description: 'Image uploaded successfully',
     schema: {
       type: 'object',
       properties: {
@@ -78,10 +79,19 @@ export class FirebaseStorageController {
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'File không hợp lệ hoặc quá lớn' })
-  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 400, description: 'Invalid or oversized file' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @Roles(ROLES.MANAGER, ROLES.STAFF)
+  /**
+   * Uploads an image file to Firebase Storage.
+   * @param file The image file to upload.
+   * @param fileName Optional custom file name.
+   * @param folder Optional destination folder.
+   * @param user The current authenticated user.
+   * @returns An object containing the success message and the image URL.
+   * @throws {BadRequestException} If no file is provided.
+   */
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @Body('fileName') fileName?: string,
@@ -89,7 +99,7 @@ export class FirebaseStorageController {
     @CurrentUser() user?: any,
   ) {
     if (!file) {
-      throw new BadRequestException('Vui lòng chọn file để upload');
+      throw new BadRequestException('Please select a file to upload');
     }
 
     const imageUrl = await this.firebaseStorageService.uploadProductImage(
@@ -99,22 +109,22 @@ export class FirebaseStorageController {
     );
 
     return {
-      message: 'Upload ảnh thành công',
+      message: 'Image uploaded successfully',
       imageUrl,
     };
   }
 
   @Delete('delete')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xóa ảnh sản phẩm từ Firebase Storage' })
+  @ApiOperation({ summary: 'Delete a product image from Firebase Storage' })
   @ApiBody({
-    description: 'URL ảnh cần xóa',
+    description: 'URL of the image to delete',
     schema: {
       type: 'object',
       properties: {
         imageUrl: {
           type: 'string',
-          description: 'URL đầy đủ của ảnh cần xóa',
+          description: 'Full URL of the image to be deleted',
           example:
             'https://storage.googleapis.com/your-bucket/products/image.jpg',
         },
@@ -124,7 +134,7 @@ export class FirebaseStorageController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Xóa ảnh thành công',
+    description: 'Image deleted successfully',
     schema: {
       type: 'object',
       properties: {
@@ -135,34 +145,43 @@ export class FirebaseStorageController {
   })
   @ApiResponse({
     status: 400,
-    description: 'URL ảnh không hợp lệ hoặc file không tồn tại',
+    description: 'Invalid image URL or file not found',
   })
-  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @Roles(ROLES.MANAGER, ROLES.STAFF)
+  /**
+   * Deletes an image from Firebase Storage.
+   * @param imageUrl The URL of the image to delete.
+   * @param user The current authenticated user.
+   * @returns An object indicating the success of the operation.
+   * @throws {BadRequestException} If the image URL is not provided.
+   */
   async deleteImage(
     @Body('imageUrl') imageUrl: string,
     @CurrentUser() user?: any,
   ) {
     if (!imageUrl) {
-      throw new BadRequestException('Vui lòng cung cấp URL ảnh cần xóa');
+      throw new BadRequestException(
+        'Please provide the URL of the image to delete',
+      );
     }
 
     const success =
       await this.firebaseStorageService.deleteProductImage(imageUrl);
 
     return {
-      message: 'Xóa ảnh thành công',
+      message: 'Image deleted successfully',
       success,
     };
   }
 
   @Get('list')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách tất cả ảnh trong thư mục' })
+  @ApiOperation({ summary: 'List all images in a directory' })
   @ApiResponse({
     status: 200,
-    description: 'Lấy danh sách ảnh thành công',
+    description: 'Image list retrieved successfully',
     schema: {
       type: 'object',
       properties: {
@@ -175,9 +194,15 @@ export class FirebaseStorageController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @Roles(ROLES.MANAGER, ROLES.STAFF)
+  /**
+   * Lists all images in a specified folder in Firebase Storage.
+   * @param folder The folder to list images from. Defaults to 'products'.
+   * @param user The current authenticated user.
+   * @returns An object containing the list of image URLs and the count.
+   */
   async listImages(
     @Query('folder') folder: string = 'products',
     @CurrentUser() user?: any,
@@ -185,7 +210,7 @@ export class FirebaseStorageController {
     const images = await this.firebaseStorageService.listProductImages(folder);
 
     return {
-      message: 'Lấy danh sách ảnh thành công',
+      message: 'Image list retrieved successfully',
       images,
       count: images.length,
     };
@@ -195,37 +220,38 @@ export class FirebaseStorageController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
-    summary: 'Cập nhật ảnh sản phẩm (xóa ảnh cũ và upload ảnh mới)',
+    summary:
+      'Update a product image (deletes the old one and uploads a new one)',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'File ảnh mới và URL ảnh cũ',
+    description: 'New image file and old image URL',
     schema: {
       type: 'object',
       properties: {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'File ảnh mới (JPEG, PNG, WebP, tối đa 5MB)',
+          description: 'New image file (JPEG, PNG, WebP, max 5MB)',
         },
         oldImageUrl: {
           type: 'string',
-          description: 'URL ảnh cũ cần xóa',
+          description: 'URL of the old image to be deleted',
         },
         fileName: {
           type: 'string',
-          description: 'Tên file mới tùy chọn',
+          description: 'Optional new file name',
         },
         folder: {
           type: 'string',
-          description: 'Thư mục lưu trữ (mặc định: products)',
+          description: 'Storage folder (default: products)',
         },
       },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Cập nhật ảnh thành công',
+    description: 'Image updated successfully',
     schema: {
       type: 'object',
       properties: {
@@ -237,11 +263,21 @@ export class FirebaseStorageController {
   })
   @ApiResponse({
     status: 400,
-    description: 'File không hợp lệ hoặc thiếu thông tin',
+    description: 'Invalid file or missing information',
   })
-  @ApiResponse({ status: 401, description: 'Chưa xác thực' })
-  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @Roles(ROLES.MANAGER, ROLES.STAFF)
+  /**
+   * Updates an image in Firebase Storage by deleting the old one and uploading a new one.
+   * @param file The new image file.
+   * @param oldImageUrl The URL of the old image to be replaced.
+   * @param fileName Optional custom file name for the new image.
+   * @param folder Optional destination folder for the new image.
+   * @param user The current authenticated user.
+   * @returns An object containing the new and old image URLs.
+   * @throws {BadRequestException} If the new file or old image URL is missing.
+   */
   async updateImage(
     @UploadedFile() file: Express.Multer.File,
     @Body('oldImageUrl') oldImageUrl: string,
@@ -250,12 +286,12 @@ export class FirebaseStorageController {
     @CurrentUser() user?: any,
   ) {
     if (!file) {
-      throw new BadRequestException('Vui lòng chọn file ảnh mới để upload');
+      throw new BadRequestException('Please select a new image file to upload');
     }
 
     if (!oldImageUrl) {
       throw new BadRequestException(
-        'Vui lòng cung cấp URL ảnh cũ cần thay thế',
+        'Please provide the URL of the old image to be replaced',
       );
     }
 
@@ -267,7 +303,7 @@ export class FirebaseStorageController {
     );
 
     return {
-      message: 'Cập nhật ảnh thành công',
+      message: 'Image updated successfully',
       newImageUrl,
       oldImageUrl,
     };
@@ -278,7 +314,7 @@ export class FirebaseStorageController {
   @ApiOperation({ summary: 'Test Firebase Storage connection' })
   @ApiResponse({
     status: 200,
-    description: 'Test thành công',
+    description: 'Test successful',
     schema: {
       type: 'object',
       properties: {
@@ -287,9 +323,13 @@ export class FirebaseStorageController {
       },
     },
   })
+  /**
+   * Tests the connectivity of the Firebase Storage controller.
+   * @returns A status message indicating the controller is active.
+   */
   async testConnection() {
     return {
-      message: 'Firebase Storage controller đang hoạt động!',
+      message: 'Firebase Storage controller is active!',
       status: 'OK',
     };
   }

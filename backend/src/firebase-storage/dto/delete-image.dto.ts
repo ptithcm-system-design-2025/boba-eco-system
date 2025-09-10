@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class DeleteImageDto {
   @ApiProperty({
-    description: 'URL đầy đủ của ảnh cần xóa',
+    description: 'The full URL of the image to be deleted',
     example: 'https://storage.googleapis.com/your-bucket/products/image.jpg',
   })
   @IsNotEmpty()

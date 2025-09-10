@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UploadImageDto {
   @ApiProperty({
-    description: 'Tên file tùy chọn (sẽ tự generate nếu không có)',
+    description: 'Optional file name (will be auto-generated if not provided)',
     required: false,
     maxLength: 100,
     example: 'product-image-1.jpg',
@@ -14,7 +14,7 @@ export class UploadImageDto {
   fileName?: string;
 
   @ApiProperty({
-    description: 'Thư mục lưu trữ (mặc định: products)',
+    description: 'Storage folder (default: products)',
     required: false,
     maxLength: 50,
     example: 'products',
