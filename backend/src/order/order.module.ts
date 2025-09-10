@@ -3,6 +3,9 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
+/**
+ * The module for managing orders.
+ */
 @Module({
   imports: [PrismaModule],
   controllers: [OrderController],

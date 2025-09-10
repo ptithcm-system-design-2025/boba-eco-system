@@ -18,7 +18,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ValidateDiscountDto } from './dto/validate-discount.dto';
 import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
-import { order, Prisma, order_status_enum } from '../generated/prisma/client'; // Import Prisma namespace for types
+import { order, Prisma, order_status_enum } from '../generated/prisma/client';
 import { ORDER_STATUS_VALUES } from '../common/constants/enums';
 import {
   ApiTags,
@@ -46,12 +46,11 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new order - Tất cả role' })
+  @ApiOperation({ summary: 'Create a new order (All roles)' })
   @ApiBody({ type: CreateOrderDto })
   @ApiResponse({
     status: 201,
-    description:
-      'Order created successfully.' /*, type: OrderEntity (nếu có) */,
+    description: 'Order created successfully.',
   })
   @ApiResponse({
     status: 400,
@@ -77,7 +76,7 @@ export class OrderController {
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
     summary:
-      'Get all orders with pagination and filtering - Chỉ MANAGER và STAFF',
+      'Get all orders with pagination and filtering (MANAGER and STAFF only)',
   })
   @ApiQuery({
     name: 'page',
@@ -117,7 +116,7 @@ export class OrderController {
       properties: {
         data: {
           type: 'array',
-          items: { type: 'object' }, // Có thể cải thiện bằng cách định nghĩa order schema
+          items: { type: 'object' },
         },
         pagination: {
           $ref: '#/components/schemas/PaginationMetadata',
@@ -150,7 +149,7 @@ export class OrderController {
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @ApiOperation({
     summary:
-      'Get a specific order by ID - Tất cả role (CUSTOMER chỉ xem order của mình)',
+      'Get a specific order by ID (All roles - CUSTOMER can only view their own orders)',
   })
   @ApiParam({ name: 'id', description: 'Order ID', type: Number })
   @ApiResponse({ status: 200, description: 'The order details' })
@@ -167,7 +166,7 @@ export class OrderController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
-  @ApiOperation({ summary: 'Update an existing order - Chỉ MANAGER và STAFF' })
+  @ApiOperation({ summary: 'Update an existing order (MANAGER and STAFF only)' })
   @ApiParam({ name: 'id', description: 'Order ID', type: Number })
   @ApiBody({ type: UpdateOrderDto })
   @ApiResponse({ status: 200, description: 'Order updated successfully.' })
@@ -198,21 +197,21 @@ export class OrderController {
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Hủy đơn hàng - Tất cả role',
+    summary: 'Cancel an order (All roles)',
     description:
-      'Thay đổi trạng thái đơn hàng thành CANCELLED. CUSTOMER chỉ có thể hủy đơn hàng của mình và chỉ khi đơn hàng ở trạng thái PENDING.',
+      'Changes the order status to CANCELLED. A CUSTOMER can only cancel their own order and only when it is in PENDING status.',
   })
   @ApiParam({ name: 'id', description: 'Order ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Đơn hàng đã được hủy thành công' })
+  @ApiResponse({ status: 200, description: 'Order cancelled successfully.' })
   @ApiResponse({
     status: 400,
     description:
-      'Bad Request - Đơn hàng không thể hủy (đã hoàn thành hoặc đã hủy)',
+      'Bad Request - Order cannot be cancelled (already completed or cancelled)',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - Không có quyền hủy đơn hàng này',
+    description: 'Forbidden - Insufficient permissions to cancel this order',
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
   async cancelOrder(@Param('id', ParseIntPipe) id: number): Promise<order> {
@@ -222,8 +221,8 @@ export class OrderController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @HttpCode(HttpStatus.OK) // Trả về order đã xóa thay vì 204 No Content
-  @ApiOperation({ summary: 'Delete an order by ID - Chỉ MANAGER' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete an order by ID (MANAGER only)' })
   @ApiParam({ name: 'id', description: 'Order ID', type: Number })
   @ApiResponse({
     status: 200,
@@ -235,7 +234,6 @@ export class OrderController {
     description: 'Forbidden - Insufficient permissions',
   })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  // @ApiResponse({ status: 400, description: 'Cannot delete completed order (tùy business logic)' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<order> {
     return this.orderService.remove(id);
   }
@@ -244,10 +242,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER)
   @ApiOperation({
-    summary: 'Lấy đơn hàng theo nhân viên với pagination - STAFF/MANAGER',
+    summary: 'Get orders by employee with pagination (STAFF/MANAGER)',
   })
   @ApiParam({ name: 'employeeId', description: 'Employee ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Danh sách đơn hàng của nhân viên' })
+  @ApiResponse({ status: 200, description: 'List of orders for the employee' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 403,
@@ -264,12 +262,12 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER)
   @ApiOperation({
-    summary: 'Lấy đơn hàng theo khách hàng với pagination - STAFF/MANAGER',
+    summary: 'Get orders by customer with pagination (STAFF/MANAGER)',
   })
   @ApiParam({ name: 'customerId', description: 'Customer ID', type: Number })
   @ApiResponse({
     status: 200,
-    description: 'Danh sách đơn hàng của khách hàng',
+    description: 'List of orders for the customer',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -287,9 +285,9 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Lấy đơn hàng theo trạng thái với pagination - MANAGER/STAFF',
+    summary: 'Get orders by status with pagination (MANAGER/STAFF)',
   })
-  @ApiParam({ 
+  @ApiParam({
     name: 'status', 
     description: 'Order status (PROCESSING, CANCELLED, COMPLETED)', 
     type: String 
@@ -308,7 +306,7 @@ export class OrderController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Danh sách đơn hàng theo trạng thái',
+    description: 'List of orders by status',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -327,13 +325,13 @@ export class OrderController {
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Kiểm tra tính hợp lệ của các discount cho đơn hàng - Tất cả role',
-    description: 'Validate xem các discount có thể áp dụng cho đơn hàng không, bao gồm kiểm tra điều kiện khách hàng, membership, và giới hạn sử dụng',
+    summary: 'Validate discounts for an order (All roles)',
+    description: 'Validates if discounts can be applied to an order, including checking customer conditions, membership, and usage limits.',
   })
   @ApiBody({ type: ValidateDiscountDto })
   @ApiResponse({
     status: 200,
-    description: 'Kết quả validation các discount với thông tin chi tiết',
+    description: 'Discount validation result with detailed information',
     schema: {
       type: 'object',
       properties: {

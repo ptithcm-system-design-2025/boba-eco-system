@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderDiscountDto {
   @ApiProperty({
-    description: 'ID của chương trình giảm giá (discount_id)',
+    description: 'The ID of the discount program (discount_id)',
     example: 1,
   })
   @IsInt()
@@ -13,5 +13,5 @@ export class CreateOrderDiscountDto {
   @Type(() => Number)
   discount_id: number;
 
-  // discount_amount sẽ được tính toán bởi service dựa trên thông tin của Discount và Order
+  // discount_amount will be calculated by the service based on Discount and Order information
 }

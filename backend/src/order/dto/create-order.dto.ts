@@ -16,7 +16,7 @@ import { CreateOrderProductDto } from './create-order-product.dto';
 import { CreateOrderDiscountDto } from './create-order-discount.dto';
 
 export class CreateOrderDto {
-  @ApiProperty({ description: 'ID của nhân viên tạo đơn', example: 1 })
+  @ApiProperty({ description: 'The ID of the employee creating the order', example: 1 })
   @IsInt()
   @IsNotEmpty()
   @Min(1)
@@ -24,7 +24,7 @@ export class CreateOrderDto {
   employee_id: number;
 
   @ApiProperty({
-    description: 'ID của khách hàng (nếu có)',
+    description: 'The ID of the customer (if any)',
     example: 1,
     required: false,
   })
@@ -35,8 +35,8 @@ export class CreateOrderDto {
   customer_id?: number;
 
   @ApiProperty({
-    description: 'Ghi chú tùy chỉnh cho toàn bộ đơn hàng',
-    example: 'Giao hàng sau 5 giờ chiều',
+    description: 'Custom note for the entire order',
+    example: 'Deliver after 5 PM',
     maxLength: 1000,
     required: false,
   })
@@ -46,7 +46,7 @@ export class CreateOrderDto {
   customize_note?: string;
 
   @ApiProperty({
-    description: 'Danh sách sản phẩm trong đơn hàng',
+    description: 'List of products in the order',
     type: [CreateOrderProductDto],
     minItems: 1,
   })
@@ -57,7 +57,7 @@ export class CreateOrderDto {
   products: CreateOrderProductDto[];
 
   @ApiProperty({
-    description: 'Danh sách mã giảm giá áp dụng cho đơn hàng',
+    description: 'List of discount codes applied to the order',
     type: [CreateOrderDiscountDto],
     required: false,
   })
@@ -66,7 +66,7 @@ export class CreateOrderDto {
   @Type(() => CreateOrderDiscountDto)
   discounts?: CreateOrderDiscountDto[];
 
-  // status sẽ được service quản lý, mặc định là PROCESSING
+  // status will be managed by the service, defaulting to PROCESSING
 
-  // order_time, total_amount, final_amount sẽ được service tính toán và thiết lập.
+  // order_time, total_amount, final_amount will be calculated and set by the service.
 }

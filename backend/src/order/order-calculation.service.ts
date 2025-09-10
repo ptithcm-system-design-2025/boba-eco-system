@@ -17,23 +17,20 @@ export class OrderCalculationService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Tính toán chi tiết giá tiền cho order mà không tạo order thực sự
+   * Calculates the detailed pricing for an order without actually creating it.
    */
   async calculateOrder(
     calculateOrderDto: CalculateOrderDto,
   ): Promise<OrderCalculationResult> {
     const { products, discounts } = calculateOrderDto;
 
-    // 1. Tính tổng tiền từ products
     const productCalculation = await this.calculateProductsTotal(products);
 
-    // 2. Tính discount
     const discountCalculation = await this.calculateDiscounts(
       discounts || [],
       productCalculation.total_amount,
     );
 
-    // 3. Tính final amount
     const final_amount = Math.max(
       0,
       productCalculation.total_amount -
@@ -50,7 +47,7 @@ export class OrderCalculationService {
   }
 
   /**
-   * Tính tổng tiền từ danh sách products
+   * Calculates the total amount from a list of products.
    */
   async calculateProductsTotal(products: CalculateOrderProductDto[]) {
     if (!products || products.length === 0) {
@@ -80,7 +77,7 @@ export class OrderCalculationService {
 
       if (!productPriceInfo) {
         throw new NotFoundException(
-          `Giá sản phẩm với ID ${productDto.product_price_id} không tồn tại.`,
+          `Product price with ID ${productDto.product_price_id} not found.`,
         );
       }
 
@@ -111,7 +108,7 @@ export class OrderCalculationService {
   }
 
   /**
-   * Tính tổng discount áp dụng
+   * Calculates the total discount to be applied.
    */
   async calculateDiscounts(
     discounts: CalculateOrderDiscountDto[],
@@ -142,11 +139,10 @@ export class OrderCalculationService {
 
       if (!discountInfo) {
         throw new NotFoundException(
-          `Giảm giá với ID ${discountDto.discount_id} không tồn tại.`,
+          `Discount with ID ${discountDto.discount_id} not found.`,
         );
       }
 
-      // Kiểm tra tính hợp lệ của discount
       if (!discountInfo.is_active) {
         throw new UnprocessableEntityException(
           `Discount '${discountInfo.name}' is not active.`,
@@ -168,17 +164,15 @@ export class OrderCalculationService {
 
       if (totalAmountDecimal.lessThan(discountInfo.min_required_order_value)) {
         throw new UnprocessableEntityException(
-          `Tổng đơn hàng (${total_amount}) không đạt giá trị tối thiểu yêu cầu (${discountInfo.min_required_order_value}) cho giảm giá '${discountInfo.name}'.`,
+          `Order total (${total_amount}) does not meet the minimum required value (${discountInfo.min_required_order_value}) for discount '${discountInfo.name}'.`,
         );
       }
 
-      // Tính discount amount
       const discountPercentage = new Decimal(
         discountInfo.discount_value,
       ).dividedBy(100);
       let discountAmount = totalAmountDecimal.times(discountPercentage);
 
-      // Áp dụng max discount amount
       const maxDiscount = new Decimal(discountInfo.max_discount_amount);
       if (discountAmount.greaterThan(maxDiscount)) {
         discountAmount = maxDiscount;
@@ -203,7 +197,7 @@ export class OrderCalculationService {
   }
 
   /**
-   * Tính lại giá cho order hiện có (dùng cho update)
+   * Recalculates the price for an existing order (used for updates).
    */
   async recalculateExistingOrder(
     orderId: number,
@@ -230,10 +224,9 @@ export class OrderCalculationService {
     });
 
     if (!order) {
-      throw new NotFoundException(`Đơn hàng với ID ${orderId} không tồn tại.`);
+      throw new NotFoundException(`Order with ID ${orderId} not found.`);
     }
 
-    // Chuyển đổi dữ liệu order hiện có thành DTO
     const products: CalculateOrderProductDto[] = order.order_product.map(
       (op) => ({
         product_price_id: op.product_price_id,

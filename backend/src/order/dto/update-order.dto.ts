@@ -12,14 +12,14 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { CreateOrderProductDto } from './create-order-product.dto'; // Giả sử có thể cập nhật products
-import { CreateOrderDiscountDto } from './create-order-discount.dto'; // Giả sử có thể cập nhật discounts
+import { CreateOrderProductDto } from './create-order-product.dto'; // Assuming products can be updated
+import { CreateOrderDiscountDto } from './create-order-discount.dto'; // Assuming discounts can be updated
 
-// Có thể cần UpdateOrderProductDto và UpdateOrderDiscountDto nếu muốn logic cập nhật chi tiết hơn
+// May need UpdateOrderProductDto and UpdateOrderDiscountDto for more detailed update logic
 
 export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   @ApiProperty({
-    description: 'ID của nhân viên cập nhật (nếu có thay đổi)',
+    description: 'The ID of the updating employee (if changed)',
     example: 2,
     required: false,
   })
@@ -30,7 +30,7 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   employee_id?: number;
 
   @ApiProperty({
-    description: 'ID của khách hàng cập nhật (nếu có thay đổi)',
+    description: 'The ID of the updating customer (if changed)',
     example: 2,
     required: false,
   })
@@ -41,8 +41,8 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   customer_id?: number;
 
   @ApiProperty({
-    description: 'Ghi chú tùy chỉnh cập nhật',
-    example: 'Đã xác nhận, giao gấp',
+    description: 'Updated custom note',
+    example: 'Confirmed, urgent delivery',
     maxLength: 1000,
     required: false,
   })
@@ -51,24 +51,24 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   @MaxLength(1000)
   customize_note?: string;
 
-  // status chỉ được cập nhật thông qua business logic, không cho phép client gửi trực tiếp
+  // status can only be updated through business logic, not directly by the client
 
-  // Cập nhật products và discounts: client gửi lại toàn bộ mảng mới.
-  // Nếu mảng rỗng hoặc không gửi, service có thể giữ nguyên hoặc xóa hết tùy logic.
-  // Để có logic thêm/sửa/xóa chi tiết từng item, cần DTOs và service phức tạp hơn.
+  // To update products and discounts: the client sends the entire new array.
+  // If the array is empty or not sent, the service can either keep the existing items or delete them, depending on the logic.
+  // For more detailed add/edit/delete logic for individual items, more complex DTOs and services are needed.
   @ApiProperty({
-    description: '(Thay thế) Danh sách sản phẩm trong đơn hàng',
+    description: '(Replacement) List of products in the order',
     type: [CreateOrderProductDto],
     required: false,
   })
   @IsOptional()
-  @ArrayMinSize(0) // Cho phép gửi mảng rỗng để xóa hết sản phẩm (tùy logic service)
+  @ArrayMinSize(0) // Allows sending an empty array to delete all products (depending on service logic)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderProductDto)
   products?: CreateOrderProductDto[];
 
   @ApiProperty({
-    description: '(Thay thế) Danh sách mã giảm giá áp dụng',
+    description: '(Replacement) List of applied discount codes',
     type: [CreateOrderDiscountDto],
     required: false,
   })

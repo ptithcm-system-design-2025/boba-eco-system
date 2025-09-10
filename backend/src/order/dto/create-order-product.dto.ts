@@ -11,7 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderProductDto {
   @ApiProperty({
-    description: 'ID của giá sản phẩm (product_price_id)',
+    description: 'The ID of the product price (product_price_id)',
     example: 1,
   })
   @IsInt()
@@ -20,7 +20,7 @@ export class CreateOrderProductDto {
   @Type(() => Number)
   product_price_id: number;
 
-  @ApiProperty({ description: 'Số lượng sản phẩm', example: 2, minimum: 1 })
+  @ApiProperty({ description: 'The quantity of the product', example: 2, minimum: 1 })
   @IsInt()
   @IsNotEmpty()
   @Min(1)
@@ -28,8 +28,8 @@ export class CreateOrderProductDto {
   quantity: number;
 
   @ApiProperty({
-    description: 'Ghi chú tùy chọn cho sản phẩm trong đơn hàng',
-    example: 'Ít đường',
+    description: 'Optional note for the product in the order',
+    example: 'Less sugar',
     maxLength: 500,
     required: false,
   })
