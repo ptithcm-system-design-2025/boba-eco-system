@@ -16,7 +16,11 @@ import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { BulkDeleteEmployeeDto } from './dto/bulk-delete-employee.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
+import {
+  PaginationDto,
+  PaginatedResult,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
 import { employee } from '../generated/prisma/client';
 import {
   ApiTags,
@@ -46,47 +50,61 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ 
-    summary: 'Tạo nhân viên mới - Chỉ MANAGER',
-    description: 'Tạo nhân viên mới trong hệ thống với thông tin cá nhân và tài khoản đăng nhập tự động'
+  @ApiOperation({
+    summary: 'Create a new employee - MANAGER only',
+    description:
+      'Creates a new employee in the system with personal information and an automatically generated login account.',
   })
   @ApiBody({ type: CreateEmployeeDto })
-  @ApiResponse({ 
-    status: 201, 
-    description: 'Nhân viên được tạo thành công',
+  @ApiResponse({
+    status: 201,
+    description: 'Employee created successfully.',
     schema: {
       type: 'object',
       properties: {
-        employee_id: { type: 'number', description: 'ID nhân viên' },
-        full_name: { type: 'string', description: 'Họ và tên nhân viên' },
-        email: { type: 'string', description: 'Email' },
-        phone: { type: 'string', description: 'Số điện thoại' },
-        address: { type: 'string', description: 'Địa chỉ', nullable: true },
-        date_of_birth: { type: 'string', format: 'date', description: 'Ngày sinh', nullable: true },
-        gender: { type: 'string', description: 'Giới tính', nullable: true },
-        hire_date: { type: 'string', format: 'date', description: 'Ngày tuyển dụng' },
-        position: { type: 'string', description: 'Chức vụ', nullable: true },
-        salary: { type: 'number', description: 'Lương', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động' },
-        created_at: { type: 'string', format: 'date-time', description: 'Thời gian tạo' }
-      }
-    }
+        employee_id: { type: 'number', description: 'Employee ID' },
+        full_name: { type: 'string', description: 'Full name' },
+        email: { type: 'string', description: 'Email address' },
+        phone: { type: 'string', description: 'Phone number' },
+        address: { type: 'string', description: 'Address', nullable: true },
+        date_of_birth: {
+          type: 'string',
+          format: 'date',
+          description: 'Date of birth',
+          nullable: true,
+        },
+        gender: { type: 'string', description: 'Gender', nullable: true },
+        hire_date: {
+          type: 'string',
+          format: 'date',
+          description: 'Hire date',
+        },
+        position: { type: 'string', description: 'Position', nullable: true },
+        salary: { type: 'number', description: 'Salary', nullable: true },
+        is_active: { type: 'boolean', description: 'Active status' },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Creation timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu đầu vào không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid input data format.',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể tạo nhân viên',
+    description: 'Forbidden - Only MANAGER can create employees.',
   })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Xung đột dữ liệu - Email hoặc số điện thoại đã tồn tại' 
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - Email or phone number already exists.',
   })
   async create(
     @Body() createEmployeeDto: CreateEmployeeDto,
@@ -98,26 +116,27 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Lấy danh sách nhân viên với phân trang - MANAGER và STAFF',
-    description: 'Trả về danh sách tất cả nhân viên trong hệ thống với thông tin cơ bản và trạng thái'
+    summary: 'Get a paginated list of employees - MANAGER and STAFF',
+    description:
+      'Returns a list of all employees in the system with basic information and status.',
   })
   @ApiQuery({
     name: 'page',
     required: false,
     type: Number,
-    description: 'Số trang (mặc định: 1)',
-    example: 1
+    description: 'Page number (default: 1)',
+    example: 1,
   })
   @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
-    description: 'Số lượng bản ghi trên mỗi trang (mặc định: 10)',
-    example: 10
+    description: 'Number of records per page (default: 10)',
+    example: 10,
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Danh sách nhân viên được phân trang thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved paginated list of employees.',
     schema: {
       type: 'object',
       properties: {
@@ -134,23 +153,24 @@ export class EmployeeController {
               hire_date: { type: 'string', format: 'date' },
               is_active: { type: 'boolean' },
               created_at: { type: 'string', format: 'date-time' },
-              updated_at: { type: 'string', format: 'date-time' }
-            }
-          }
+              updated_at: { type: 'string', format: 'date-time' },
+            },
+          },
         },
         pagination: {
           $ref: '#/components/schemas/PaginationMetadata',
-        }
-      }
-    }
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER và STAFF mới có thể xem danh sách nhân viên',
+    description:
+      'Forbidden - Only MANAGER and STAFF can view the employee list.',
   })
   async findAll(
     @Query() paginationDto: PaginationDto,
@@ -158,48 +178,53 @@ export class EmployeeController {
     return this.employeeService.findAll(paginationDto);
   }
 
-  @Get('email/:email') // Endpoint ví dụ để tìm theo email
+  @Get('email/:email')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ 
-    summary: 'Tìm nhân viên theo email - Chỉ MANAGER',
-    description: 'Tìm kiếm thông tin nhân viên dựa trên địa chỉ email để hỗ trợ quản lý nhân sự'
+  @ApiOperation({
+    summary: 'Find an employee by email - MANAGER only',
+    description:
+      'Searches for employee information based on their email address to support HR management.',
   })
-  @ApiParam({ 
-    name: 'email', 
-    description: 'Địa chỉ email của nhân viên cần tìm', 
+  @ApiParam({
+    name: 'email',
+    description: 'The email address of the employee to find',
     type: String,
-    example: 'nhanvien@example.com'
+    example: 'employee@example.com',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Thông tin chi tiết nhân viên',
+  @ApiResponse({
+    status: 200,
+    description: 'Detailed employee information.',
     schema: {
       type: 'object',
       properties: {
-        employee_id: { type: 'number', description: 'ID nhân viên' },
-        full_name: { type: 'string', description: 'Họ và tên nhân viên' },
-        email: { type: 'string', description: 'Email' },
-        phone: { type: 'string', description: 'Số điện thoại' },
-        address: { type: 'string', description: 'Địa chỉ', nullable: true },
-        position: { type: 'string', description: 'Chức vụ', nullable: true },
-        hire_date: { type: 'string', format: 'date', description: 'Ngày tuyển dụng' },
-        salary: { type: 'number', description: 'Lương', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động' }
-      }
-    }
+        employee_id: { type: 'number', description: 'Employee ID' },
+        full_name: { type: 'string', description: 'Full name' },
+        email: { type: 'string', description: 'Email address' },
+        phone: { type: 'string', description: 'Phone number' },
+        address: { type: 'string', description: 'Address', nullable: true },
+        position: { type: 'string', description: 'Position', nullable: true },
+        hire_date: {
+          type: 'string',
+          format: 'date',
+          description: 'Hire date',
+        },
+        salary: { type: 'number', description: 'Salary', nullable: true },
+        is_active: { type: 'boolean', description: 'Active status' },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể tìm kiếm nhân viên theo email',
+    description: 'Forbidden - Only MANAGER can search for employees by email.',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên với email được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - No employee found with the provided email.',
   })
   async findByEmail(@Param('email') email: string): Promise<employee | null> {
     return this.employeeService.findByEmail(email);
@@ -209,55 +234,72 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Xóa nhiều nhân viên cùng lúc - Chỉ MANAGER',
-    description: 'Xóa nhiều nhân viên cùng lúc. Các nhân viên có đơn hàng hoặc dữ liệu liên quan sẽ không thể xóa và sẽ được báo lỗi'
+  @ApiOperation({
+    summary: 'Bulk delete employees - MANAGER only',
+    description:
+      'Deletes multiple employees at once. Employees with associated orders or data cannot be deleted and will be reported as failed.',
   })
   @ApiBody({ type: BulkDeleteEmployeeDto })
   @ApiResponse({
     status: 200,
-    description: 'Quá trình xóa hàng loạt hoàn thành với kết quả chi tiết',
+    description: 'Bulk delete process completed with detailed results.',
     schema: {
       type: 'object',
       properties: {
         deleted: {
           type: 'array',
           items: { type: 'number' },
-          description: 'Danh sách ID các nhân viên đã xóa thành công'
+          description: 'List of successfully deleted employee IDs.',
         },
         failed: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              id: { type: 'number', description: 'ID nhân viên không thể xóa' },
-              reason: { type: 'string', description: 'Lý do không thể xóa' }
-            }
+              id: {
+                type: 'number',
+                description: 'ID of the employee that could not be deleted',
+              },
+              reason: {
+                type: 'string',
+                description: 'Reason for deletion failure',
+              },
+            },
           },
-          description: 'Danh sách các nhân viên không thể xóa và lý do'
+          description:
+            'List of employees that could not be deleted and the reasons why.',
         },
         summary: {
           type: 'object',
           properties: {
-            total: { type: 'number', description: 'Tổng số nhân viên được yêu cầu xóa' },
-            success: { type: 'number', description: 'Số nhân viên xóa thành công' },
-            failed: { type: 'number', description: 'Số nhân viên không thể xóa' }
-          }
-        }
-      }
-    }
+            total: {
+              type: 'number',
+              description: 'Total number of employees requested for deletion.',
+            },
+            success: {
+              type: 'number',
+              description: 'Number of successfully deleted employees.',
+            },
+            failed: {
+              type: 'number',
+              description: 'Number of employees that could not be deleted.',
+            },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Danh sách ID không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid ID list format.',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa nhân viên',
+    description: 'Forbidden - Only MANAGER can delete employees.',
   })
   async bulkDelete(@Body() bulkDeleteDto: BulkDeleteEmployeeDto): Promise<{
     deleted: number[];
@@ -270,49 +312,68 @@ export class EmployeeController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
-  @ApiOperation({ 
-    summary: 'Lấy thông tin nhân viên theo ID - MANAGER và STAFF',
-    description: 'Lấy thông tin chi tiết của một nhân viên cụ thể bao gồm thông tin cá nhân và công việc'
+  @ApiOperation({
+    summary: 'Get employee information by ID - MANAGER and STAFF',
+    description:
+      'Retrieves detailed information for a specific employee, including personal and job-related data.',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của nhân viên cần lấy thông tin', 
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the employee to retrieve information for',
     type: Number,
-    example: 1
+    example: 1,
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Thông tin chi tiết nhân viên',
+  @ApiResponse({
+    status: 200,
+    description: 'Detailed employee information.',
     schema: {
       type: 'object',
       properties: {
-        employee_id: { type: 'number', description: 'ID nhân viên' },
-        full_name: { type: 'string', description: 'Họ và tên nhân viên' },
-        email: { type: 'string', description: 'Email' },
-        phone: { type: 'string', description: 'Số điện thoại' },
-        address: { type: 'string', description: 'Địa chỉ', nullable: true },
-        date_of_birth: { type: 'string', format: 'date', description: 'Ngày sinh', nullable: true },
-        gender: { type: 'string', description: 'Giới tính', nullable: true },
-        hire_date: { type: 'string', format: 'date', description: 'Ngày tuyển dụng' },
-        position: { type: 'string', description: 'Chức vụ', nullable: true },
-        salary: { type: 'number', description: 'Lương', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động' },
-        created_at: { type: 'string', format: 'date-time', description: 'Thời gian tạo' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        employee_id: { type: 'number', description: 'Employee ID' },
+        full_name: { type: 'string', description: 'Full name' },
+        email: { type: 'string', description: 'Email address' },
+        phone: { type: 'string', description: 'Phone number' },
+        address: { type: 'string', description: 'Address', nullable: true },
+        date_of_birth: {
+          type: 'string',
+          format: 'date',
+          description: 'Date of birth',
+          nullable: true,
+        },
+        gender: { type: 'string', description: 'Gender', nullable: true },
+        hire_date: {
+          type: 'string',
+          format: 'date',
+          description: 'Hire date',
+        },
+        position: { type: 'string', description: 'Position', nullable: true },
+        salary: { type: 'number', description: 'Salary', nullable: true },
+        is_active: { type: 'boolean', description: 'Active status' },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Creation timestamp',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Last update timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER và STAFF mới có thể xem thông tin nhân viên',
+    description:
+      'Forbidden - Only MANAGER and STAFF can view employee information.',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - No employee found with the provided ID.',
   })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -323,54 +384,74 @@ export class EmployeeController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ 
-    summary: 'Cập nhật thông tin nhân viên - Chỉ MANAGER',
-    description: 'Cập nhật thông tin cá nhân và công việc của nhân viên như chức vụ, lương, địa chỉ, v.v.'
+  @ApiOperation({
+    summary: 'Update employee information - MANAGER only',
+    description:
+      'Updates personal and job-related information for an employee, such as position, salary, address, etc.',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của nhân viên cần cập nhật', 
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the employee to update',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiBody({ type: UpdateEmployeeDto })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Thông tin nhân viên được cập nhật thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Employee information updated successfully.',
     schema: {
       type: 'object',
       properties: {
-        employee_id: { type: 'number', description: 'ID nhân viên' },
-        full_name: { type: 'string', description: 'Họ và tên đã cập nhật' },
-        email: { type: 'string', description: 'Email đã cập nhật' },
-        phone: { type: 'string', description: 'Số điện thoại đã cập nhật' },
-        address: { type: 'string', description: 'Địa chỉ đã cập nhật', nullable: true },
-        position: { type: 'string', description: 'Chức vụ đã cập nhật', nullable: true },
-        salary: { type: 'number', description: 'Lương đã cập nhật', nullable: true },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động đã cập nhật' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        employee_id: { type: 'number', description: 'Employee ID' },
+        full_name: { type: 'string', description: 'Updated full name' },
+        email: { type: 'string', description: 'Updated email address' },
+        phone: { type: 'string', description: 'Updated phone number' },
+        address: {
+          type: 'string',
+          description: 'Updated address',
+          nullable: true,
+        },
+        position: {
+          type: 'string',
+          description: 'Updated position',
+          nullable: true,
+        },
+        salary: {
+          type: 'number',
+          description: 'Updated salary',
+          nullable: true,
+        },
+        is_active: {
+          type: 'boolean',
+          description: 'Updated active status',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Last update timestamp',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu cập nhật không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid update data format.',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể cập nhật thông tin nhân viên',
+    description: 'Forbidden - Only MANAGER can update employee information.',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - No employee found with the provided ID.',
   })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Xung đột dữ liệu - Email hoặc số điện thoại đã tồn tại' 
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - Email or phone number already exists.',
   })
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -383,45 +464,51 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @ApiOperation({
-    summary: 'Khóa/mở khóa tài khoản nhân viên - Chỉ MANAGER',
-    description: 'Thay đổi trạng thái khóa của tài khoản nhân viên để ngăn chặn hoặc cho phép đăng nhập hệ thống',
+    summary: 'Lock/unlock an employee account - MANAGER only',
+    description:
+      'Changes the lock status of an employee account to prevent or allow system login.',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID nhân viên', 
+  @ApiParam({
+    name: 'id',
+    description: 'Employee ID',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiBody({ type: LockAccountDto })
   @ApiResponse({
     status: 200,
-    description: 'Thay đổi trạng thái khóa tài khoản thành công',
+    description: 'Account lock status changed successfully.',
     schema: {
       type: 'object',
       properties: {
-        employee_id: { type: 'number', description: 'ID nhân viên' },
-        account_id: { type: 'number', description: 'ID tài khoản' },
-        is_locked: { type: 'boolean', description: 'Trạng thái khóa mới' },
-        locked_at: { type: 'string', format: 'date-time', description: 'Thời gian thay đổi trạng thái khóa', nullable: true },
-        message: { type: 'string', description: 'Thông báo kết quả' }
-      }
-    }
+        employee_id: { type: 'number', description: 'Employee ID' },
+        account_id: { type: 'number', description: 'Account ID' },
+        is_locked: { type: 'boolean', description: 'New lock status' },
+        locked_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Timestamp of the lock status change',
+          nullable: true,
+        },
+        message: { type: 'string', description: 'Result message' },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Trạng thái khóa không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid lock status format.',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể khóa/mở khóa tài khoản nhân viên',
+    description: 'Forbidden - Only MANAGER can lock/unlock employee accounts.',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên hoặc nhân viên chưa có tài khoản' 
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Employee not found or has no account.',
   })
   async lockEmployeeAccount(
     @Param('id', ParseIntPipe) employeeId: number,
@@ -438,19 +525,20 @@ export class EmployeeController {
   @Roles(ROLES.MANAGER)
   @ApiOperation({
     summary: 'Cập nhật thông tin tài khoản của nhân viên - Chỉ MANAGER',
-    description: 'Cập nhật tên đăng nhập, mật khẩu, và trạng thái tài khoản của nhân viên',
+    description:
+      'Cập nhật tên đăng nhập, mật khẩu, và trạng thái tài khoản của nhân viên',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID nhân viên', 
+  @ApiParam({
+    name: 'id',
+    description: 'ID nhân viên',
     type: Number,
-    example: 1
+    example: 1,
   })
-  @ApiParam({ 
-    name: 'accountId', 
-    description: 'ID tài khoản', 
+  @ApiParam({
+    name: 'accountId',
+    description: 'ID tài khoản',
     type: Number,
-    example: 1
+    example: 1,
   })
   @ApiBody({ type: UpdateAccountDto })
   @ApiResponse({
@@ -464,30 +552,40 @@ export class EmployeeController {
         username: { type: 'string', description: 'Tên đăng nhập đã cập nhật' },
         email: { type: 'string', description: 'Email đã cập nhật' },
         phone: { type: 'string', description: 'Số điện thoại đã cập nhật' },
-        is_active: { type: 'boolean', description: 'Trạng thái hoạt động tài khoản' },
-        updated_at: { type: 'string', format: 'date-time', description: 'Thời gian cập nhật' }
-      }
-    }
+        is_active: {
+          type: 'boolean',
+          description: 'Trạng thái hoạt động tài khoản',
+        },
+        updated_at: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Thời gian cập nhật',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Yêu cầu không hợp lệ - Dữ liệu tài khoản không đúng định dạng' 
+  @ApiResponse({
+    status: 400,
+    description:
+      'Yêu cầu không hợp lệ - Dữ liệu tài khoản không đúng định dạng',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Chưa xác thực - Token không hợp lệ',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể cập nhật tài khoản nhân viên',
+    description:
+      'Không có quyền truy cập - Chỉ MANAGER mới có thể cập nhật tài khoản nhân viên',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên hoặc tài khoản với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy nhân viên hoặc tài khoản với ID được cung cấp',
   })
   @ApiResponse({
     status: 409,
-    description: 'Xung đột dữ liệu - Tên đăng nhập, email hoặc số điện thoại đã tồn tại',
+    description:
+      'Xung đột dữ liệu - Tên đăng nhập, email hoặc số điện thoại đã tồn tại',
   })
   async updateEmployeeAccount(
     @Param('id', ParseIntPipe) employeeId: number,
@@ -505,35 +603,37 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ 
-    summary: 'Xóa nhân viên - Chỉ MANAGER',
-    description: 'Xóa vĩnh viễn nhân viên khỏi hệ thống. Lưu ý: Không thể xóa nhân viên có đơn hàng hoặc dữ liệu quan trọng liên quan'
+  @ApiOperation({
+    summary: 'Delete an employee - MANAGER only',
+    description:
+      'Permanently deletes an employee from the system. Note: Cannot delete employees with associated orders or other important data.',
   })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'ID của nhân viên cần xóa', 
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the employee to delete',
     type: Number,
-    example: 1
+    example: 1,
   })
-  @ApiResponse({ 
-    status: 204, 
-    description: 'Nhân viên được xóa thành công' 
+  @ApiResponse({
+    status: 204,
+    description: 'Employee deleted successfully.',
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa nhân viên',
+    description: 'Forbidden - Only MANAGER can delete employees.',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'Không tìm thấy nhân viên với ID được cung cấp' 
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - No employee found with the provided ID.',
   })
   @ApiResponse({
     status: 409,
-    description: 'Xung đột dữ liệu - Không thể xóa nhân viên có đơn hàng hoặc dữ liệu quan trọng liên quan',
+    description:
+      'Conflict - Cannot delete employee with associated orders or other important data.',
   })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.employeeService.remove(id);
@@ -543,31 +643,32 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Kiểm tra hoạt động của Employee Controller - Chỉ MANAGER',
-    description: 'Endpoint để kiểm tra xem Employee Controller có hoạt động bình thường không (smoke test)'
+  @ApiOperation({
+    summary: 'Test Employee Controller - MANAGER only',
+    description:
+      'An endpoint to check if the Employee Controller is working correctly (smoke test).',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Kiểm tra thành công',
+  @ApiResponse({
+    status: 200,
+    description: 'Test successful.',
     schema: {
       type: 'object',
       properties: {
-        message: { 
-          type: 'string', 
-          description: 'Thông báo xác nhận controller hoạt động bình thường',
-          example: 'Employee controller is working!'
-        }
-      }
-    }
+        message: {
+          type: 'string',
+          description: 'Confirmation message that the controller is working.',
+          example: 'Employee controller is working!',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Chưa xác thực - Token không hợp lệ' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền truy cập - Chỉ MANAGER mới có thể thực hiện kiểm tra',
+    description: 'Forbidden - Only MANAGER can perform this test.',
   })
   async test(): Promise<{ message: string }> {
     return { message: 'Employee controller is working!' };

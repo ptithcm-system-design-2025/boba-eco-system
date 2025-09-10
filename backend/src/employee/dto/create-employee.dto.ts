@@ -10,70 +10,73 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateEmployeeDto {
   @ApiProperty({
-    description: 'Tên của nhân viên',
-    example: 'Nguyễn',
+    description: 'The first name of the employee',
+    example: 'John',
     maxLength: 70,
     type: String,
   })
-  @IsString({ message: 'Tên phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Tên không được để trống' })
-  @MaxLength(70, { message: 'Tên không được vượt quá 70 ký tự' })
+  @IsString({ message: 'First name must be a string' })
+  @IsNotEmpty({ message: 'First name is required' })
+  @MaxLength(70, { message: 'First name must not exceed 70 characters' })
   first_name: string;
 
   @ApiProperty({
-    description: 'Họ và tên đệm của nhân viên',
-    example: 'Văn An',
+    description: 'The last name of the employee',
+    example: 'Doe',
     maxLength: 70,
     type: String,
   })
-  @IsString({ message: 'Họ phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Họ không được để trống' })
-  @MaxLength(70, { message: 'Họ không được vượt quá 70 ký tự' })
+  @IsString({ message: 'Last name must be a string' })
+  @IsNotEmpty({ message: 'Last name is required' })
+  @MaxLength(70, { message: 'Last name must not exceed 70 characters' })
   last_name: string;
 
   @ApiProperty({
-    description: 'Địa chỉ email của nhân viên',
-    example: 'employee@cakepos.com',
+    description: 'The email address of the employee',
+    example: 'employee@example.com',
     maxLength: 255,
     format: 'email',
     type: String,
   })
-  @IsEmail({}, { message: 'Email không đúng định dạng' })
-  @IsNotEmpty({ message: 'Email không được để trống' })
-  @MaxLength(255, { message: 'Email không được vượt quá 255 ký tự' })
+  @IsEmail({}, { message: 'Invalid email format' })
+  @IsNotEmpty({ message: 'Email is required' })
+  @MaxLength(255, { message: 'Email must not exceed 255 characters' })
   email: string;
 
   @ApiProperty({
-    description: 'Số điện thoại của nhân viên',
+    description: 'The phone number of the employee',
     example: '+84901234567',
     maxLength: 15,
     type: String,
   })
-  @IsPhoneNumber('VN', { message: 'Số điện thoại không đúng định dạng' })
-  @IsNotEmpty({ message: 'Số điện thoại không được để trống' })
-  @MaxLength(15, { message: 'Số điện thoại không được vượt quá 15 ký tự' })
+  @IsPhoneNumber('VN', { message: 'Invalid phone number format' })
+  @IsNotEmpty({ message: 'Phone number is required' })
+  @MaxLength(15, { message: 'Phone number must not exceed 15 characters' })
   phone: string;
 
   @ApiProperty({
-    description: 'Vị trí/chức vụ của nhân viên',
-    example: 'Nhân viên bán hàng',
+    description: 'The position of the employee',
+    example: 'Sales Staff',
     maxLength: 100,
     type: String,
   })
-  @IsString({ message: 'Vị trí phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Vị trí không được để trống' })
-  @MaxLength(100, { message: 'Vị trí không được vượt quá 100 ký tự' })
+  @IsString({ message: 'Position must be a string' })
+  @IsNotEmpty({ message: 'Position is required' })
+  @MaxLength(100, { message: 'Position must not exceed 100 characters' })
   position: string;
 
-  // Thông tin tài khoản (bắt buộc cho employee)
+  /**
+   * The username for the employee's account.
+   * This is required to create an account for the employee.
+   */
   @ApiProperty({
-    description: 'Tên đăng nhập cho tài khoản nhân viên',
+    description: 'The username for the employee account',
     example: 'employee_user',
     minLength: 3,
     type: String,
   })
-  @IsString({ message: 'Tên đăng nhập phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Tên đăng nhập không được để trống' })
-  @MinLength(3, { message: 'Tên đăng nhập phải có ít nhất 3 ký tự' })
+  @IsString({ message: 'Username must be a string' })
+  @IsNotEmpty({ message: 'Username is required' })
+  @MinLength(3, { message: 'Username must be at least 3 characters long' })
   username: string;
 }

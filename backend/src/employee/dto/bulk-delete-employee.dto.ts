@@ -4,13 +4,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class BulkDeleteEmployeeDto {
   @ApiProperty({
-    description: 'Danh sách ID của các nhân viên cần xóa',
+    description: 'A list of employee IDs to be deleted',
     example: [1, 2, 3],
     type: [Number],
   })
   @IsArray()
-  @ArrayMinSize(1, { message: 'Danh sách ID không được rỗng' })
-  @IsInt({ each: true, message: 'Mỗi ID phải là số nguyên' })
+  @ArrayMinSize(1, { message: 'The ID list must not be empty' })
+  @IsInt({ each: true, message: 'Each ID must be an integer' })
   @Type(() => Number)
   ids: number[];
 }

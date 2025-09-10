@@ -25,18 +25,17 @@ export class EmployeeService {
   async create(createEmployeeDto: CreateEmployeeDto): Promise<employee> {
     const { email, username, ...employeeData } = createEmployeeDto;
 
-    // Kiểm tra email employee đã tồn tại chưa
     const existingEmployeeByEmail = await this.prisma.employee.findUnique({
       where: { email },
     });
     if (existingEmployeeByEmail) {
-      throw new ConflictException(`Nhân viên với email '${email}' đã tồn tại.`);
+      throw new ConflictException(
+        `Employee with email '${email}' already exists.`,
+      );
     }
 
     try {
-      // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
       return await this.prisma.$transaction(async (tx) => {
-        // Bước 1: Tạo account với role STAFF
         const account = await this.accountService.create({
           username,
           password: '12345678',
@@ -44,7 +43,6 @@ export class EmployeeService {
           is_active: true,
         });
 
-        // Bước 2: Tạo employee record với account_id
         const data: Prisma.employeeCreateInput = {
           ...employeeData,
           email,
@@ -64,7 +62,9 @@ export class EmployeeService {
   }
 
   /**
-   * Xử lý lỗi khi tạo employee
+   * Handles errors during employee creation.
+   * @param error The error object.
+   * @param email The email of the employee being created.
    */
   private handleCreateError(error: any, email: string): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -72,17 +72,19 @@ export class EmployeeService {
         case 'P2002':
           const fieldDescription = this.getUniqueConstraintField(error, email);
           throw new ConflictException(
-            `Nhân viên đã tồn tại với ${fieldDescription}.`,
+            `Employee already exists with ${fieldDescription}.`,
           );
         default:
-          throw new BadRequestException(`Lỗi cơ sở dữ liệu: ${error.message}`);
+          throw new BadRequestException(`Database error: ${error.message}`);
       }
     }
     throw error;
   }
 
   /**
-   * Lấy thông tin field bị vi phạm unique constraint
+   * Gets the field that caused a unique constraint violation.
+   * @param error The Prisma error object.
+   * @param email The email of the employee.
    */
   private getUniqueConstraintField(
     error: Prisma.PrismaClientKnownRequestError,
@@ -92,11 +94,11 @@ export class EmployeeService {
       const target = error.meta.target as string[];
       if (target.includes('email')) return `email '${email}'`;
     }
-    return 'thông tin duy nhất đã cung cấp';
+    return 'the provided unique information';
   }
 
   /**
-   * Lấy role_id cho STAFF
+   * Retrieves the role ID for the 'STAFF' role.
    */
   private async getStaffRoleId(): Promise<number> {
     const staffRole = await this.prisma.role.findFirst({
@@ -104,7 +106,7 @@ export class EmployeeService {
     });
     if (!staffRole) {
       throw new BadRequestException(
-        'Vai trò STAFF không tồn tại trong hệ thống',
+        'The STAFF role does not exist in the system.',
       );
     }
     return staffRole.role_id;
@@ -160,9 +162,7 @@ export class EmployeeService {
       },
     });
     if (!emp) {
-      throw new NotFoundException(
-        `Nhân viên với ID ${employee_id} không tồn tại`,
-      );
+      throw new NotFoundException(`Employee with ID ${employee_id} not found`);
     }
     return emp;
   }
@@ -178,7 +178,6 @@ export class EmployeeService {
     employee_id: number,
     updateEmployeeDto: UpdateEmployeeDto,
   ): Promise<employee> {
-    // Chỉ cập nhật thông tin employee, không cập nhật account
     const { ...employeeData } = updateEmployeeDto;
 
     const data: Prisma.employeeUpdateInput = { ...employeeData };
@@ -195,21 +194,23 @@ export class EmployeeService {
   }
 
   /**
-   * Xử lý lỗi khi cập nhật employee
+   * Handles errors during employee update.
+   * @param error The error object.
+   * @param employee_id The ID of the employee being updated.
    */
   private handleUpdateError(error: any, employee_id: number): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       switch (error.code) {
         case 'P2025':
           throw new NotFoundException(
-            `Nhân viên với ID ${employee_id} không tồn tại`,
+            `Employee with ID ${employee_id} not found`,
           );
         case 'P2002':
           throw new ConflictException(
-            'Không thể cập nhật nhân viên, vi phạm ràng buộc duy nhất (ví dụ: email đã tồn tại).',
+            'Cannot update employee due to a unique constraint violation (e.g., email already exists).',
           );
         default:
-          throw new BadRequestException(`Lỗi cơ sở dữ liệu: ${error.message}`);
+          throw new BadRequestException(`Database error: ${error.message}`);
       }
     }
     throw error;
@@ -217,7 +218,6 @@ export class EmployeeService {
 
   async remove(employee_id: number): Promise<employee> {
     try {
-      // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
       return await this.prisma.$transaction(async (tx) => {
         const employeeWithAccount = await tx.employee.findUnique({
           where: { employee_id },
@@ -226,16 +226,14 @@ export class EmployeeService {
 
         if (!employeeWithAccount) {
           throw new NotFoundException(
-            `Nhân viên với ID ${employee_id} không tồn tại`,
+            `Employee with ID ${employee_id} not found`,
           );
         }
 
-        // Xóa employee trước
         const deletedEmployee = await tx.employee.delete({
           where: { employee_id },
         });
 
-        // Xóa account liên quan
         if (employeeWithAccount.account) {
           await this.accountService.remove(
             employeeWithAccount.account.account_id,
@@ -250,32 +248,35 @@ export class EmployeeService {
   }
 
   /**
-   * Xử lý lỗi khi xóa employee
+   * Handles errors during employee deletion.
+   * @param error The error object.
+   * @param employee_id The ID of the employee being deleted.
    */
   private handleDeleteError(error: any, employee_id: number): never {
     if (error instanceof NotFoundException) {
-      throw error; // Re-throw NotFoundException đã được xử lý
+      throw error;
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       switch (error.code) {
         case 'P2025':
           throw new NotFoundException(
-            `Nhân viên với ID ${employee_id} không tồn tại`,
+            `Employee with ID ${employee_id} not found`,
           );
         case 'P2003':
           throw new ConflictException(
-            `Không thể xóa nhân viên với ID ${employee_id} do tồn tại dữ liệu liên quan.`,
+            `Cannot delete employee with ID ${employee_id} due to related data.`,
           );
         default:
-          throw new BadRequestException(`Lỗi cơ sở dữ liệu: ${error.message}`);
+          throw new BadRequestException(`Database error: ${error.message}`);
       }
     }
     throw error;
   }
 
   /**
-   * Xóa nhiều employee theo danh sách ID
+   * Deletes multiple employees by their IDs.
+   * @param bulkDeleteDto DTO containing the list of employee IDs.
    */
   async bulkDelete(bulkDeleteDto: BulkDeleteEmployeeDto): Promise<{
     deleted: number[];
@@ -286,7 +287,6 @@ export class EmployeeService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        // Lấy thông tin employees và accounts liên quan trước khi xóa
         const employeesWithAccounts = await tx.employee.findMany({
           where: { employee_id: { in: ids } },
           include: { account: true },
@@ -298,23 +298,20 @@ export class EmployeeService {
           .filter((e) => e.account)
           .map((e) => e.account.account_id);
 
-        // Xóa employees bằng deleteMany
-        const deleteResult = await tx.employee.deleteMany({
+        await tx.employee.deleteMany({
           where: { employee_id: { in: foundIds } },
         });
 
-        // Xóa accounts liên quan nếu có
         if (accountIds.length > 0) {
           await tx.account.deleteMany({
             where: { account_id: { in: accountIds } },
           });
         }
 
-        // Tạo kết quả response
         const failed: { id: number; reason: string }[] = notFoundIds.map(
           (id) => ({
             id,
-            reason: `Nhân viên với ID ${id} không tồn tại`,
+            reason: `Employee with ID ${id} not found`,
           }),
         );
 
@@ -329,10 +326,9 @@ export class EmployeeService {
         };
       });
     } catch (error) {
-      // Nếu có lỗi trong transaction, trả về tất cả IDs là failed
       const failed: { id: number; reason: string }[] = ids.map((id) => ({
         id,
-        reason: error instanceof Error ? error.message : 'Lỗi không xác định',
+        reason: error instanceof Error ? error.message : 'Unknown error',
       }));
 
       return {
@@ -354,9 +350,7 @@ export class EmployeeService {
     });
 
     if (!employee) {
-      throw new NotFoundException(
-        `Employee với ID ${employeeId} không tồn tại`,
-      );
+      throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
 
     return this.accountService.update(employee.account.account_id, {
@@ -364,23 +358,23 @@ export class EmployeeService {
     });
   }
 
-  async updateEmployeeAccount(employeeId: number, accountId: number, updateData: any) {
-    // Kiểm tra employee tồn tại
+  async updateEmployeeAccount(
+    employeeId: number,
+    accountId: number,
+    updateData: any,
+  ) {
     const employee = await this.prisma.employee.findUnique({
       where: { employee_id: employeeId },
       include: { account: true },
     });
 
     if (!employee) {
-      throw new NotFoundException(
-        `Employee với ID ${employeeId} không tồn tại`,
-      );
+      throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
 
-    // Kiểm tra account thuộc về employee này
     if (employee.account.account_id !== accountId) {
       throw new BadRequestException(
-        `Account với ID ${accountId} không thuộc về Employee với ID ${employeeId}`,
+        `Account with ID ${accountId} does not belong to Employee with ID ${employeeId}`,
       );
     }
 
