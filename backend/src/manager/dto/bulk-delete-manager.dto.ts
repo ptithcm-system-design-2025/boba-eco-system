@@ -1,6 +1,6 @@
-import { IsArray, IsInt, ArrayMinSize } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import {ArrayMinSize, IsArray, IsInt} from 'class-validator';
+import {Type} from 'class-transformer';
+import {ApiProperty} from '@nestjs/swagger';
 
 export class BulkDeleteManagerDto {
   @ApiProperty({
