@@ -1,0 +1,33 @@
+{
+    "folders": [
+        {
+            "path": "../../boba-eco-system"
+        },
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "editor.formatOnSave": true,
+        "editor.fontFamily": "SF Pro Display",
+        "workbench.colorTheme": "Tranquility Base Light",
+        "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+        "git.inputValidationLength": 70,
+        "[scminput]": {
+            "editor.rulers": [
+                50,
+                72
+            ],
+            "editor.wrappingStrategy": "advanced",
+            "editor.wordWrap": "wordWrapColumn",
+            "editor.wordWrapColumn": 60,
+        },
+        "scm.inputFontFamily": "mono",
+        "[typescript]": {
+            "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+        },
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "always"
+        }
+    }
+}
