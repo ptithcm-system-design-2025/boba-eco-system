@@ -1,15 +1,7 @@
-import { PartialType } from '@nestjs/swagger'; // Hoặc '@nestjs/mapped-types'
-import { CreatePaymentDto } from './create-payment.dto';
-import {
-  IsOptional,
-  IsEnum,
-  IsNumber,
-  Min,
-  IsDateString,
-  IsInt,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import {ApiProperty, PartialType} from '@nestjs/swagger'; // Hoặc '@nestjs/mapped-types'
+import {CreatePaymentDto} from './create-payment.dto';
+import {IsDateString, IsNumber, IsOptional, Min,} from 'class-validator';
+import {Type} from 'class-transformer';
 
 export class UpdatePaymentDto extends PartialType(CreatePaymentDto) {
   // Ghi đè hoặc thêm các trường cụ thể cho update nếu cần

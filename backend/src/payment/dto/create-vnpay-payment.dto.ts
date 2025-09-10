@@ -1,13 +1,6 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  Min,
-  IsOptional,
-  IsString,
-  IsUrl,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import {IsInt, IsNotEmpty, IsOptional, IsString, Min,} from 'class-validator';
+import {Type} from 'class-transformer';
+import {ApiProperty} from '@nestjs/swagger';
 
 export class CreateVNPayPaymentDto {
   @ApiProperty({ description: 'ID của đơn hàng cần thanh toán', example: 1 })

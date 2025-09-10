@@ -1,38 +1,29 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import {
-  payment,
-  Prisma,
-  order as OrderModel,
-  payment_method as PaymentMethodModel,
-  payment_status_enum,
-} from '../generated/prisma/client';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
-import { VNPayService, VNPayPaymentRequest } from './vnpay.service';
-import { InvoiceService } from '../invoice/invoice.service';
-import { Decimal } from '@prisma/client/runtime/library';
+import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException,} from '@nestjs/common';
+import {PrismaService} from '../prisma/prisma.service';
+import {payment, payment_status_enum, Prisma,} from '../generated/prisma/client';
+import {CreatePaymentDto} from './dto/create-payment.dto';
+import {UpdatePaymentDto} from './dto/update-payment.dto';
+import {PaginatedResult, PaginationDto} from '../common/dto/pagination.dto';
+import {VNPayPaymentRequest, VNPayService} from './vnpay.service';
+import {InvoiceService} from '../invoice/invoice.service';
+import {Decimal} from '@prisma/client/runtime/library';
 
-// Định nghĩa kiểu cho Payment bao gồm các relations cần thiết
 type PaymentWithRelations = Prisma.paymentGetPayload<{
   include: {
     order: true;
     payment_method: true;
   };
 }>;
-
+/**
+ * Defines constants for payment method IDs.
+ */
 export const PAYMENT_METHOD = {
   CASH: 1,
   VNPAY: 2,
 } as const;
-
+/**
+ * Service for managing payments.
+ */
 @Injectable()
 export class PaymentService {
   constructor(
@@ -40,7 +31,6 @@ export class PaymentService {
     private vnpayService: VNPayService,
     private invoiceService: InvoiceService,
   ) {}
-
   async create(
     createPaymentDto: CreatePaymentDto,
   ): Promise<PaymentWithRelations> {
@@ -51,7 +41,7 @@ export class PaymentService {
       where: { order_id },
     });
     if (!order) {
-      throw new NotFoundException(`Đơn hàng với ID ${order_id} không tồn tại.`);
+      throw new NotFoundException(`Order with ID ${order_id} not found.`);
     }
 
     const paymentMethod = await this.prisma.payment_method.findUnique({
@@ -59,7 +49,7 @@ export class PaymentService {
     });
     if (!paymentMethod) {
       throw new NotFoundException(
-        `Phương thức thanh toán với ID ${payment_method_id} không tồn tại.`,
+        `Payment method with ID ${payment_method_id} not found.`,
       );
     }
 
@@ -102,7 +92,7 @@ export class PaymentService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Thất bại khi tạo thanh toán. Đơn hàng hoặc phương thức thanh toán liên quan không tồn tại.`,
+            `Failed to create payment. Related order or payment method not found.`,
           );
         }
       }
@@ -111,9 +101,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * Tạo URL thanh toán VNPay
-   */
   async createVNPayPaymentUrl(
     orderId: number,
     orderInfo?: string,
@@ -124,19 +111,19 @@ export class PaymentService {
       where: { order_id: orderId },
     });
     if (!order) {
-      throw new NotFoundException(`Đơn hàng với ID ${orderId} không tồn tại.`);
+      throw new NotFoundException(`Order with ID ${orderId} not found.`);
     }
 
     const amount = Number(order.final_amount || order.total_amount || 0);
 
     if (amount <= 0) {
-      throw new BadRequestException('Số tiền thanh toán phải lớn hơn 0');
+      throw new BadRequestException('Payment amount must be greater than 0.');
     }
 
     const paymentRequest: VNPayPaymentRequest = {
       orderId,
       amount,
-      orderInfo: orderInfo || `Thanh toan don hang #${orderId}`,
+      orderInfo: orderInfo || `Payment for order #${orderId}`,
       returnUrl:
         returnUrl ||
         process.env.VNPAY_RETURN_URL ||
@@ -147,9 +134,6 @@ export class PaymentService {
     return this.vnpayService.createPaymentUrl(paymentRequest);
   }
 
-  /**
-   * Xử lý callback từ VNPay và cập nhật trạng thái thanh toán
-   */
   async processVNPayCallback(callbackData: any): Promise<{
     success: boolean;
     message: string;
@@ -161,7 +145,7 @@ export class PaymentService {
       if (!verification.isValid) {
         return {
           success: false,
-          message: 'Chữ ký không hợp lệ',
+          message: 'Invalid signature.',
         };
       }
 
@@ -170,7 +154,7 @@ export class PaymentService {
       if (!orderId || !amount) {
         return {
           success: false,
-          message: 'Thông tin giao dịch không đầy đủ',
+          message: 'Incomplete transaction information.',
         };
       }
 
@@ -186,16 +170,15 @@ export class PaymentService {
         callbackData.vnp_TxnRef,
       );
 
-      // Tự động tạo hóa đơn khi thanh toán VNPay thành công
       if (isSuccessful && payment.status === payment_status_enum.PAID) {
         try {
           const invoiceData = await this.invoiceService.getInvoiceData(orderId);
           const invoiceHTML =
             this.invoiceService.generateInvoiceHTML(invoiceData);
-          console.log(`Hóa đơn VNPay đã được tạo cho đơn hàng #${orderId}`);
+          console.log(`VNPay invoice created for order #${orderId}`);
         } catch (invoiceError) {
           console.error(
-            `Lỗi khi tạo hóa đơn VNPay cho đơn hàng #${orderId}:`,
+            `Error creating VNPay invoice for order #${orderId}:`,
             invoiceError,
           );
         }
@@ -203,21 +186,18 @@ export class PaymentService {
 
       return {
         success: isSuccessful,
-        message: isSuccessful ? 'Thanh toán thành công' : 'Thanh toán thất bại',
+        message: isSuccessful ? 'Payment successful.' : 'Payment failed.',
         payment,
       };
     } catch (error) {
       console.error('Error processing VNPay callback:', error);
       return {
         success: false,
-        message: 'Lỗi xử lý callback',
+        message: 'Error processing callback.',
       };
     }
   }
 
-  /**
-   * Tạo hoặc cập nhật payment record cho VNPay
-   */
   private async createOrUpdateVNPayPayment(
     orderId: number,
     amount: number,
@@ -233,7 +213,6 @@ export class PaymentService {
     });
 
     if (existingPayment) {
-      // Cập nhật payment đã tồn tại
       return this.prisma.payment.update({
         where: { payment_id: existingPayment.payment_id },
         data: {
@@ -244,14 +223,13 @@ export class PaymentService {
         include: { order: true, payment_method: true },
       });
     } else {
-      // Tạo payment record mới
       return this.prisma.payment.create({
         data: {
           order_id: orderId,
           payment_method_id: PAYMENT_METHOD.VNPAY,
           status,
           amount_paid: new Decimal(amount),
-          change_amount: new Decimal(0), // VNPay không có tiền thừa
+          change_amount: new Decimal(0),
           payment_time: new Date(),
         },
         include: { order: true, payment_method: true },
@@ -300,7 +278,7 @@ export class PaymentService {
       include: { order: true, payment_method: true },
     });
     if (!payment) {
-      throw new NotFoundException(`Thanh toán với ID ${id} không tồn tại.`);
+      throw new NotFoundException(`Payment with ID ${id} not found.`);
     }
     return payment;
   }
@@ -315,7 +293,6 @@ export class PaymentService {
 
     const dataToUpdate: Prisma.paymentUpdateInput = {};
 
-    // status không được cập nhật trực tiếp từ client
     if (payment_time) dataToUpdate.payment_time = new Date(payment_time);
 
     let newPaidAmount: Decimal | undefined;
@@ -356,6 +333,11 @@ export class PaymentService {
     }
   }
 
+  /**
+   * Deletes a payment by its ID.
+   * @param id - The ID of the payment to delete.
+   * @returns The deleted payment record.
+   */
   async remove(id: number): Promise<PaymentWithRelations> {
     const paymentToDelete = await this.findOne(id);
     try {
@@ -369,6 +351,12 @@ export class PaymentService {
     }
   }
 
+  /**
+   * Finds payments by a specific payment method.
+   * @param payment_method_id - The ID of the payment method.
+   * @param paginationDto - Pagination options.
+   * @returns A paginated result of payments.
+   */
   async findByPaymentMethod(
     payment_method_id: number,
     paginationDto: PaginationDto,

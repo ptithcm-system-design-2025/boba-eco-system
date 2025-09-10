@@ -1,41 +1,41 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ParseIntPipe,
-  HttpCode,
-  HttpStatus,
-  Query,
-  BadRequestException,
-  Req,
-  Res,
-  UseGuards,
+    BadRequestException,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    Req,
+    Res,
+    UseGuards,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { PaymentService } from './payment.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { CreateVNPayPaymentDto } from './dto/create-vnpay-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
-import { payment } from '../generated/prisma/client';
+import {Request, Response} from 'express';
+import {PaymentService} from './payment.service';
+import {CreatePaymentDto} from './dto/create-payment.dto';
+import {CreateVNPayPaymentDto} from './dto/create-vnpay-payment.dto';
+import {UpdatePaymentDto} from './dto/update-payment.dto';
+import {PaginatedResult, PaginationDto, PaginationMetadata,} from '../common/dto/pagination.dto';
+import {payment} from '../generated/prisma/client';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBody,
-  ApiBearerAuth,
-  ApiExtraModels,
+    ApiBearerAuth,
+    ApiBody,
+    ApiExtraModels,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard';
+import {RolesGuard} from '../auth/guards/roles.guard';
+import {Roles} from '../auth/decorators/roles.decorator';
+import {ROLES} from '../auth/constants/roles.constant';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -49,7 +49,7 @@ export class PaymentController {
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Create a new payment record - Chỉ MANAGER và STAFF',
+    summary: 'Create a new payment record (MANAGER, STAFF)',
   })
   @ApiBody({ type: CreatePaymentDto })
   @ApiResponse({
@@ -80,7 +80,7 @@ export class PaymentController {
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
     summary:
-      'Get all payments with pagination and optional order filter - Chỉ MANAGER và STAFF',
+      'Get all payments with pagination and optional order filter (MANAGER, STAFF)',
   })
   @ApiQuery({
     name: 'page',
@@ -100,8 +100,8 @@ export class PaymentController {
     type: Number,
     description: 'Filter payments by a specific order ID',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Paginated list of payments',
     schema: {
       type: 'object',
@@ -129,7 +129,7 @@ export class PaymentController {
     if (orderId) {
       orderIdNum = parseInt(orderId, 10);
       if (isNaN(orderIdNum)) {
-        throw new BadRequestException('ID đơn hàng không hợp lệ. Phải là số.');
+        throw new BadRequestException('Invalid Order ID. Must be a number.');
       }
     }
     return this.paymentService.findAll(paginationDto, orderIdNum);
@@ -139,7 +139,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Get a specific payment by ID - Chỉ MANAGER và STAFF',
+    summary: 'Get a specific payment by ID (MANAGER, STAFF)',
   })
   @ApiParam({ name: 'id', description: 'Payment ID', type: Number })
   @ApiResponse({
@@ -163,7 +163,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Update an existing payment - Chỉ MANAGER và STAFF',
+    summary: 'Update an existing payment (MANAGER, STAFF)',
   })
   @ApiParam({ name: 'id', description: 'Payment ID', type: Number })
   @ApiBody({ type: UpdatePaymentDto })
@@ -190,7 +190,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a payment by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Delete a payment by ID (MANAGER)' })
   @ApiParam({ name: 'id', description: 'Payment ID', type: Number })
   @ApiResponse({
     status: 204,
@@ -206,13 +206,11 @@ export class PaymentController {
     await this.paymentService.remove(id);
   }
 
-  // ============= VNPAY ENDPOINTS =============
-
   @Post('vnpay/create')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Create VNPay payment URL - Tất cả role' })
+  @ApiOperation({ summary: 'Create VNPay payment URL (All Roles)' })
   @ApiBody({ type: CreateVNPayPaymentDto })
   @ApiResponse({
     status: 200,
@@ -240,7 +238,7 @@ export class PaymentController {
   }
 
   @Get('vnpay/callback')
-  @ApiOperation({ summary: 'Handle VNPay payment callback - Public endpoint' })
+  @ApiOperation({ summary: 'Handle VNPay payment callback (Public)' })
   @ApiResponse({
     status: 200,
     description: 'Payment callback processed successfully',
@@ -253,12 +251,10 @@ export class PaymentController {
     const result = await this.paymentService.processVNPayCallback(callbackData);
 
     if (result.success) {
-      // Redirect to success page hoặc trả về JSON response
       res.redirect(
         `${process.env.POS_URL || 'http://localhost:3001'}/payment/success?orderId=${result.payment?.order_id}`,
       );
     } else {
-      // Redirect to failure page hoặc trả về error response
       res.redirect(
         `${process.env.POS_URL || 'http://localhost:3001'}/payment/failure?message=${encodeURIComponent(result.message)}`,
       );
@@ -267,7 +263,7 @@ export class PaymentController {
 
   @Post('vnpay/webhook')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Handle VNPay IPN webhook - Public endpoint' })
+  @ApiOperation({ summary: 'Handle VNPay IPN webhook (Public)' })
   @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
   async handleVNPayWebhook(
     @Body() webhookData: any,
@@ -300,7 +296,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @ApiOperation({
-    summary: 'Test endpoint for payment controller - Chỉ MANAGER',
+    summary: 'Test endpoint for payment controller (MANAGER)',
   })
   @ApiResponse({ status: 200, description: 'Test successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -308,6 +304,10 @@ export class PaymentController {
     status: 403,
     description: 'Forbidden - Insufficient permissions',
   })
+  /**
+   * Admin test endpoint to check if the controller is responsive.
+   * @returns A confirmation message.
+   */
   adminTest(): { message: string } {
     return { message: 'Payment controller is working!' };
   }
@@ -345,6 +345,12 @@ export class PaymentController {
     status: 403,
     description: 'Forbidden - Insufficient permissions',
   })
+  /**
+   * Retrieves payments filtered by a specific payment method.
+   * @param paymentMethodId - The ID of the payment method to filter by.
+   * @param paginationDto - Pagination options.
+   * @returns A paginated list of payments for the specified method.
+   */
   async findByPaymentMethod(
     @Param('paymentMethodId', ParseIntPipe) paymentMethodId: number,
     @Query() paginationDto: PaginationDto,

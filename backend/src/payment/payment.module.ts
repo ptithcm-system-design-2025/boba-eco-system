@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { VnpayModule } from 'nestjs-vnpay';
-import { PaymentService } from './payment.service';
-import { PaymentController } from './payment.controller';
-import { VNPayService } from './vnpay.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { InvoiceModule } from '../invoice/invoice.module';
+import {Module} from '@nestjs/common';
+import {ConfigModule, ConfigService} from '@nestjs/config';
+import {VnpayModule} from 'nestjs-vnpay';
+import {PaymentService} from './payment.service';
+import {PaymentController} from './payment.controller';
+import {VNPayService} from './vnpay.service';
+import {PrismaModule} from '../prisma/prisma.module';
+import {InvoiceModule} from '../invoice/invoice.module';
 
 @Module({
   imports: [
@@ -21,13 +21,13 @@ import { InvoiceModule } from '../invoice/invoice.module';
         vnpayHost:
           configService.get<string>('VNPAY_HOST') ||
           'https://sandbox.vnpayment.vn',
-        testMode: configService.get<boolean>('VNPAY_TEST_MODE') !== false, // Default to test mode
+        testMode: configService.get<boolean>('VNPAY_TEST_MODE') !== false,
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [PaymentController],
   providers: [PaymentService, VNPayService],
-  exports: [PaymentService, VNPayService], // Export services nếu cần sử dụng ở module khác
+  exports: [PaymentService, VNPayService],
 })
 export class PaymentModule {}
