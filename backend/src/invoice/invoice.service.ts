@@ -35,9 +35,16 @@ export interface InvoiceData {
 }
 
 @Injectable()
+/**
+ * Service for handling invoice generation and data retrieval.
+ */
 export class InvoiceService {
   private templatePath: string;
 
+  /**
+   * @param prisma The Prisma database service.
+   * @param storeService The store service.
+   */
   constructor(
     private prisma: PrismaService,
     private storeService: StoreService,
@@ -79,13 +86,13 @@ export class InvoiceService {
     Handlebars.registerHelper('getPaymentStatusText', (status: string) => {
       switch (status) {
         case 'PAID':
-          return 'Đã thanh toán';
+          return 'Paid';
         case 'PENDING':
-          return 'Chờ thanh toán';
+          return 'Pending';
         case 'PROCESSING':
-          return 'Đang xử lý';
+          return 'Processing';
         default:
-          return 'Không xác định';
+          return 'Unknown';
       }
     });
 
@@ -104,7 +111,9 @@ export class InvoiceService {
   }
 
   /**
-   * Lấy dữ liệu chi tiết của đơn hàng để tạo hóa đơn
+   * Retrieves detailed order data to create an invoice.
+   * @param orderId The ID of the order.
+   * @returns The invoice data.
    */
   async getInvoiceData(orderId: number): Promise<InvoiceData> {
     const order = (await this.prisma.order.findUnique({
@@ -119,8 +128,8 @@ export class InvoiceService {
         order_product: {
           include: {
             product_price: {
-          include: {
-            product: true,
+              include: {
+                product: true,
                 product_size: true,
               },
             },
@@ -140,13 +149,11 @@ export class InvoiceService {
     })) as any;
 
     if (!order) {
-      throw new NotFoundException(`Đơn hàng với ID ${orderId} không tồn tại`);
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
-    // Lấy thông tin cửa hàng
     const storeInfo = await this.storeService.getDefaultStore();
 
-    // Tính tổng discount
     const totalDiscount = (order.order_discount || []).reduce(
       (sum: number, od: any) => {
         const discountAmount =
@@ -159,7 +166,6 @@ export class InvoiceService {
       0,
     );
 
-    // Lấy thông tin payment gần nhất
     const latestPayment = (order.payment || []).sort(
       (a: any, b: any) =>
         new Date(b.payment_time || b.created_at || 0).getTime() -
@@ -169,9 +175,16 @@ export class InvoiceService {
     const invoiceData: InvoiceData = {
       order_id: order.order_id,
       order_time: new Date(order.order_time || order.created_at || new Date()),
-      customer_name: order.customer ? `${order.customer.first_name || ''} ${order.customer.last_name || ''}`.trim() || 'Khách vãng lai' : 'Khách vãng lai',
+      customer_name: order.customer
+        ? `${order.customer.first_name || ''} ${order.customer.last_name || ''}`.trim() ||
+          'Guest'
+        : 'Guest',
       customer_phone: order.customer?.phone || '',
-      employee_name: order.employee ? `${order.employee.first_name || ''} ${order.employee.last_name || ''}`.trim() || order.employee.account?.username || 'N/A' : 'N/A',
+      employee_name: order.employee
+        ? `${order.employee.first_name || ''} ${order.employee.last_name || ''}`.trim() ||
+          order.employee.account?.username ||
+          'N/A'
+        : 'N/A',
       store_name: storeInfo?.name || 'Cake POS Store',
       store_address: storeInfo?.address || '123 Đường ABC, Quận XYZ, TP.HCM',
       store_phone: storeInfo?.phone || '0123 456 789',
@@ -207,7 +220,9 @@ export class InvoiceService {
   }
 
   /**
-   * Tạo HTML hóa đơn từ template
+   * Generates invoice HTML from a template.
+   * @param invoiceData The data for the invoice.
+   * @returns The generated HTML string.
    */
   generateInvoiceHTML(invoiceData: InvoiceData): string {
     const template = this.getInvoiceTemplate();
@@ -216,7 +231,9 @@ export class InvoiceService {
   }
 
   /**
-   * Xuất hóa đơn dưới dạng PDF
+   * Generates a PDF invoice.
+   * @param orderId The ID of the order.
+   * @returns A buffer containing the PDF data.
    */
   async generateInvoicePDF(orderId: number): Promise<Buffer> {
     const invoiceData = await this.getInvoiceData(orderId);
@@ -249,15 +266,16 @@ export class InvoiceService {
   }
 
   /**
-   * Đọc template HTML từ file
+   * Reads the HTML template from a file.
+   * @returns The template content as a string.
    */
   private getInvoiceTemplate(): string {
     try {
       return fs.readFileSync(this.templatePath, 'utf8');
     } catch (error) {
       throw new NotFoundException(
-        `Không thể đọc template hóa đơn: ${error.message}`,
+        `Could not read invoice template: ${error.message}`,
       );
+    }
   }
 }
-} 

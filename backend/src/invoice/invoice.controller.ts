@@ -2,8 +2,8 @@ import {
   Controller,
   Get,
   Param,
-  Res,
   ParseIntPipe,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -11,28 +11,43 @@ import { InvoiceService } from './invoice.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLE_HIERARCHY, ROLES } from '../auth/constants/roles.constant';
+import { ROLES } from '../auth/constants/roles.constant';
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
   ApiParam,
   ApiResponse,
-  ApiBearerAuth,
+  ApiTags,
 } from '@nestjs/swagger';
 
 @ApiTags('Invoice')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('invoice')
+/**
+ * Handles invoice-related requests.
+ */
 export class InvoiceController {
+  /**
+   * @param invoiceService The invoice service.
+   */
   constructor(private readonly invoiceService: InvoiceService) {}
 
+  /**
+   * Retrieves the invoice as an HTML page.
+   * @param orderId The ID of the order.
+   * @param res The HTTP response object.
+   */
   @Get(':orderId/html')
   @Roles(ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Lấy hóa đơn dưới dạng HTML' })
-  @ApiParam({ name: 'orderId', description: 'ID của đơn hàng', type: 'number' })
-  @ApiResponse({ status: 200, description: 'HTML hóa đơn' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy đơn hàng' })
+  @ApiOperation({ summary: 'Get invoice as HTML' })
+  @ApiParam({
+    name: 'orderId',
+    description: 'The ID of the order',
+    type: 'number',
+  })
+  @ApiResponse({ status: 200, description: 'Invoice HTML' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
   async getInvoiceHTML(
     @Param('orderId', ParseIntPipe) orderId: number,
     @Res() res: Response,
@@ -48,12 +63,21 @@ export class InvoiceController {
     }
   }
 
+  /**
+   * Generates and returns the invoice as a PDF file.
+   * @param orderId The ID of the order.
+   * @param res The HTTP response object.
+   */
   @Get(':orderId/pdf')
   @Roles(ROLES.STAFF)
-  @ApiOperation({ summary: 'Xuất hóa đơn dưới dạng PDF' })
-  @ApiParam({ name: 'orderId', description: 'ID của đơn hàng', type: 'number' })
-  @ApiResponse({ status: 200, description: 'PDF hóa đơn' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy đơn hàng' })
+  @ApiOperation({ summary: 'Export invoice as PDF' })
+  @ApiParam({
+    name: 'orderId',
+    description: 'The ID of the order',
+    type: 'number',
+  })
+  @ApiResponse({ status: 200, description: 'Invoice PDF' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
   async getInvoicePDF(
     @Param('orderId', ParseIntPipe) orderId: number,
     @Res() res: Response,
@@ -64,7 +88,7 @@ export class InvoiceController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="hoa-don-${orderId}.pdf"`,
+        `attachment; filename="invoice-${orderId}.pdf"`,
       );
       res.setHeader('Content-Length', pdfBuffer.length);
 
@@ -74,12 +98,21 @@ export class InvoiceController {
     }
   }
 
+  /**
+   * Retrieves the raw invoice data.
+   * @param orderId The ID of the order.
+   * @returns The invoice data.
+   */
   @Get(':orderId/data')
   @Roles(ROLES.STAFF)
-  @ApiOperation({ summary: 'Lấy dữ liệu hóa đơn' })
-  @ApiParam({ name: 'orderId', description: 'ID của đơn hàng', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Dữ liệu hóa đơn' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy đơn hàng' })
+  @ApiOperation({ summary: 'Get invoice data' })
+  @ApiParam({
+    name: 'orderId',
+    description: 'The ID of the order',
+    type: 'number',
+  })
+  @ApiResponse({ status: 200, description: 'Invoice data' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
   async getInvoiceData(@Param('orderId', ParseIntPipe) orderId: number) {
     return await this.invoiceService.getInvoiceData(orderId);
   }
