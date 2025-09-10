@@ -1,30 +1,34 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  ParseIntPipe,
+  Get,
   HttpCode,
   HttpStatus,
-  UseGuards,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductSizeService } from './product-size.service';
 import { CreateProductSizeDto } from './dto/create-product-size.dto';
 import { UpdateProductSizeDto } from './dto/update-product-size.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
-import { product_size, product_price } from '../generated/prisma/client';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiBody,
+  PaginatedResult,
+  PaginationDto,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
+import { product_price, product_size } from '../generated/prisma/client';
+import {
   ApiBearerAuth,
+  ApiBody,
   ApiExtraModels,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -38,15 +42,20 @@ import { ROLES } from '../auth/constants/roles.constant';
 export class ProductSizeController {
   constructor(private readonly productSizeService: ProductSizeService) {}
 
+  /**
+   * Creates a new product size.
+   * @param createProductSizeDto The data to create the product size.
+   * @returns The created product size.
+   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Tạo kích thước sản phẩm mới - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Create a new product size (MANAGER only)' })
   @ApiBody({ type: CreateProductSizeDto })
   @ApiResponse({
     status: 201,
-    description: 'Kích thước sản phẩm được tạo thành công',
+    description: 'The product size has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -54,22 +63,30 @@ export class ProductSizeController {
     status: 403,
     description: 'Forbidden - Insufficient permissions',
   })
-  @ApiResponse({ status: 409, description: 'Conflict - Kích thước đã tồn tại' })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - Product size already exists',
+  })
   async create(
     @Body() createProductSizeDto: CreateProductSizeDto,
   ): Promise<product_size> {
     return this.productSizeService.create(createProductSizeDto);
   }
 
+  /**
+   * Retrieves a paginated list of product sizes.
+   * @param paginationDto The pagination options.
+   * @returns A paginated list of product sizes.
+   */
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER, ROLES.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy danh sách kích thước sản phẩm với pagination - TẤT CẢ ROLES',
+    summary: 'Get a paginated list of product sizes (All roles)',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Danh sách kích thước sản phẩm',
+  @ApiResponse({
+    status: 200,
+    description: 'A paginated list of product sizes',
     schema: {
       type: 'object',
       properties: {
@@ -94,12 +111,17 @@ export class ProductSizeController {
     return this.productSizeService.findAll(paginationDto);
   }
 
+  /**
+   * Retrieves a single product size by its ID.
+   * @param id The ID of the product size to retrieve.
+   * @returns The product size, or null if not found.
+   */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Lấy kích thước sản phẩm theo ID - TẤT CẢ ROLES' })
+  @ApiOperation({ summary: 'Get a product size by ID (All roles)' })
   @ApiParam({ name: 'id', description: 'Product Size ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Chi tiết kích thước sản phẩm' })
+  @ApiResponse({ status: 200, description: 'The product size details' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 403,
@@ -107,7 +129,7 @@ export class ProductSizeController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Kích thước sản phẩm không tồn tại',
+    description: 'Product size not found',
   })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -115,15 +137,21 @@ export class ProductSizeController {
     return this.productSizeService.findOne(id);
   }
 
+  /**
+   * Updates a product size.
+   * @param id The ID of the product size to update.
+   * @param updateProductSizeDto The data to update the product size with.
+   * @returns The updated product size.
+   */
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ summary: 'Cập nhật kích thước sản phẩm - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Update a product size (MANAGER only)' })
   @ApiParam({ name: 'id', description: 'Product Size ID', type: Number })
   @ApiBody({ type: UpdateProductSizeDto })
   @ApiResponse({
     status: 200,
-    description: 'Kích thước sản phẩm được cập nhật thành công',
+    description: 'The product size has been successfully updated.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -133,9 +161,12 @@ export class ProductSizeController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Kích thước sản phẩm không tồn tại',
+    description: 'Product size not found',
   })
-  @ApiResponse({ status: 409, description: 'Conflict - Kích thước đã tồn tại' })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - Product size already exists',
+  })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductSizeDto: UpdateProductSizeDto,
@@ -143,15 +174,20 @@ export class ProductSizeController {
     return this.productSizeService.update(id, updateProductSizeDto);
   }
 
+  /**
+   * Deletes a product size.
+   * @param id The ID of the product size to delete.
+   * @returns A promise that resolves when the product size is deleted.
+   */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Xóa kích thước sản phẩm - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Delete a product size (MANAGER only)' })
   @ApiParam({ name: 'id', description: 'Product Size ID', type: Number })
   @ApiResponse({
     status: 204,
-    description: 'Kích thước sản phẩm được xóa thành công',
+    description: 'The product size has been successfully deleted.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -160,27 +196,32 @@ export class ProductSizeController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Kích thước sản phẩm không tồn tại',
+    description: 'Product size not found',
   })
   @ApiResponse({
     status: 409,
-    description: 'Conflict - Kích thước đang được sử dụng',
+    description: 'Conflict - The product size is currently in use.',
   })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.productSizeService.remove(id);
   }
 
-  // Endpoint để lấy product prices theo size (quan hệ 1-nhiều)
+  /**
+   * Retrieves a paginated list of product prices for a given product size.
+   * @param id The ID of the product size.
+   * @param paginationDto The pagination options.
+   * @returns A paginated list of product prices.
+   */
   @Get(':id/product-prices')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.STAFF, ROLES.MANAGER, ROLES.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy giá sản phẩm theo kích thước với pagination - TẤT CẢ ROLES',
+    summary: 'Get product prices by size with pagination (All roles)',
   })
   @ApiParam({ name: 'id', description: 'Product Size ID', type: Number })
   @ApiResponse({
     status: 200,
-    description: 'Danh sách giá sản phẩm theo kích thước',
+    description: 'A paginated list of product prices for the given size',
     schema: {
       type: 'object',
       properties: {
@@ -201,7 +242,7 @@ export class ProductSizeController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Kích thước sản phẩm không tồn tại',
+    description: 'Product size not found',
   })
   async getProductPricesBySize(
     @Param('id', ParseIntPipe) id: number,
@@ -210,11 +251,15 @@ export class ProductSizeController {
     return this.productSizeService.getProductPricesBySize(id, paginationDto);
   }
 
+  /**
+   * A test endpoint to check if the controller is working.
+   * @returns A success message.
+   */
   @Get('test/ping')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Test product size controller - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Test product size controller (MANAGER only)' })
   @ApiResponse({ status: 200, description: 'Test successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({

@@ -1,19 +1,24 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { store, Prisma } from '../generated/prisma/client';
+import { Prisma, store } from '../generated/prisma/client';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { PaginatedResult, PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class StoreService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new store.
+   * @param createStoreDto - The data to create the store.
+   * @returns The created store.
+   * @throws {ConflictException} If a store with the same email or name already exists.
+   */
   async create(createStoreDto: CreateStoreDto): Promise<store> {
     const {
       name,
@@ -25,18 +30,14 @@ export class StoreService {
       ...rest
     } = createStoreDto;
 
-    // Prisma có thể tự động parse date strings (YYYY-MM-DD) và time strings (HH:mm:ss)
-    // khi kiểu trong schema là DateTime. Nếu không, cần chuyển đổi thủ công.
-    // Ví dụ: new Date(`1970-01-01T${opening_time}Z`) cho thời gian.
-
     const storeData: Prisma.storeCreateInput = {
       ...rest,
       name,
       email,
       phone,
-      opening_date: new Date(opening_date), // Đảm bảo là Date object
-      opening_time: new Date(`1970-01-01T${opening_time}`), // Tạo Date với ngày giả định
-      closing_time: new Date(`1970-01-01T${closing_time}`), // Tạo Date với ngày giả định
+      opening_date: new Date(opening_date),
+      opening_time: new Date(`1970-01-01T${opening_time}`),
+      closing_time: new Date(`1970-01-01T${closing_time}`),
     };
 
     try {
@@ -46,20 +47,17 @@ export class StoreService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          // Kiểm tra xem trường nào gây ra lỗi unique constraint
           const target = error.meta?.target as string[];
           if (target?.includes('email')) {
             throw new ConflictException(
-              `Cửa hàng với email '${email}' đã tồn tại.`,
+              `Store with email '${email}' already exists.`,
             );
           }
           if (target?.includes('name')) {
-            // Giả sử name cũng có thể là unique
             throw new ConflictException(
-              `Cửa hàng với tên '${name}' đã tồn tại.`,
+              `Store with name '${name}' already exists.`,
             );
           }
-          // Thêm các kiểm tra khác nếu cần (vd: phone, tax_code nếu chúng unique)
           throw new ConflictException(
             'A unique constraint violation occurred.',
           );
@@ -69,6 +67,11 @@ export class StoreService {
     }
   }
 
+  /**
+   * Retrieves a paginated list of stores.
+   * @param paginationDto - The pagination options.
+   * @returns A paginated list of stores.
+   */
   async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<store>> {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
@@ -97,35 +100,50 @@ export class StoreService {
     };
   }
 
+  /**
+   * Retrieves a single store by its ID.
+   * @param id - The ID of the store to retrieve.
+   * @returns The store with the given ID.
+   * @throws {NotFoundException} If the store is not found.
+   */
   async findOne(id: number): Promise<store | null> {
     const store = await this.prisma.store.findUnique({
       where: { store_id: id },
     });
     if (!store) {
-      throw new NotFoundException(`Cửa hàng với ID ${id} không tồn tại.`);
+      throw new NotFoundException(`Store with ID ${id} not found.`);
     }
     return store;
   }
 
+  /**
+   * Retrieves the default store.
+   * This is assumed to be the first store created.
+   * @returns The default store.
+   * @throws {NotFoundException} If no store is found.
+   */
   async getDefaultStore(): Promise<store | null> {
-    // Lấy cửa hàng đầu tiên (có thể là cửa hàng chính)
-    // Hoặc có thể thêm field is_default trong database
     const store = await this.prisma.store.findFirst({
       orderBy: { store_id: 'asc' },
     });
-    
     if (!store) {
-      throw new NotFoundException('Không tìm thấy thông tin cửa hàng.');
+      throw new NotFoundException('No store information found.');
     }
-    
     return store;
   }
 
+  /**
+   * Updates a store by its ID.
+   * @param id - The ID of the store to update.
+   * @param updateStoreDto - The data to update the store with.
+   * @returns The updated store.
+   * @throws {NotFoundException} If the store is not found.
+   * @throws {ConflictException} If the updated email or name conflicts with an existing store.
+   */
   async update(id: number, updateStoreDto: UpdateStoreDto): Promise<store> {
     const { email, name, opening_date, opening_time, closing_time, ...rest } =
       updateStoreDto;
 
-    // Kiểm tra sự tồn tại của store trước khi cập nhật
     await this.findOne(id);
 
     const dataToUpdate: Prisma.storeUpdateInput = { ...rest };
@@ -151,11 +169,13 @@ export class StoreService {
         const target = error.meta?.target as string[];
         if (target?.includes('email') && email) {
           throw new ConflictException(
-            `Cửa hàng với email '${email}' đã tồn tại.`,
+            `Store with email '${email}' already exists.`,
           );
         }
         if (target?.includes('name') && name) {
-          throw new ConflictException(`Cửa hàng với tên '${name}' đã tồn tại.`);
+          throw new ConflictException(
+            `Store with name '${name}' already exists.`,
+          );
         }
         throw new ConflictException(
           'A unique constraint violation occurred during update.',
@@ -165,19 +185,22 @@ export class StoreService {
     }
   }
 
+  /**
+   * Removes a store by its ID.
+   * @param id - The ID of the store to remove.
+   * @returns The removed store.
+   * @throws {NotFoundException} If the store is not found.
+   * @throws {ConflictException} If the store cannot be deleted due to foreign key constraints.
+   */
   async remove(id: number): Promise<store> {
-    // Kiểm tra sự tồn tại trước khi xóa
     await this.findOne(id);
     try {
       return await this.prisma.store.delete({
         where: { store_id: id },
       });
     } catch (error) {
-      // Xử lý lỗi P2025 (Record to delete does not exist) đã được findOne xử lý
-      // Xử lý các lỗi liên quan đến foreign key constraints nếu store có liên kết
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2003') {
-          // Foreign key constraint failed
           throw new ConflictException(
             `Cannot delete store with ID ${id} due to existing related records.`,
           );

@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsOptional, Length, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductSizeDto {

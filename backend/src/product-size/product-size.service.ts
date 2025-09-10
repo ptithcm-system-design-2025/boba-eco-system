@@ -1,22 +1,28 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
-  product_size,
-  product_price,
   Prisma,
+  product_price,
+  product_size,
 } from '../generated/prisma/client';
 import { CreateProductSizeDto } from './dto/create-product-size.dto';
 import { UpdateProductSizeDto } from './dto/update-product-size.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { PaginatedResult, PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class ProductSizeService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new product size.
+   * @param createProductSizeDto The data to create the product size.
+   * @returns The created product size.
+   * @throws {ConflictException} If a product size with the same name and unit already exists.
+   */
   async create(
     createProductSizeDto: CreateProductSizeDto,
   ): Promise<product_size> {
@@ -28,7 +34,7 @@ export class ProductSizeService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new ConflictException(
-            `Kích thước sản phẩm với tên '${createProductSizeDto.name}' và đơn vị '${createProductSizeDto.unit}' đã tồn tại.`,
+            `Product size with name '${createProductSizeDto.name}' and unit '${createProductSizeDto.unit}' already exists.`,
           );
         }
       }
@@ -36,6 +42,11 @@ export class ProductSizeService {
     }
   }
 
+  /**
+   * Retrieves a paginated list of product sizes.
+   * @param paginationDto The pagination options.
+   * @returns A paginated list of product sizes.
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<product_size>> {
@@ -66,18 +77,30 @@ export class ProductSizeService {
     };
   }
 
+  /**
+   * Retrieves a single product size by its ID.
+   * @param size_id The ID of the product size to retrieve.
+   * @returns The product size, or null if not found.
+   * @throws {NotFoundException} If the product size with the given ID is not found.
+   */
   async findOne(size_id: number): Promise<product_size | null> {
     const productSize = await this.prisma.product_size.findUnique({
       where: { size_id },
     });
     if (!productSize) {
-      throw new NotFoundException(
-        `Kích thước sản phẩm với ID ${size_id} không tồn tại`,
-      );
+      throw new NotFoundException(`Product size with ID ${size_id} not found`);
     }
     return productSize;
   }
 
+  /**
+   * Updates a product size.
+   * @param size_id The ID of the product size to update.
+   * @param updateProductSizeDto The data to update the product size with.
+   * @returns The updated product size.
+   * @throws {NotFoundException} If the product size with the given ID is not found.
+   * @throws {ConflictException} If a product size with the same name and unit already exists.
+   */
   async update(
     size_id: number,
     updateProductSizeDto: UpdateProductSizeDto,
@@ -91,12 +114,12 @@ export class ProductSizeService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Kích thước sản phẩm với ID ${size_id} không tồn tại`,
+            `Product size with ID ${size_id} not found`,
           );
         }
         if (error.code === 'P2002') {
           throw new ConflictException(
-            `Kích thước sản phẩm với tên '${updateProductSizeDto.name}' và đơn vị '${updateProductSizeDto.unit}' đã tồn tại.`,
+            `Product size with name '${updateProductSizeDto.name}' and unit '${updateProductSizeDto.unit}' already exists.`,
           );
         }
       }
@@ -104,6 +127,13 @@ export class ProductSizeService {
     }
   }
 
+  /**
+   * Deletes a product size.
+   * @param size_id The ID of the product size to delete.
+   * @returns The deleted product size.
+   * @throws {NotFoundException} If the product size with the given ID is not found.
+   * @throws {ConflictException} If the product size is still in use by product prices.
+   */
   async remove(size_id: number): Promise<product_size> {
     try {
       return await this.prisma.product_size.delete({
@@ -113,12 +143,12 @@ export class ProductSizeService {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           throw new NotFoundException(
-            `Kích thước sản phẩm với ID ${size_id} không tồn tại`,
+            `Product size with ID ${size_id} not found`,
           );
         }
         if (error.code === 'P2003') {
           throw new ConflictException(
-            `Kích thước sản phẩm với ID ${size_id} không thể xóa vì đang được sử dụng trong giá sản phẩm.`,
+            `Product size with ID ${size_id} cannot be deleted as it is currently in use by product prices.`,
           );
         }
       }
@@ -126,17 +156,20 @@ export class ProductSizeService {
     }
   }
 
-  // Method để lấy danh sách product_price theo size (quan hệ 1-nhiều)
+  /**
+   * Retrieves a paginated list of product prices for a given product size.
+   * @param size_id The ID of the product size.
+   * @param paginationDto The pagination options.
+   * @returns A paginated list of product prices.
+   * @throws {NotFoundException} If the product size with the given ID is not found.
+   */
   async getProductPricesBySize(
     size_id: number,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<product_price>> {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
-
-    // Kiểm tra size có tồn tại không
     await this.findOne(size_id);
-
     const [data, total] = await Promise.all([
       this.prisma.product_price.findMany({
         where: { size_id },

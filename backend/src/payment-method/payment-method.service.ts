@@ -1,19 +1,30 @@
 import {
-  Injectable,
-  NotFoundException,
   ConflictException,
+  Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { payment_method, Prisma } from '../generated/prisma/client';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
-import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { PaginatedResult, PaginationDto } from '../common/dto/pagination.dto';
 
+/**
+ * Service for managing payment methods.
+ * Handles business logic related to payment methods.
+ */
 @Injectable()
 export class PaymentMethodService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Creates a new payment method.
+   * @param createDto - The data for creating the new payment method.
+   * @returns The created payment method.
+   * @throws {ConflictException} If a payment method with the same name already exists.
+   * @throws {InternalServerErrorException} If an unexpected error occurs.
+   */
   async create(createDto: CreatePaymentMethodDto): Promise<payment_method> {
     const { name, description } = createDto;
     try {
@@ -30,7 +41,7 @@ export class PaymentMethodService {
       ) {
         if ((error.meta?.target as string[])?.includes('name')) {
           throw new ConflictException(
-            `Phương thức thanh toán với tên '${name}' đã tồn tại.`,
+            `Payment method with name '${name}' already exists.`,
           );
         }
         throw new ConflictException('A unique constraint violation occurred.');
@@ -42,6 +53,11 @@ export class PaymentMethodService {
     }
   }
 
+  /**
+   * Retrieves a paginated list of payment methods.
+   * @param paginationDto - DTO for pagination parameters.
+   * @returns A paginated result of payment methods.
+   */
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<payment_method>> {
@@ -72,36 +88,54 @@ export class PaymentMethodService {
     };
   }
 
+  /**
+   * Finds a single payment method by its ID.
+   * @param id - The ID of the payment method to find.
+   * @returns The payment method.
+   * @throws {NotFoundException} If the payment method with the given ID is not found.
+   */
   async findOne(id: number): Promise<payment_method> {
     const method = await this.prisma.payment_method.findUnique({
       where: { payment_method_id: id },
     });
     if (!method) {
-      throw new NotFoundException(
-        `Phương thức thanh toán với ID ${id} không tồn tại.`,
-      );
+      throw new NotFoundException(`Payment method with ID ${id} not found.`);
     }
     return method;
   }
 
+  /**
+   * Finds a single payment method by its name.
+   * @param name - The name of the payment method to find.
+   * @returns The payment method, or null if not found.
+   */
   async findByName(name: string): Promise<payment_method | null> {
     return this.prisma.payment_method.findUnique({
       where: { name },
     });
   }
 
+  /**
+   * Updates a payment method.
+   * @param id - The ID of the payment method to update.
+   * @param updateDto - The data to update the payment method with.
+   * @returns The updated payment method.
+   * @throws {NotFoundException} If the payment method is not found.
+   * @throws {ConflictException} If the new name conflicts with an existing payment method.
+   * @throws {InternalServerErrorException} If an unexpected error occurs.
+   */
   async update(
     id: number,
     updateDto: UpdatePaymentMethodDto,
   ): Promise<payment_method> {
-    await this.findOne(id); // Check for existence
+    await this.findOne(id);
     const { name, description } = updateDto;
     try {
       return await this.prisma.payment_method.update({
         where: { payment_method_id: id },
         data: {
           ...(name && { name }),
-          ...(description !== undefined && { description }), // Allow setting description to null or empty string
+          ...(description !== undefined && { description }),
         },
       });
     } catch (error) {
@@ -111,7 +145,7 @@ export class PaymentMethodService {
       ) {
         if ((error.meta?.target as string[])?.includes('name') && name) {
           throw new ConflictException(
-            `Phương thức thanh toán với tên '${name}' đã tồn tại.`,
+            `Payment method with name '${name}' already exists.`,
           );
         }
         throw new ConflictException(
@@ -123,7 +157,7 @@ export class PaymentMethodService {
         error.code === 'P2025'
       ) {
         throw new NotFoundException(
-          `Phương thức thanh toán với ID ${id} không tồn tại để cập nhật.`,
+          `Payment method with ID ${id} not found for update.`,
         );
       }
       console.error(`Error updating payment method ${id}:`, error);
@@ -133,10 +167,17 @@ export class PaymentMethodService {
     }
   }
 
+  /**
+   * Removes a payment method.
+   * @param id - The ID of the payment method to remove.
+   * @returns The removed payment method.
+   * @throws {NotFoundException} If the payment method is not found.
+   * @throws {ConflictException} If the payment method is in use by existing payments.
+   * @throws {InternalServerErrorException} If an unexpected error occurs.
+   */
   async remove(id: number): Promise<payment_method> {
-    const methodToDelete = await this.findOne(id); // Check for existence
+    const methodToDelete = await this.findOne(id);
     try {
-      // Trước khi xóa, kiểm tra xem phương thức này có đang được payment nào sử dụng không
       const paymentsUsingMethod = await this.prisma.payment.count({
         where: { payment_method_id: id },
       });
@@ -150,13 +191,13 @@ export class PaymentMethodService {
       });
       return methodToDelete;
     } catch (error) {
-      if (error instanceof ConflictException) throw error; // Re-throw conflict exception
+      if (error instanceof ConflictException) throw error;
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
         throw new NotFoundException(
-          `Phương thức thanh toán với ID ${id} không tồn tại để xóa.`,
+          `Payment method with ID ${id} not found for deletion.`,
         );
       }
       console.error(`Error deleting payment method ${id}:`, error);

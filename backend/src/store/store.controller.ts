@@ -1,30 +1,34 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  ParseIntPipe,
+  Get,
   HttpCode,
   HttpStatus,
-  UseGuards,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
-import { PaginationDto, PaginatedResult, PaginationMetadata } from '../common/dto/pagination.dto';
+import {
+  PaginatedResult,
+  PaginationDto,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
 import { store } from '../generated/prisma/client';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiBody,
   ApiBearerAuth,
+  ApiBody,
   ApiExtraModels,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -38,11 +42,17 @@ import { ROLES } from '../auth/constants/roles.constant';
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
+  /**
+   * Creates a new store.
+   * This endpoint is restricted to users with the MANAGER role.
+   * @param createStoreDto - The data for creating the new store.
+   * @returns The newly created store.
+   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new store - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Create a new store (Manager only)' })
   @ApiBody({ type: CreateStoreDto })
   @ApiResponse({
     status: 201,
@@ -65,14 +75,20 @@ export class StoreController {
     return this.storeService.create(createStoreDto);
   }
 
+  /**
+   * Retrieves a paginated list of all stores.
+   * This endpoint is restricted to users with MANAGER or STAFF roles.
+   * @param paginationDto - The pagination parameters.
+   * @returns A paginated result of stores.
+   */
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
   @ApiOperation({
-    summary: 'Get all stores with pagination - MANAGER và STAFF',
+    summary: 'Get all stores with pagination (Manager and Staff only)',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Paginated list of stores',
     schema: {
       type: 'object',
@@ -98,10 +114,15 @@ export class StoreController {
     return this.storeService.findAll(paginationDto);
   }
 
+  /**
+   * Retrieves the default store information.
+   * This endpoint is accessible to all authenticated users.
+   * @returns The default store.
+   */
   @Get('default')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
-  @ApiOperation({ summary: 'Get default store information - Tất cả roles' })
+  @ApiOperation({ summary: 'Get default store information (All roles)' })
   @ApiResponse({ status: 200, description: 'Default store information' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -113,10 +134,16 @@ export class StoreController {
     return this.storeService.getDefaultStore();
   }
 
+  /**
+   * Retrieves a specific store by its ID.
+   * This endpoint is restricted to users with MANAGER or STAFF roles.
+   * @param id - The ID of the store to retrieve.
+   * @returns The store with the specified ID.
+   */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER, ROLES.STAFF)
-  @ApiOperation({ summary: 'Get a store by ID - MANAGER và STAFF' })
+  @ApiOperation({ summary: 'Get a store by ID (Manager and Staff only)' })
   @ApiParam({ name: 'id', description: 'Store ID', type: Number })
   @ApiResponse({ status: 200, description: 'The store' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -129,10 +156,17 @@ export class StoreController {
     return this.storeService.findOne(id);
   }
 
+  /**
+   * Updates an existing store.
+   * This endpoint is restricted to users with the MANAGER role.
+   * @param id - The ID of the store to update.
+   * @param updateStoreDto - The data to update the store with.
+   * @returns The updated store.
+   */
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
-  @ApiOperation({ summary: 'Update a store by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Update a store by ID (Manager only)' })
   @ApiParam({ name: 'id', description: 'Store ID', type: Number })
   @ApiBody({ type: UpdateStoreDto })
   @ApiResponse({
@@ -157,11 +191,16 @@ export class StoreController {
     return this.storeService.update(id, updateStoreDto);
   }
 
+  /**
+   * Deletes a store by its ID.
+   * This endpoint is restricted to users with the MANAGER role.
+   * @param id - The ID of the store to delete.
+   */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLES.MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a store by ID - Chỉ MANAGER' })
+  @ApiOperation({ summary: 'Delete a store by ID (Manager only)' })
   @ApiParam({ name: 'id', description: 'Store ID', type: Number })
   @ApiResponse({
     status: 204,
