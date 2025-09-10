@@ -1,37 +1,41 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    ParseIntPipe,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import {DiscountService} from './discount.service';
-import {CreateDiscountDto} from './dto/create-discount.dto';
-import {UpdateDiscountDto} from './dto/update-discount.dto';
-import {BulkDeleteDiscountDto} from './dto/bulk-delete-discount.dto';
-import {PaginatedResult, PaginationDto, PaginationMetadata} from '../common/dto/pagination.dto';
-import {discount} from '../generated/prisma/client';
+import { DiscountService } from './discount.service';
+import { CreateDiscountDto } from './dto/create-discount.dto';
+import { UpdateDiscountDto } from './dto/update-discount.dto';
+import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
 import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiExtraModels,
-    ApiOperation,
-    ApiParam,
-    ApiQuery,
-    ApiResponse,
-    ApiTags,
+  PaginatedResult,
+  PaginationDto,
+  PaginationMetadata,
+} from '../common/dto/pagination.dto';
+import { discount } from '../generated/prisma';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiExtraModels,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard';
-import {RolesGuard} from '../auth/guards/roles.guard';
-import {Roles} from '../auth/decorators/roles.decorator';
-import {ROLES} from '../auth/constants/roles.constant';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { ROLES } from '../auth/constants/roles.constant';
 
 @ApiTags('discounts')
 @Controller('discounts')
@@ -98,8 +102,8 @@ export class DiscountController {
     type: Number,
     description: 'Items per page',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Paginated list of discounts',
     schema: {
       type: 'object',
@@ -120,7 +124,6 @@ export class DiscountController {
   ): Promise<PaginatedResult<discount>> {
     return this.discountService.findAll(paginationDto);
   }
-
 
   /**
    * Performs a bulk deletion of discounts.
@@ -264,5 +267,4 @@ export class DiscountController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.discountService.remove(id);
   }
-
 }

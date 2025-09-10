@@ -1,11 +1,15 @@
-import {ConflictException, Injectable, NotFoundException,} from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {discount, Prisma} from '../generated/prisma/client';
-import {CreateDiscountDto} from './dto/create-discount.dto';
-import {UpdateDiscountDto} from './dto/update-discount.dto';
-import {BulkDeleteDiscountDto} from './dto/bulk-delete-discount.dto';
-import {PaginatedResult, PaginationDto} from '../common/dto/pagination.dto';
-import {Decimal} from '@prisma/client/runtime/library';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { discount, Prisma } from '../generated/prisma/client';
+import { CreateDiscountDto } from './dto/create-discount.dto';
+import { UpdateDiscountDto } from './dto/update-discount.dto';
+import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
+import { PaginatedResult, PaginationDto } from '../common/dto/pagination.dto';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 /**
@@ -214,7 +218,9 @@ export class DiscountService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new NotFoundException(`Discount with ID ${discount_id} not found.`);
+          throw new NotFoundException(
+            `Discount with ID ${discount_id} not found.`,
+          );
         }
         if (error.code === 'P2002' && error.meta?.target) {
           const targetFields = error.meta.target as string[];
@@ -257,7 +263,9 @@ export class DiscountService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new NotFoundException(`Discount with ID ${discount_id} not found`);
+          throw new NotFoundException(
+            `Discount with ID ${discount_id} not found`,
+          );
         }
         if (error.code === 'P2003') {
           throw new ConflictException(
