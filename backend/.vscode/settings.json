@@ -11,7 +11,20 @@
         ],
         "editor.wrappingStrategy": "advanced",
         "editor.wordWrap": "wordWrapColumn",
-        "editor.wordWrapColumn": 60,
+        "editor.wordWrapColumn": 60
     },
     "scm.inputFontFamily": "mono",
+    "[typescript][javascript][css][json]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "source.organizeImports.biome": "explicit",
+            "source.fixAll.biome": "explicit"
+        }
+    },
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit",
+        "source.fixAll.biome": "explicit",
+        "source.organizeImports.biome": "explicit"
+    }
 }
