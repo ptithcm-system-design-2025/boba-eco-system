@@ -1,12 +1,10 @@
 {
-  "mcpServers": {
-    "Bifrost": {
-      "url": "http://localhost:8008/sse",
-      "timeout": 30,
-      "alwaysAllow": [
-        "get_document_symbols"
-      ],
-      "disabled": false
-    }
-  }
+	"mcpServers": {
+		"Bifrost": {
+			"url": "http://localhost:8008/sse",
+			"timeout": 30,
+			"alwaysAllow": ["get_document_symbols"],
+			"disabled": false
+		}
+	}
 }
