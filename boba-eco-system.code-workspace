@@ -1,0 +1,57 @@
+{
+    "folders": [
+                {
+            "path": ".",
+            "name": "workspace-root"
+        },
+        {
+            "path": "backend"
+        },
+        {
+            "path": "frontend/manager",
+            "name": "frontend-manager"
+        },
+        {
+            "path": "frontend/pos",
+            "name": "frontend-pos"
+        },
+        {
+            "path": "database",
+            "name": "database"
+        }
+    ],
+    "settings": {
+        "[scminput]": {
+            "editor.rulers": [
+                65,
+                72
+            ],
+            "editor.wrappingStrategy": "simple",
+            "editor.wordWrap": "bounded",
+            "editor.wordWrapColumn": 72,
+            "editor.formatOnPaste": true,
+            "editor.wrappingIndent": "indent",
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "scm.inputFontFamily": "mono",
+        "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Source Code Pro', 'Fira Code', Menlo, Monaco, 'Courier New', monospace",
+        "editor.fontLigatures": true,
+        "[yaml]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2,
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+            "editor.autoIndent": "keep",
+            "diffEditor.ignoreTrimWhitespace": false,
+            "editor.defaultColorDecorators": "never",
+            "editor.quickSuggestions": {
+                "strings": true,
+                "other": true,
+                "comments": false
+            }
+        },
+        "augment.completions.enableAutomaticCompletions": false,
+        "augment.completions.enableQuickSuggestions": true,
+        "augment.experimental.terminal.vscodeTerminalStrategy": "VSCode",
+        "augment.nextEdit.enableBackgroundSuggestions": false
+    }
+}

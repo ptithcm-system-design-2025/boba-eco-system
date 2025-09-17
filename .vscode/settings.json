@@ -1,0 +1,17 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "database":true,
+        "backend":true,
+        "frontend/manager":true,
+        "frontend/pos":true,
+        "frontend" :true
+    }
+}
