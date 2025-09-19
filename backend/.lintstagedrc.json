@@ -1,9 +1,5 @@
 {
 	"$schema": "https://json.schemastore.org/lintstagedrc.schema.json",
-	"src/**/*.ts": [
-		"pnpm biome lint --fix",
-		"pnpm biome format --write",
-		"pnpm biome check --apply --organize-imports"
-	],
+	"src/**/*.ts": ["pnpm biome lint --fix", "pnpm biome format --write"],
 	"*.{js,json,css,scss}": ["pnpm biome lint --fix", "pnpm biome format --write"]
 }
