@@ -4,8 +4,8 @@ import { RoleController } from './role.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [RoleController],
-  providers: [RoleService],
+	imports: [PrismaModule],
+	controllers: [RoleController],
+	providers: [RoleService],
 })
 export class RoleModule {}

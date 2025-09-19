@@ -8,9 +8,9 @@ import { PrismaModule } from '../prisma/prisma.module';
  * Includes the controller, service, and required imports.
  */
 @Module({
-  imports: [PrismaModule],
-  controllers: [AccountController],
-  providers: [AccountService],
-  exports: [AccountService],
+	imports: [PrismaModule],
+	controllers: [AccountController],
+	providers: [AccountService],
+	exports: [AccountService],
 })
 export class AccountModule {}

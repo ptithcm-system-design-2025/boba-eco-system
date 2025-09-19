@@ -14,31 +14,31 @@ import { PrismaModule } from '../prisma/prisma.module';
  * It integrates JWT, Passport, Prisma, and provides related services, controllers, and guards.
  */
 @Module({
-  imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-      },
-    }),
-    PrismaModule,
-  ],
-  controllers: [AuthController],
-  providers: [
-    AuthService,
-    AuthTokenService,
-    JwtStrategy,
-    JwtAuthGuard,
-    RolesGuard,
-  ],
-  exports: [
-    AuthService,
-    AuthTokenService,
-    JwtStrategy,
-    JwtAuthGuard,
-    RolesGuard,
-    PassportModule,
-  ],
+	imports: [
+		PassportModule.register({ defaultStrategy: 'jwt' }),
+		JwtModule.register({
+			secret: process.env.JWT_SECRET || 'your-secret-key',
+			signOptions: {
+				expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+			},
+		}),
+		PrismaModule,
+	],
+	controllers: [AuthController],
+	providers: [
+		AuthService,
+		AuthTokenService,
+		JwtStrategy,
+		JwtAuthGuard,
+		RolesGuard,
+	],
+	exports: [
+		AuthService,
+		AuthTokenService,
+		JwtStrategy,
+		JwtAuthGuard,
+		RolesGuard,
+		PassportModule,
+	],
 })
 export class AuthModule {}

@@ -1,206 +1,206 @@
 import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
+	Injectable,
+	BadRequestException,
+	InternalServerErrorException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 
 @Injectable()
 export class FirebaseStorageService {
-  private bucket: admin.storage.Storage;
+	private bucket: admin.storage.Storage;
 
-  constructor(private configService: ConfigService) {
-    this.initializeFirebase();
-  }
+	constructor(private configService: ConfigService) {
+		this.initializeFirebase();
+	}
 
-  /**
-   * Initializes the Firebase Admin SDK.
-   * @private
-   * @throws {InternalServerErrorException} If Firebase initialization fails.
-   */
-  private initializeFirebase() {
-    try {
-      if (!admin.apps.length) {
-        const serviceAccount = require(path.join(__dirname, 'key.json'));
+	/**
+	 * Initializes the Firebase Admin SDK.
+	 * @private
+	 * @throws {InternalServerErrorException} If Firebase initialization fails.
+	 */
+	private initializeFirebase() {
+		try {
+			if (!admin.apps.length) {
+				const serviceAccount = require(path.join(__dirname, 'key.json'));
 
-        admin.initializeApp({
-          credential: admin.credential.cert(
-            serviceAccount as admin.ServiceAccount,
-          ),
-          storageBucket: this.configService.get<string>(
-            'FIREBASE_STORAGE_BUCKET',
-          ),
-        });
-      }
+				admin.initializeApp({
+					credential: admin.credential.cert(
+						serviceAccount as admin.ServiceAccount
+					),
+					storageBucket: this.configService.get<string>(
+						'FIREBASE_STORAGE_BUCKET'
+					),
+				});
+			}
 
-      this.bucket = admin.storage();
-    } catch (error) {
-      console.error('Firebase initialization error:', error);
-      throw new InternalServerErrorException('Firebase initialization failed');
-    }
-  }
+			this.bucket = admin.storage();
+		} catch (error) {
+			console.error('Firebase initialization error:', error);
+			throw new InternalServerErrorException('Firebase initialization failed');
+		}
+	}
 
-  /**
-   * Upload ảnh sản phẩm lên Firebase Storage
-   * @param file - File buffer từ multer
-   * @param fileName - Tên file (optional, sẽ tự generate nếu không có)
-   * @param folder - Thư mục lưu trữ (mặc định: 'products')
-   * @returns URL công khai của ảnh đã upload
-   */
-  async uploadProductImage(
-    file: Express.Multer.File,
-    fileName?: string,
-    folder: string = 'products',
-  ): Promise<string> {
-    try {
-      const allowedMimeTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/webp',
-      ];
-      if (!allowedMimeTypes.includes(file.mimetype)) {
-        throw new BadRequestException(
-          'Chỉ chấp nhận file ảnh định dạng JPEG, PNG, hoặc WebP',
-        );
-      }
+	/**
+	 * Upload ảnh sản phẩm lên Firebase Storage
+	 * @param file - File buffer từ multer
+	 * @param fileName - Tên file (optional, sẽ tự generate nếu không có)
+	 * @param folder - Thư mục lưu trữ (mặc định: 'products')
+	 * @returns URL công khai của ảnh đã upload
+	 */
+	async uploadProductImage(
+		file: Express.Multer.File,
+		fileName?: string,
+		folder: string = 'products'
+	): Promise<string> {
+		try {
+			const allowedMimeTypes = [
+				'image/jpeg',
+				'image/jpg',
+				'image/png',
+				'image/webp',
+			];
+			if (!allowedMimeTypes.includes(file.mimetype)) {
+				throw new BadRequestException(
+					'Chỉ chấp nhận file ảnh định dạng JPEG, PNG, hoặc WebP'
+				);
+			}
 
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        throw new BadRequestException(
-          'Kích thước file không được vượt quá 5MB',
-        );
-      }
+			const maxSize = 5 * 1024 * 1024;
+			if (file.size > maxSize) {
+				throw new BadRequestException(
+					'Kích thước file không được vượt quá 5MB'
+				);
+			}
 
-      const fileExtension = file.originalname.split('.').pop();
-      const uniqueFileName = fileName || `${uuidv4()}.${fileExtension}`;
-      const filePath = `${folder}/${uniqueFileName}`;
+			const fileExtension = file.originalname.split('.').pop();
+			const uniqueFileName = fileName || `${uuidv4()}.${fileExtension}`;
+			const filePath = `${folder}/${uniqueFileName}`;
 
-      const bucketRef = this.bucket.bucket();
-      const fileRef = bucketRef.file(filePath);
+			const bucketRef = this.bucket.bucket();
+			const fileRef = bucketRef.file(filePath);
 
-      await fileRef.save(file.buffer, {
-        metadata: {
-          contentType: file.mimetype,
-          metadata: {
-            originalName: file.originalname,
-            uploadedAt: new Date().toISOString(),
-          },
-        },
-      });
+			await fileRef.save(file.buffer, {
+				metadata: {
+					contentType: file.mimetype,
+					metadata: {
+						originalName: file.originalname,
+						uploadedAt: new Date().toISOString(),
+					},
+				},
+			});
 
-      await fileRef.makePublic();
+			await fileRef.makePublic();
 
-      const publicUrl = fileRef.publicUrl();
-      return publicUrl;
-    } catch (error) {
-      console.error('Upload error:', error);
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error uploading image');
-    }
-  }
+			const publicUrl = fileRef.publicUrl();
+			return publicUrl;
+		} catch (error) {
+			console.error('Upload error:', error);
+			if (error instanceof BadRequestException) {
+				throw error;
+			}
+			throw new InternalServerErrorException('Error uploading image');
+		}
+	}
 
-  /**
-   * Deletes a product image from Firebase Storage.
-   * @param imageUrl - The URL of the image to delete.
-   * @returns boolean - true if deletion is successful.
-   */
-  async deleteProductImage(imageUrl: string): Promise<boolean> {
-    try {
-      const bucketName = this.configService.get<string>(
-        'FIREBASE_STORAGE_BUCKET',
-      );
-      const baseUrl = `https://storage.googleapis.com/${bucketName}/`;
+	/**
+	 * Deletes a product image from Firebase Storage.
+	 * @param imageUrl - The URL of the image to delete.
+	 * @returns boolean - true if deletion is successful.
+	 */
+	async deleteProductImage(imageUrl: string): Promise<boolean> {
+		try {
+			const bucketName = this.configService.get<string>(
+				'FIREBASE_STORAGE_BUCKET'
+			);
+			const baseUrl = `https://storage.googleapis.com/${bucketName}/`;
 
-      if (!imageUrl.startsWith(baseUrl)) {
-        throw new BadRequestException('Invalid image URL');
-      }
+			if (!imageUrl.startsWith(baseUrl)) {
+				throw new BadRequestException('Invalid image URL');
+			}
 
-      const filePath = imageUrl.replace(baseUrl, '');
+			const filePath = imageUrl.replace(baseUrl, '');
 
-      const bucketRef = this.bucket.bucket();
-      const fileRef = bucketRef.file(filePath);
+			const bucketRef = this.bucket.bucket();
+			const fileRef = bucketRef.file(filePath);
 
-      const [exists] = await fileRef.exists();
-      if (!exists) {
-        throw new BadRequestException('File not found');
-      }
+			const [exists] = await fileRef.exists();
+			if (!exists) {
+				throw new BadRequestException('File not found');
+			}
 
-      await fileRef.delete();
-      return true;
-    } catch (error) {
-      console.error('Delete error:', error);
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error deleting image');
-    }
-  }
+			await fileRef.delete();
+			return true;
+		} catch (error) {
+			console.error('Delete error:', error);
+			if (error instanceof BadRequestException) {
+				throw error;
+			}
+			throw new InternalServerErrorException('Error deleting image');
+		}
+	}
 
-  /**
-   * Lists all images in a specified folder.
-   * @param folder - The folder to list images from.
-   * @returns An array of image URLs.
-   */
-  async listProductImages(folder: string = 'products'): Promise<string[]> {
-    try {
-      const bucketRef = this.bucket.bucket();
-      const [files] = await bucketRef.getFiles({
-        prefix: `${folder}/`,
-      });
+	/**
+	 * Lists all images in a specified folder.
+	 * @param folder - The folder to list images from.
+	 * @returns An array of image URLs.
+	 */
+	async listProductImages(folder: string = 'products'): Promise<string[]> {
+		try {
+			const bucketRef = this.bucket.bucket();
+			const [files] = await bucketRef.getFiles({
+				prefix: `${folder}/`,
+			});
 
-      const bucketName = this.configService.get<string>(
-        'FIREBASE_STORAGE_BUCKET',
-      );
-      const imageUrls = files.map(
-        (file) => `https://storage.googleapis.com/${bucketName}/${file.name}`,
-      );
+			const bucketName = this.configService.get<string>(
+				'FIREBASE_STORAGE_BUCKET'
+			);
+			const imageUrls = files.map(
+				(file) => `https://storage.googleapis.com/${bucketName}/${file.name}`
+			);
 
-      return imageUrls;
-    } catch (error) {
-      console.error('List images error:', error);
-      throw new InternalServerErrorException('Error listing images');
-    }
-  }
+			return imageUrls;
+		} catch (error) {
+			console.error('List images error:', error);
+			throw new InternalServerErrorException('Error listing images');
+		}
+	}
 
-  /**
-   * Updates a product image by deleting the old one and uploading a new one.
-   * @param oldImageUrl - The URL of the old image to delete.
-   * @param newFile - The new image file.
-   * @param fileName - Optional new file name.
-   * @param folder - The storage folder.
-   * @returns The URL of the new image.
-   */
-  async updateProductImage(
-    oldImageUrl: string,
-    newFile: Express.Multer.File,
-    fileName?: string,
-    folder: string = 'products',
-  ): Promise<string> {
-    try {
-      const newImageUrl = await this.uploadProductImage(
-        newFile,
-        fileName,
-        folder,
-      );
+	/**
+	 * Updates a product image by deleting the old one and uploading a new one.
+	 * @param oldImageUrl - The URL of the old image to delete.
+	 * @param newFile - The new image file.
+	 * @param fileName - Optional new file name.
+	 * @param folder - The storage folder.
+	 * @returns The URL of the new image.
+	 */
+	async updateProductImage(
+		oldImageUrl: string,
+		newFile: Express.Multer.File,
+		fileName?: string,
+		folder: string = 'products'
+	): Promise<string> {
+		try {
+			const newImageUrl = await this.uploadProductImage(
+				newFile,
+				fileName,
+				folder
+			);
 
-      if (oldImageUrl) {
-        try {
-          await this.deleteProductImage(oldImageUrl);
-        } catch (error) {
-          console.warn('Warning: Could not delete old image:', error.message);
-        }
-      }
+			if (oldImageUrl) {
+				try {
+					await this.deleteProductImage(oldImageUrl);
+				} catch (error) {
+					console.warn('Warning: Could not delete old image:', error.message);
+				}
+			}
 
-      return newImageUrl;
-    } catch (error) {
-      console.error('Update image error:', error);
-      throw error;
-    }
-  }
+			return newImageUrl;
+		} catch (error) {
+			console.error('Update image error:', error);
+			throw error;
+		}
+	}
 }

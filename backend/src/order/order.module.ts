@@ -7,9 +7,9 @@ import { PrismaModule } from '../prisma/prisma.module';
  * The module for managing orders.
  */
 @Module({
-  imports: [PrismaModule],
-  controllers: [OrderController],
-  providers: [OrderService],
-  exports: [OrderService],
+	imports: [PrismaModule],
+	controllers: [OrderController],
+	providers: [OrderService],
+	exports: [OrderService],
 })
 export class OrderModule {}
