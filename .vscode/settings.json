@@ -12,6 +12,6 @@
         "backend":true,
         "frontend/manager":true,
         "frontend/pos":true,
-        "frontend" :true
+        "frontend/" :true
     }
 }
