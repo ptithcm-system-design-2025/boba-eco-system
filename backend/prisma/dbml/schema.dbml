@@ -309,19 +309,19 @@ Ref: employee.account_id - account.account_id
 
 Ref: manager.account_id - account.account_id
 
-Ref: order.customer_id > customer.customer_id
+Ref: order.customer_id - customer.customer_id
 
-Ref: order.employee_id > employee.employee_id
+Ref: order.employee_id - employee.employee_id
 
-Ref: order_discount.discount_id > discount.discount_id [delete: Cascade]
+Ref: order_discount.discount_id > discount.discount_id
 
 Ref: order_discount.order_id > order.order_id [delete: Cascade]
 
 Ref: order_product.order_id > order.order_id [delete: Cascade]
 
-Ref: order_product.product_price_id > product_price.product_price_id [delete: Cascade]
+Ref: order_product.product_price_id > product_price.product_price_id
 
-Ref: payment.order_id > order.order_id [delete: Cascade]
+Ref: order.order_id > payment.order_id [delete: Cascade]
 
 Ref: payment.payment_method_id > payment_method.payment_method_id
 
