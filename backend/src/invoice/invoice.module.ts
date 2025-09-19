@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { StoreModule } from '../store/store.module';
 
 @Module({
-  imports: [PrismaModule, StoreModule],
-  controllers: [InvoiceController],
-  providers: [InvoiceService],
-  exports: [InvoiceService],
+	imports: [PrismaModule, StoreModule],
+	controllers: [InvoiceController],
+	providers: [InvoiceService],
+	exports: [InvoiceService],
 })
 export class InvoiceModule {}

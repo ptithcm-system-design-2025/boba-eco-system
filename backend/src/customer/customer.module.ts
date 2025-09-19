@@ -14,9 +14,9 @@ import { AccountModule } from '../account/account.module';
  * @exports {CustomerService} - Makes the CustomerService available to other modules.
  */
 @Module({
-  imports: [PrismaModule, AccountModule],
-  controllers: [CustomerController],
-  providers: [CustomerService],
-  exports: [CustomerService],
+	imports: [PrismaModule, AccountModule],
+	controllers: [CustomerController],
+	providers: [CustomerService],
+	exports: [CustomerService],
 })
 export class CustomerModule {}

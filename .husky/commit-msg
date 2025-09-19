@@ -1,1 +1,10 @@
+# Check secrets in commit message
+if ! command -v git-secrets &> /dev/null
+then
+  echo "git-secrets is not installed. Please install from https://github.com/awslabs/git-secrets"
+  exit 1
+fi
+
+git-secrets --commit_msg_hook "$1"
+
 pnpm exec commitlint --edit "$1"

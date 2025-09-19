@@ -1,10 +1,8 @@
-# Check secrets before commit
+# Check secrets in merge commit
 if ! command -v git-secrets &> /dev/null
 then
   echo "git-secrets is not installed. Please install from https://github.com/awslabs/git-secrets"
   exit 1
 fi
 
-git-secrets --pre_commit_hook -- "$@"
-
-cd backend && pnpm exec lint-staged
+git-secrets --prepare_commit_msg_hook "$1"

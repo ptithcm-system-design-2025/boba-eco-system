@@ -1,33 +1,33 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import type { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { ROLE_HIERARCHY, RoleType } from '../constants/roles.constant';
+import { ROLE_HIERARCHY, type RoleType } from '../constants/roles.constant';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+	constructor(private reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<RoleType[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+	canActivate(context: ExecutionContext): boolean {
+		const requiredRoles = this.reflector.getAllAndOverride<RoleType[]>(
+			ROLES_KEY,
+			[context.getHandler(), context.getClass()]
+		);
 
-    if (!requiredRoles) {
-      return true;
-    }
+		if (!requiredRoles) {
+			return true;
+		}
 
-    const { user } = context.switchToHttp().getRequest();
+		const { user } = context.switchToHttp().getRequest();
 
-    if (!user || !user.role_name) {
-      return false;
-    }
+		if (!user || !user.role_name) {
+			return false;
+		}
 
-    const userRole = user.role_name as RoleType;
-    const allowedRoles = ROLE_HIERARCHY[userRole] || [userRole];
+		const userRole = user.role_name as RoleType;
+		const allowedRoles = ROLE_HIERARCHY[userRole] || [userRole];
 
-    return requiredRoles.some((requiredRole) =>
-      allowedRoles.includes(requiredRole),
-    );
-  }
+		return requiredRoles.some((requiredRole) =>
+			allowedRoles.includes(requiredRole)
+		);
+	}
 }

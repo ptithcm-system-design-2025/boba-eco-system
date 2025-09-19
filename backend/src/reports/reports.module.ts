@@ -4,8 +4,8 @@ import { ReportsController } from './reports.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
-  providers: [ReportsService],
-  controllers: [ReportsController],
+	imports: [PrismaModule],
+	providers: [ReportsService],
+	controllers: [ReportsController],
 })
 export class ReportsModule {}

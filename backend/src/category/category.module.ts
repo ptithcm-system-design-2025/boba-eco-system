@@ -6,8 +6,8 @@ import { CategoryController } from './category.controller';
  * Provides category-related functionality to the application.
  */
 @Module({
-  controllers: [CategoryController],
-  providers: [CategoryService],
-  exports: [CategoryService],
+	controllers: [CategoryController],
+	providers: [CategoryService],
+	exports: [CategoryService],
 })
 export class CategoryModule {}
