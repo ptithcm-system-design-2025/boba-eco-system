@@ -5,7 +5,8 @@
             "name": "workspace-root"
         },
         {
-            "path": "backend"
+            "path": "backend",
+            "name": "backend"
         },
         {
             "path": "frontend/manager",

@@ -1,23 +1,60 @@
 import {
-	Injectable,
-	NotFoundException,
-	ConflictException,
 	BadRequestException,
+	ConflictException,
+	Injectable,
 	InternalServerErrorException,
-} from '@nestjs/common';
-import type { PrismaService } from '../prisma/prisma.service';
-import { Prisma, type product, type product_price } from '../generated/prisma/client';
-import type { CreateProductDto } from './dto/create-product.dto';
-import type { UpdateProductDto } from './dto/update-product.dto';
-import type { CreateProductPriceDto } from './dto/create-product-price.dto';
-import type { UpdateProductPriceDto } from './dto/update-product-price.dto';
-import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto';
-import type { BulkDeleteProductDto } from './dto/bulk-delete-product.dto';
-import type { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+	NotFoundException,
+} from '@nestjs/common'
+import type {
+	PaginatedResult,
+	PaginationDto,
+} from '../common/dto/pagination.dto'
+import type { FirebaseStorageService } from '../firebase-storage/firebase-storage.service'
+import {
+	Prisma,
+	type product,
+	type product_price,
+} from '../generated/prisma/client'
+import type { PrismaService } from '../prisma/prisma.service'
+import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
+import type { BulkDeleteProductDto } from './dto/bulk-delete-product.dto'
+import type { CreateProductPriceDto } from './dto/create-product-price.dto'
+import type { CreateProductDto } from './dto/create-product.dto'
+import type { UpdateProductPriceDto } from './dto/update-product-price.dto'
+import type { UpdateProductDto } from './dto/update-product.dto'
 
 @Injectable()
 export class ProductService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private firebaseStorageService: FirebaseStorageService
+	) {}
+
+	/**
+	 * Converts gs:// paths to public URLs in product data for frontend consumption
+	 * @param product - Product object to convert
+	 * @returns Product object with public URLs
+	 */
+	private convertProductImagePaths(product: product): product {
+		if (product.image_path) {
+			return {
+				...product,
+				image_path: this.firebaseStorageService.convertGsToPublicUrl(
+					product.image_path
+				),
+			}
+		}
+		return product
+	}
+
+	/**
+	 * Converts gs:// paths to public URLs in an array of products
+	 * @param products - Array of products to convert
+	 * @returns Array of products with public URLs
+	 */
+	private convertProductsImagePaths(products: product[]): product[] {
+		return products.map((product) => this.convertProductImagePaths(product))
+	}
 
 	/**
 	 * Creates a new product along with its prices.
@@ -30,16 +67,16 @@ export class ProductService {
 	 * @throws {InternalServerErrorException} If there's an unexpected error during product size upsertion.
 	 */
 	async create(createProductDto: CreateProductDto): Promise<product> {
-		const { name, category_id, prices, ...restProductData } = createProductDto;
+		const { name, category_id, prices, ...restProductData } = createProductDto
 
 		if (category_id) {
 			const categoryExists = await this.prisma.category.findUnique({
 				where: { category_id },
-			});
+			})
 			if (!categoryExists) {
 				throw new NotFoundException(
 					`Category with ID ${category_id} does not exist.`
-				);
+				)
 			}
 		}
 
@@ -50,21 +87,21 @@ export class ProductService {
 			product_price: {
 				create: [],
 			},
-		};
+		}
 
 		for (const priceDto of prices) {
-			const { size_id, size_data, price, is_active } = priceDto;
-			let productSizeId: number;
+			const { size_id, size_data, price, is_active } = priceDto
+			let productSizeId: number
 
 			if (!size_id && !size_data) {
 				throw new BadRequestException(
 					'Each price must have either a size_id or size_data.'
-				);
+				)
 			}
 			if (size_id && size_data) {
 				throw new BadRequestException(
 					'Each price cannot have both size_id and size_data. Provide one.'
-				);
+				)
 			}
 
 			if (size_data) {
@@ -73,7 +110,7 @@ export class ProductService {
 					unit: sizeUnit,
 					quantity: sizeQuantity,
 					description: sizeDescription,
-				} = size_data;
+				} = size_data
 				try {
 					const upsertedSize = await this.prisma.product_size.upsert({
 						where: { unit_name: { unit: sizeUnit, name: sizeName } },
@@ -84,8 +121,8 @@ export class ProductService {
 							description: sizeDescription,
 						},
 						update: { quantity: sizeQuantity, description: sizeDescription },
-					});
-					productSizeId = upsertedSize.size_id;
+					})
+					productSizeId = upsertedSize.size_id
 				} catch (e) {
 					if (
 						e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -93,37 +130,37 @@ export class ProductService {
 					) {
 						const existingSize = await this.prisma.product_size.findUnique({
 							where: { unit_name: { unit: sizeUnit, name: sizeName } },
-						});
+						})
 						if (!existingSize) {
 							throw new InternalServerErrorException(
 								`Failed to create or find product size: ${sizeName} (${sizeUnit}) after upsert attempt.`
-							);
+							)
 						}
-						productSizeId = existingSize.size_id;
+						productSizeId = existingSize.size_id
 					} else {
-						console.error('Error upserting product size:', e);
+						console.error('Error upserting product size:', e)
 						throw new InternalServerErrorException(
 							'Error processing product size data.'
-						);
+						)
 					}
 				}
 			} else if (size_id) {
 				const existingSize = await this.prisma.product_size.findUnique({
 					where: { size_id },
-				});
+				})
 				if (!existingSize) {
 					throw new NotFoundException(
 						`Product size with ID ${size_id} does not exist.`
-					);
+					)
 				}
-				productSizeId = existingSize.size_id;
+				productSizeId = existingSize.size_id
 			} else {
 				throw new BadRequestException(
 					'Missing size_id or size_data for price item.'
-				);
+				)
 			}
 
-			(
+			;(
 				productData.product_price!
 					.create as Prisma.product_priceCreateWithoutProductInput[]
 			).push({
@@ -132,7 +169,7 @@ export class ProductService {
 				product_size: {
 					connect: { size_id: productSizeId },
 				},
-			});
+			})
 		}
 
 		try {
@@ -142,7 +179,7 @@ export class ProductService {
 					category: true,
 					product_price: { include: { product_size: true } },
 				},
-			});
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (
@@ -151,7 +188,7 @@ export class ProductService {
 				) {
 					throw new ConflictException(
 						`Product with name '${name}' already exists.`
-					);
+					)
 				}
 				if (
 					error.code === 'P2002' &&
@@ -160,11 +197,11 @@ export class ProductService {
 				) {
 					throw new ConflictException(
 						'A product cannot have duplicate prices for the same size.'
-					);
+					)
 				}
 			}
-			console.error('Error creating product:', error);
-			throw error;
+			console.error('Error creating product:', error)
+			throw error
 		}
 	}
 
@@ -176,8 +213,8 @@ export class ProductService {
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<product>> {
-		const { page = 1, limit = 10 } = paginationDto;
-		const skip = (page - 1) * limit;
+		const { page = 1, limit = 10 } = paginationDto
+		const skip = (page - 1) * limit
 
 		const [data, total] = await Promise.all([
 			this.prisma.product.findMany({
@@ -192,12 +229,15 @@ export class ProductService {
 				},
 			}),
 			this.prisma.product.count(),
-		]);
+		])
 
-		const totalPages = Math.ceil(total / limit);
+		const totalPages = Math.ceil(total / limit)
+
+		// Convert gs:// paths to public URLs for frontend
+		const convertedData = this.convertProductsImagePaths(data)
 
 		return {
-			data,
+			data: convertedData,
 			pagination: {
 				page,
 				limit,
@@ -206,7 +246,7 @@ export class ProductService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		};
+		}
 	}
 
 	/**
@@ -222,13 +262,14 @@ export class ProductService {
 				category: true,
 				product_price: true,
 			},
-		});
+		})
 		if (!product) {
 			throw new NotFoundException(
 				`Product with ID ${product_id} does not exist`
-			);
+			)
 		}
-		return product;
+		// Convert gs:// path to public URL for frontend
+		return this.convertProductImagePaths(product)
 	}
 
 	/**
@@ -243,25 +284,25 @@ export class ProductService {
 		product_id: number,
 		updateProductDto: UpdateProductDto
 	): Promise<product> {
-		const { name, category_id, ...restProductData } = updateProductDto;
+		const { name, category_id, ...restProductData } = updateProductDto
 
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { product_id },
-		});
+		})
 		if (!existingProduct) {
 			throw new NotFoundException(
 				`Product with ID ${product_id} does not exist.`
-			);
+			)
 		}
 
 		if (category_id) {
 			const categoryExists = await this.prisma.category.findUnique({
 				where: { category_id },
-			});
+			})
 			if (!categoryExists) {
 				throw new NotFoundException(
 					`Category with ID ${category_id} does not exist.`
-				);
+				)
 			}
 		}
 
@@ -269,7 +310,7 @@ export class ProductService {
 			...restProductData,
 			...(name && { name }),
 			...(category_id && { category: { connect: { category_id } } }),
-		};
+		}
 
 		try {
 			return await this.prisma.product.update({
@@ -279,7 +320,7 @@ export class ProductService {
 					category: true,
 					product_price: { include: { product_size: true } },
 				},
-			});
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (
@@ -288,16 +329,16 @@ export class ProductService {
 				) {
 					throw new ConflictException(
 						`Product with name '${name}' already exists.`
-					);
+					)
 				}
 				if (error.code === 'P2025') {
 					throw new NotFoundException(
 						`Product with ID ${product_id} not found during update operation.`
-					);
+					)
 				}
 			}
-			console.error(`Error updating product ${product_id}:`, error);
-			throw error;
+			console.error(`Error updating product ${product_id}:`, error)
+			throw error
 		}
 	}
 
@@ -308,22 +349,22 @@ export class ProductService {
 	 * @returns An object summarizing the deletion result.
 	 */
 	async bulkDelete(bulkDeleteDto: BulkDeleteProductDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		const { ids } = bulkDeleteDto;
+		const { ids } = bulkDeleteDto
 
 		try {
 			await this.prisma.$transaction(async (tx) => {
 				await tx.product_price.deleteMany({
 					where: { product_id: { in: ids } },
-				});
+				})
 
 				await tx.product.deleteMany({
 					where: { product_id: { in: ids } },
-				});
-			});
+				})
+			})
 
 			return {
 				deleted: ids,
@@ -333,7 +374,7 @@ export class ProductService {
 					success: ids.length,
 					failed: 0,
 				},
-			};
+			}
 		} catch (error) {
 			return {
 				deleted: [],
@@ -346,7 +387,7 @@ export class ProductService {
 					success: 0,
 					failed: ids.length,
 				},
-			};
+			}
 		}
 	}
 
@@ -361,36 +402,36 @@ export class ProductService {
 	async remove(product_id: number): Promise<product> {
 		const product = await this.prisma.product.findUnique({
 			where: { product_id },
-		});
+		})
 		if (!product) {
 			throw new NotFoundException(
 				`Product with ID ${product_id} does not exist.`
-			);
+			)
 		}
 
 		try {
 			return await this.prisma.$transaction(async (tx) => {
-				await tx.product_price.deleteMany({ where: { product_id } });
+				await tx.product_price.deleteMany({ where: { product_id } })
 				return tx.product.delete({
 					where: { product_id },
 					include: { product_price: true },
-				});
-			});
+				})
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
 					throw new NotFoundException(
 						`Product with ID ${product_id} not found during delete operation.`
-					);
+					)
 				}
 				if (error.code === 'P2003') {
 					throw new ConflictException(
 						`Product with ID ${product_id} cannot be deleted as its associated prices might be in use (e.g., in orders).`
-					);
+					)
 				}
 			}
-			console.error(`Error removing product ${product_id}:`, error);
-			throw error;
+			console.error(`Error removing product ${product_id}:`, error)
+			throw error
 		}
 	}
 
@@ -404,8 +445,8 @@ export class ProductService {
 		category_id: number,
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<product>> {
-		const { page = 1, limit = 10 } = paginationDto;
-		const skip = (page - 1) * limit;
+		const { page = 1, limit = 10 } = paginationDto
+		const skip = (page - 1) * limit
 
 		const [data, total] = await Promise.all([
 			this.prisma.product.findMany({
@@ -423,12 +464,15 @@ export class ProductService {
 			this.prisma.product.count({
 				where: { category_id },
 			}),
-		]);
+		])
 
-		const totalPages = Math.ceil(total / limit);
+		const totalPages = Math.ceil(total / limit)
+
+		// Convert gs:// paths to public URLs for frontend
+		const convertedData = this.convertProductsImagePaths(data)
 
 		return {
-			data,
+			data: convertedData,
 			pagination: {
 				page,
 				limit,
@@ -437,7 +481,7 @@ export class ProductService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		};
+		}
 	}
 
 	/**
@@ -450,10 +494,10 @@ export class ProductService {
 		category_id: number,
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<product>> {
-		const { page = 1, limit = 10 } = paginationDto;
-		const skip = (page - 1) * limit;
+		const { page = 1, limit = 10 } = paginationDto
+		const skip = (page - 1) * limit
 
-		const categoryCondition = { category_id: category_id };
+		const categoryCondition = { category_id: category_id }
 
 		const [data, total] = await Promise.all([
 			this.prisma.product.findMany({
@@ -479,12 +523,15 @@ export class ProductService {
 					},
 				},
 			}),
-		]);
+		])
 
-		const totalPages = Math.ceil(total / limit);
+		const totalPages = Math.ceil(total / limit)
+
+		// Convert gs:// paths to public URLs for frontend
+		const convertedData = this.convertProductsImagePaths(data)
 
 		return {
-			data,
+			data: convertedData,
 			pagination: {
 				page,
 				limit,
@@ -493,7 +540,7 @@ export class ProductService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		};
+		}
 	}
 
 	/**
@@ -509,29 +556,29 @@ export class ProductService {
 		createProductPriceDto: CreateProductPriceDto
 	): Promise<product_price> {
 		const { product_id, size_id, size_data, price, is_active } =
-			createProductPriceDto;
+			createProductPriceDto
 
 		const product = await this.prisma.product.findUnique({
 			where: { product_id },
-		});
+		})
 		if (!product) {
 			throw new NotFoundException(
 				`Product with ID ${product_id} does not exist.`
-			);
+			)
 		}
 
 		if (!size_id && !size_data) {
 			throw new BadRequestException(
 				'Either size_id or size_data must be provided.'
-			);
+			)
 		}
 		if (size_id && size_data) {
 			throw new BadRequestException(
 				'Cannot provide both size_id and size_data.'
-			);
+			)
 		}
 
-		let productSizeId: number;
+		let productSizeId: number
 
 		if (size_data) {
 			const {
@@ -539,7 +586,7 @@ export class ProductService {
 				unit: sizeUnit,
 				quantity: sizeQuantity,
 				description: sizeDescription,
-			} = size_data;
+			} = size_data
 			try {
 				const upsertedSize = await this.prisma.product_size.upsert({
 					where: { unit_name: { unit: sizeUnit, name: sizeName } },
@@ -550,8 +597,8 @@ export class ProductService {
 						description: sizeDescription,
 					},
 					update: { quantity: sizeQuantity, description: sizeDescription },
-				});
-				productSizeId = upsertedSize.size_id;
+				})
+				productSizeId = upsertedSize.size_id
 			} catch (e) {
 				if (
 					e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -559,32 +606,32 @@ export class ProductService {
 				) {
 					const existingSize = await this.prisma.product_size.findUnique({
 						where: { unit_name: { unit: sizeUnit, name: sizeName } },
-					});
+					})
 					if (!existingSize) {
 						throw new InternalServerErrorException(
 							`Failed to create or find product size: ${sizeName} (${sizeUnit}).`
-						);
+						)
 					}
-					productSizeId = existingSize.size_id;
+					productSizeId = existingSize.size_id
 				} else {
-					console.error('Error upserting product size:', e);
+					console.error('Error upserting product size:', e)
 					throw new InternalServerErrorException(
 						'Error processing product size data.'
-					);
+					)
 				}
 			}
 		} else if (size_id) {
 			const existingSize = await this.prisma.product_size.findUnique({
 				where: { size_id },
-			});
+			})
 			if (!existingSize) {
 				throw new NotFoundException(
 					`Product size with ID ${size_id} does not exist.`
-				);
+				)
 			}
-			productSizeId = existingSize.size_id;
+			productSizeId = existingSize.size_id
 		} else {
-			throw new BadRequestException('Missing size_id or size_data.');
+			throw new BadRequestException('Missing size_id or size_data.')
 		}
 
 		try {
@@ -599,7 +646,7 @@ export class ProductService {
 					product: true,
 					product_size: true,
 				},
-			});
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (
@@ -609,11 +656,11 @@ export class ProductService {
 				) {
 					throw new ConflictException(
 						'This product already has a price for this size.'
-					);
+					)
 				}
 			}
-			console.error('Error creating product price:', error);
-			throw error;
+			console.error('Error creating product price:', error)
+			throw error
 		}
 	}
 
@@ -630,12 +677,12 @@ export class ProductService {
 	): Promise<product_price> {
 		const existingPrice = await this.prisma.product_price.findUnique({
 			where: { product_price_id: priceId },
-		});
+		})
 
 		if (!existingPrice) {
 			throw new NotFoundException(
 				`Product price with ID ${priceId} does not exist.`
-			);
+			)
 		}
 
 		try {
@@ -646,17 +693,17 @@ export class ProductService {
 					product: true,
 					product_size: true,
 				},
-			});
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
 					throw new NotFoundException(
 						`Product price with ID ${priceId} does not exist.`
-					);
+					)
 				}
 			}
-			console.error(`Error updating product price ${priceId}:`, error);
-			throw error;
+			console.error(`Error updating product price ${priceId}:`, error)
+			throw error
 		}
 	}
 
@@ -670,12 +717,12 @@ export class ProductService {
 	async removeProductPrice(priceId: number): Promise<product_price> {
 		const existingPrice = await this.prisma.product_price.findUnique({
 			where: { product_price_id: priceId },
-		});
+		})
 
 		if (!existingPrice) {
 			throw new NotFoundException(
 				`Product price with ID ${priceId} does not exist.`
-			);
+			)
 		}
 
 		try {
@@ -685,22 +732,22 @@ export class ProductService {
 					product: true,
 					product_size: true,
 				},
-			});
+			})
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
 					throw new NotFoundException(
 						`Product price with ID ${priceId} does not exist.`
-					);
+					)
 				}
 				if (error.code === 'P2003') {
 					throw new ConflictException(
 						`Product price with ID ${priceId} cannot be deleted as it is currently in use (e.g., in an order).`
-					);
+					)
 				}
 			}
-			console.error(`Error removing product price ${priceId}:`, error);
-			throw error;
+			console.error(`Error removing product price ${priceId}:`, error)
+			throw error
 		}
 	}
 
@@ -712,21 +759,21 @@ export class ProductService {
 	async bulkDeleteProductPrices(
 		bulkDeleteDto: BulkDeleteProductPriceDto
 	): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		const { ids } = bulkDeleteDto;
-		const deleted: number[] = [];
-		const failed: { id: number; reason: string }[] = [];
+		const { ids } = bulkDeleteDto
+		const deleted: number[] = []
+		const failed: { id: number; reason: string }[] = []
 
 		for (const priceId of ids) {
 			try {
-				await this.removeProductPrice(priceId);
-				deleted.push(priceId);
+				await this.removeProductPrice(priceId)
+				deleted.push(priceId)
 			} catch (error) {
-				const reason = error instanceof Error ? error.message : 'Unknown error';
-				failed.push({ id: priceId, reason });
+				const reason = error instanceof Error ? error.message : 'Unknown error'
+				failed.push({ id: priceId, reason })
 			}
 		}
 
@@ -738,7 +785,7 @@ export class ProductService {
 				success: deleted.length,
 				failed: failed.length,
 			},
-		};
+		}
 	}
 
 	/**
@@ -750,12 +797,12 @@ export class ProductService {
 	async getProductPrices(productId: number): Promise<product_price[]> {
 		const product = await this.prisma.product.findUnique({
 			where: { product_id: productId },
-		});
+		})
 
 		if (!product) {
 			throw new NotFoundException(
 				`Product with ID ${productId} does not exist.`
-			);
+			)
 		}
 
 		return this.prisma.product_price.findMany({
@@ -764,6 +811,6 @@ export class ProductService {
 				product_size: true,
 			},
 			orderBy: [{ is_active: 'desc' }, { product_size: { name: 'asc' } }],
-		});
+		})
 	}
 }
