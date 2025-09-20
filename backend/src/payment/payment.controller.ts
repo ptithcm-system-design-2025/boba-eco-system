@@ -11,21 +11,8 @@ import {
 	Patch,
 	Post,
 	Query,
-	Req,
-	Res,
 	UseGuards,
-} from '@nestjs/common';
-import type { Request, Response } from 'express';
-import type { PaymentService } from './payment.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { CreateVNPayPaymentDto } from './dto/create-vnpay-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { payment } from '../generated/prisma/client';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -35,11 +22,20 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { payment } from '../generated/prisma/client'
+import { CreatePaymentDto } from './dto/create-payment.dto'
+import { UpdatePaymentDto } from './dto/update-payment.dto'
+import type { PaymentService } from './payment.service'
 
 @ApiTags('payments')
 @Controller('payments')
@@ -76,7 +72,7 @@ export class PaymentController {
 		description: 'Not Found (e.g., Order or PaymentMethod not found)',
 	})
 	async create(@Body() createPaymentDto: CreatePaymentDto): Promise<payment> {
-		return this.paymentService.create(createPaymentDto);
+		return this.paymentService.create(createPaymentDto)
 	}
 
 	@Get()
@@ -129,14 +125,14 @@ export class PaymentController {
 		@Query() paginationDto: PaginationDto,
 		@Query('orderId') orderId?: string
 	): Promise<PaginatedResult<payment>> {
-		let orderIdNum: number | undefined;
+		let orderIdNum: number | undefined
 		if (orderId) {
-			orderIdNum = parseInt(orderId, 10);
+			orderIdNum = parseInt(orderId, 10)
 			if (isNaN(orderIdNum)) {
-				throw new BadRequestException('Invalid Order ID. Must be a number.');
+				throw new BadRequestException('Invalid Order ID. Must be a number.')
 			}
 		}
-		return this.paymentService.findAll(paginationDto, orderIdNum);
+		return this.paymentService.findAll(paginationDto, orderIdNum)
 	}
 
 	@Get(':id')
@@ -160,7 +156,7 @@ export class PaymentController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<payment | null> {
-		return this.paymentService.findOne(id);
+		return this.paymentService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -187,7 +183,7 @@ export class PaymentController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updatePaymentDto: UpdatePaymentDto
 	): Promise<payment> {
-		return this.paymentService.update(id, updatePaymentDto);
+		return this.paymentService.update(id, updatePaymentDto)
 	}
 
 	@Delete(':id')
@@ -207,92 +203,100 @@ export class PaymentController {
 	})
 	@ApiResponse({ status: 404, description: 'Payment not found' })
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.paymentService.remove(id);
+		await this.paymentService.remove(id)
 	}
 
-	@Post('vnpay/create')
+	@Post('stripe/create-payment-intent')
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
 	@HttpCode(HttpStatus.OK)
-	@ApiOperation({ summary: 'Create VNPay payment URL (All Roles)' })
-	@ApiBody({ type: CreateVNPayPaymentDto })
+	@ApiOperation({ summary: 'Create Stripe payment intent (All Roles)' })
+	@ApiBody({ type: CreateStripePaymentDto })
 	@ApiResponse({
 		status: 200,
-		description: 'VNPay payment URL created successfully',
-		schema: { type: 'object', properties: { paymentUrl: { type: 'string' } } },
+		description: 'Stripe payment intent created successfully',
+		schema: {
+			type: 'object',
+			properties: {
+				clientSecret: { type: 'string' },
+				paymentIntentId: { type: 'string' },
+			},
+		},
 	})
 	@ApiResponse({ status: 400, description: 'Bad Request' })
 	@ApiResponse({ status: 401, description: 'Unauthorized' })
 	@ApiResponse({ status: 404, description: 'Order not found' })
-	async createVNPayPayment(
-		@Body() createVNPayPaymentDto: CreateVNPayPaymentDto,
-		@Req() req: Request
-	): Promise<{ paymentUrl: string }> {
-		const { orderId, orderInfo, returnUrl } = createVNPayPaymentDto;
-		const ipAddr = req.ip || req.socket.remoteAddress || '127.0.0.1';
+	async createStripePaymentIntent(
+		@Body() createStripePaymentDto: CreateStripePaymentDto
+	): Promise<{ clientSecret: string; paymentIntentId: string }> {
+		const { orderId, currency, orderInfo, customerEmail } =
+			createStripePaymentDto
 
-		const paymentUrl = await this.paymentService.createVNPayPaymentUrl(
+		return this.paymentService.createStripePaymentIntent(
 			orderId,
+			currency,
 			orderInfo,
-			returnUrl,
-			ipAddr
-		);
-
-		return { paymentUrl };
+			customerEmail
+		)
 	}
 
-	@Get('vnpay/callback')
-	@ApiOperation({ summary: 'Handle VNPay payment callback (Public)' })
+	@Post('stripe/confirm-payment')
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
+	@HttpCode(HttpStatus.OK)
+	@ApiOperation({ summary: 'Confirm Stripe payment (All Roles)' })
 	@ApiResponse({
 		status: 200,
-		description: 'Payment callback processed successfully',
+		description: 'Payment confirmation processed successfully',
+		schema: {
+			type: 'object',
+			properties: {
+				success: { type: 'boolean' },
+				message: { type: 'string' },
+				payment: { type: 'object' },
+			},
+		},
 	})
-	@ApiResponse({ status: 400, description: 'Invalid callback data' })
-	async handleVNPayCallback(
-		@Query() callbackData: any,
-		@Res() res: Response
-	): Promise<void> {
-		const result = await this.paymentService.processVNPayCallback(callbackData);
-
-		if (result.success) {
-			res.redirect(
-				`${process.env.POS_URL || 'http://localhost:3001'}/payment/success?orderId=${result.payment?.order_id}`
-			);
-		} else {
-			res.redirect(
-				`${process.env.POS_URL || 'http://localhost:3001'}/payment/failure?message=${encodeURIComponent(result.message)}`
-			);
-		}
+	@ApiResponse({ status: 400, description: 'Invalid payment intent ID' })
+	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	async confirmStripePayment(
+		@Body() body: { paymentIntentId: string }
+	): Promise<{
+		success: boolean
+		message: string
+		payment?: any
+	}> {
+		return this.paymentService.confirmStripePayment(body.paymentIntentId)
 	}
 
-	@Post('vnpay/webhook')
+	@Post('stripe/webhook')
 	@HttpCode(HttpStatus.OK)
-	@ApiOperation({ summary: 'Handle VNPay IPN webhook (Public)' })
+	@ApiOperation({ summary: 'Handle Stripe webhook (Public)' })
 	@ApiResponse({ status: 200, description: 'Webhook processed successfully' })
-	async handleVNPayWebhook(
-		@Body() webhookData: any
-	): Promise<{ RspCode: string; Message: string }> {
+	async handleStripeWebhook(
+		@Req() req: Request
+	): Promise<{ received: boolean }> {
 		try {
-			const result =
-				await this.paymentService.processVNPayCallback(webhookData);
+			const signature = req.headers['stripe-signature'] as string
+			const payload = req.body
+
+			if (!signature) {
+				throw new BadRequestException('Missing Stripe signature')
+			}
+
+			const result = await this.paymentService.processStripeWebhook(
+				payload,
+				signature
+			)
 
 			if (result.success) {
-				return {
-					RspCode: '00',
-					Message: 'Confirm Success',
-				};
+				return { received: true }
 			} else {
-				return {
-					RspCode: '01',
-					Message: 'Order not found',
-				};
+				throw new BadRequestException(result.message)
 			}
 		} catch (error) {
-			console.error('VNPay webhook error:', error);
-			return {
-				RspCode: '99',
-				Message: 'Unknown error',
-			};
+			console.error('Stripe webhook error:', error)
+			throw new BadRequestException('Webhook processing failed')
 		}
 	}
 
@@ -313,7 +317,7 @@ export class PaymentController {
 	 * @returns A confirmation message.
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Payment controller is working!' };
+		return { message: 'Payment controller is working!' }
 	}
 
 	@Get('payment-method/:paymentMethodId')
@@ -362,6 +366,6 @@ export class PaymentController {
 		return this.paymentService.findByPaymentMethod(
 			paymentMethodId,
 			paginationDto
-		);
+		)
 	}
 }

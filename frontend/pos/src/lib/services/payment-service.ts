@@ -33,10 +33,11 @@ export interface Payment {
   };
 }
 
-export interface CreateVNPayPaymentDto {
+export interface CreateStripePaymentDto {
   orderId: number;
+  currency?: string;
   orderInfo?: string;
-  returnUrl?: string;
+  customerEmail?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -61,7 +62,7 @@ export class PaymentService {
   // Payment Method IDs (phải khớp với backend)
   static readonly PAYMENT_METHODS = {
     CASH: 1,
-    VNPAY: 2,
+    STRIPE: 2,
   } as const;
 
   /**
@@ -109,10 +110,10 @@ export class PaymentService {
   }
 
   /**
-   * Tạo URL thanh toán VNPay
+   * Tạo Stripe payment intent
    */
-  async createVNPayPayment(paymentData: CreateVNPayPaymentDto): Promise<{ paymentUrl: string }> {
-    return apiClient.post<{ paymentUrl: string }>(`${PaymentService.BASE_URL}/vnpay/create`, paymentData);
+  async createStripePaymentIntent(paymentData: CreateStripePaymentDto): Promise<{ clientSecret: string; paymentIntentId: string }> {
+    return apiClient.post<{ clientSecret: string; paymentIntentId: string }>(`${PaymentService.BASE_URL}/stripe/create-payment-intent`, paymentData);
   }
 
   /**
@@ -142,16 +143,24 @@ export class PaymentService {
   }
 
   /**
-   * Thanh toán VNPay cho đơn hàng
+   * Tạo Stripe payment intent cho đơn hàng
    */
-  async processVNPayPayment(orderId: number, orderInfo?: string, returnUrl?: string): Promise<{ paymentUrl: string }> {
-    const vnpayData: CreateVNPayPaymentDto = {
+  async processStripePayment(orderId: number, currency: string = 'vnd', orderInfo?: string, customerEmail?: string): Promise<{ clientSecret: string; paymentIntentId: string }> {
+    const stripeData: CreateStripePaymentDto = {
       orderId,
+      currency,
       orderInfo: orderInfo || `Thanh toán đơn hàng #${orderId}`,
-      returnUrl: returnUrl || `${window.location.origin}/payment/vnpay/callback`,
+      customerEmail,
     };
 
-    return this.createVNPayPayment(vnpayData);
+    return this.createStripePaymentIntent(stripeData);
+  }
+
+  /**
+   * Xác nhận thanh toán Stripe
+   */
+  async confirmStripePayment(paymentIntentId: string): Promise<{ success: boolean; message: string; payment?: any }> {
+    return apiClient.post<{ success: boolean; message: string; payment?: any }>(`${PaymentService.BASE_URL}/stripe/confirm-payment`, { paymentIntentId });
   }
 
   /**

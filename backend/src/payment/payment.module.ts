@@ -1,33 +1,15 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { VnpayModule } from 'nestjs-vnpay';
-import { PaymentService } from './payment.service';
-import { PaymentController } from './payment.controller';
-import { VNPayService } from './vnpay.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { InvoiceModule } from '../invoice/invoice.module';
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { InvoiceModule } from '../invoice/invoice.module'
+import { PrismaModule } from '../prisma/prisma.module'
+import { PaymentController } from './payment.controller'
+import { PaymentService } from './payment.service'
+import { StripeService } from './stripe.service'
 
 @Module({
-	imports: [
-		PrismaModule,
-		InvoiceModule,
-		ConfigModule,
-		VnpayModule.registerAsync({
-			imports: [ConfigModule],
-			useFactory: async (configService: ConfigService) => ({
-				tmnCode: configService.get<string>('VNPAY_TMN_CODE') || 'your_tmn_code',
-				secureSecret:
-					configService.get<string>('VNPAY_SECRET_KEY') || 'your_secret_key',
-				vnpayHost:
-					configService.get<string>('VNPAY_HOST') ||
-					'https://sandbox.vnpayment.vn',
-				testMode: configService.get<boolean>('VNPAY_TEST_MODE') !== false,
-			}),
-			inject: [ConfigService],
-		}),
-	],
+	imports: [PrismaModule, InvoiceModule, ConfigModule],
 	controllers: [PaymentController],
-	providers: [PaymentService, VNPayService],
-	exports: [PaymentService, VNPayService],
+	providers: [PaymentService, StripeService],
+	exports: [PaymentService, StripeService],
 })
 export class PaymentModule {}
