@@ -8,40 +8,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export default function VNPayCallbackPage() {
+export default function PaymentConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [orderId, setOrderId] = useState<string>('');
+  const [paymentIntentId, setPaymentIntentId] = useState<string>('');
 
   useEffect(() => {
     // Lấy thông tin từ URL params
-    const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
-    const vnp_OrderInfo = searchParams.get('vnp_OrderInfo');
-    const vnp_TxnRef = searchParams.get('vnp_TxnRef');
-    const vnp_Amount = searchParams.get('vnp_Amount');
-    const vnp_BankCode = searchParams.get('vnp_BankCode');
-    const vnp_TransactionNo = searchParams.get('vnp_TransactionNo');
+    const paymentStatus = searchParams.get('status');
+    const orderIdParam = searchParams.get('orderId');
+    const paymentIntentIdParam = searchParams.get('payment_intent');
+    const messageParam = searchParams.get('message');
 
     // Xử lý kết quả
-    if (vnp_ResponseCode === '00') {
+    if (paymentStatus === 'success') {
       setStatus('success');
-      setMessage('Thanh toán thành công!');
-      toast.success("Thanh toán VNPay thành công", {
+      setMessage(messageParam || 'Thanh toán thành công!');
+      toast.success("Thanh toán thành công", {
         description: "Đơn hàng đã được thanh toán hoàn tất"
       });
-    } else {
+    } else if (paymentStatus === 'error') {
       setStatus('error');
-      setMessage('Thanh toán thất bại hoặc bị hủy');
-      toast.error("Thanh toán VNPay thất bại", {
+      setMessage(messageParam || 'Thanh toán thất bại hoặc bị hủy');
+      toast.error("Thanh toán thất bại", {
         description: "Vui lòng thử lại hoặc chọn phương thức thanh toán khác"
       });
+    } else {
+      // Default to loading if no status provided
+      setStatus('loading');
+      setMessage('Đang xử lý thanh toán...');
     }
 
-    // Lấy order ID từ vnp_OrderInfo hoặc vnp_TxnRef
-    if (vnp_TxnRef) {
-      setOrderId(vnp_TxnRef);
+    // Set order ID and payment intent ID
+    if (orderIdParam) {
+      setOrderId(orderIdParam);
+    }
+    if (paymentIntentIdParam) {
+      setPaymentIntentId(paymentIntentIdParam);
     }
   }, [searchParams]);
 
@@ -57,7 +63,7 @@ export default function VNPayCallbackPage() {
 
   const formatPrice = (priceString: string | null) => {
     if (!priceString) return 'N/A';
-    const price = parseInt(priceString) / 100; // VNPay amount is in xu (cents)
+    const price = parseFloat(priceString);
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
@@ -73,7 +79,7 @@ export default function VNPayCallbackPage() {
               {status === 'loading' && <Clock className="w-5 h-5 text-blue-600" />}
               {status === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
               {status === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
-              <span>Kết quả thanh toán VNPay</span>
+              <span>Kết quả thanh toán</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center py-8">
@@ -93,28 +99,28 @@ export default function VNPayCallbackPage() {
                 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                   <div className="space-y-2 text-sm">
-                    {searchParams.get('vnp_TxnRef') && (
+                    {orderId && (
                       <div className="flex justify-between">
                         <span>Mã đơn hàng:</span>
-                        <span className="font-medium">#{searchParams.get('vnp_TxnRef')}</span>
+                        <span className="font-medium">#{orderId}</span>
                       </div>
                     )}
-                    {searchParams.get('vnp_Amount') && (
+                    {searchParams.get('amount') && (
                       <div className="flex justify-between">
                         <span>Số tiền:</span>
-                        <span className="font-medium">{formatPrice(searchParams.get('vnp_Amount'))}</span>
+                        <span className="font-medium">{formatPrice(searchParams.get('amount'))}</span>
                       </div>
                     )}
-                    {searchParams.get('vnp_BankCode') && (
+                    {paymentIntentId && (
                       <div className="flex justify-between">
-                        <span>Ngân hàng:</span>
-                        <span className="font-medium">{searchParams.get('vnp_BankCode')}</span>
+                        <span>Mã thanh toán:</span>
+                        <span className="font-medium">{paymentIntentId}</span>
                       </div>
                     )}
-                    {searchParams.get('vnp_TransactionNo') && (
+                    {searchParams.get('payment_method') && (
                       <div className="flex justify-between">
-                        <span>Mã giao dịch:</span>
-                        <span className="font-medium">{searchParams.get('vnp_TransactionNo')}</span>
+                        <span>Phương thức:</span>
+                        <span className="font-medium">{searchParams.get('payment_method')}</span>
                       </div>
                     )}
                   </div>
@@ -133,14 +139,23 @@ export default function VNPayCallbackPage() {
                 <p className="text-gray-600 mb-6">{message}</p>
                 
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-red-700">
-                    Mã lỗi: {searchParams.get('vnp_ResponseCode')}
-                  </p>
-                  {searchParams.get('vnp_TxnRef') && (
-                    <p className="text-sm text-red-700">
-                      Mã đơn hàng: #{searchParams.get('vnp_TxnRef')}
-                    </p>
-                  )}
+                  <div className="space-y-2 text-sm">
+                    {searchParams.get('error_code') && (
+                      <p className="text-red-700">
+                        Mã lỗi: {searchParams.get('error_code')}
+                      </p>
+                    )}
+                    {orderId && (
+                      <p className="text-red-700">
+                        Mã đơn hàng: #{orderId}
+                      </p>
+                    )}
+                    {paymentIntentId && (
+                      <p className="text-red-700">
+                        Mã thanh toán: {paymentIntentId}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <Badge variant="destructive" className="mb-6">

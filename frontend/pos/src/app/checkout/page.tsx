@@ -9,7 +9,7 @@ import {
   FileText, 
   ArrowLeft, 
   ArrowRight,
-  AlertTriangle,
+
   X,
   Crown,
   Gift,
@@ -33,7 +33,7 @@ import { paymentService, Payment } from "@/lib/services/payment-service";
 import { invoiceService } from "@/lib/services/invoice-service";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { CashPaymentMethod } from "@/components/pos/cash-payment-method";
-import { VNPayPaymentMethod } from "@/components/pos/vnpay-payment-method";
+import { StripePaymentMethod } from "@/components/pos/stripe-payment-method";
 
 type CheckoutStep = 'confirm' | 'payment' | 'complete';
 
@@ -59,7 +59,8 @@ export default function CheckoutPage() {
   const [createdPayment, setCreatedPayment] = useState<Payment | null>(null);
   const [amountPaid, setAmountPaid] = useState<number>(0);
   const [isPrintingInvoice, setIsPrintingInvoice] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'vnpay'>('cash');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'stripe'>('cash');
+  const [stripeClientSecret, setStripeClientSecret] = useState<string>('');
 
   // Calculate totals
   const subtotal = getCartTotal();
@@ -222,19 +223,20 @@ export default function CheckoutPage() {
           description: `Đơn hàng #${createdOrder.order_id} đã được thanh toán hoàn tất`
         });
 
-      } else if (selectedPaymentMethod === 'vnpay') {
-        // Process VNPay payment
-        const vnpayResponse = await paymentService.processVNPayPayment(
+      } else if (selectedPaymentMethod === 'stripe') {
+        // Create Stripe payment intent
+        const stripeResponse = await paymentService.processStripePayment(
           createdOrder.order_id,
-          `Thanh toán đơn hàng #${createdOrder.order_id} - Cake POS`,
-          `${window.location.origin}/payment/vnpay/callback`
+          'vnd',
+          `Thanh toán đơn hàng #${createdOrder.order_id} - Boba POS`,
+          selectedCustomer?.email
         );
 
-        // Redirect to VNPay payment URL
-        window.location.href = vnpayResponse.paymentUrl;
-        
-        toast.success("Chuyển hướng đến VNPay", {
-          description: "Đang chuyển hướng đến trang thanh toán VNPay..."
+        // Set client secret for Stripe Elements
+        setStripeClientSecret(stripeResponse.clientSecret);
+
+        toast.success("Khởi tạo thanh toán thành công", {
+          description: "Vui lòng nhập thông tin thẻ để hoàn tất thanh toán"
         });
       }
 
@@ -251,6 +253,43 @@ export default function CheckoutPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Handle Stripe Payment Success
+  const handleStripePaymentSuccess = async (paymentIntent: any) => {
+    try {
+      setIsProcessing(true);
+
+      // Confirm payment with backend
+      const result = await paymentService.confirmStripePayment(paymentIntent.id);
+
+      if (result.success && result.payment) {
+        setCreatedPayment(result.payment);
+        setCurrentStep('complete');
+
+        toast.success("Thanh toán thành công!", {
+          description: `Đơn hàng #${createdOrder?.order_id} đã được thanh toán hoàn tất`
+        });
+      } else {
+        toast.error("Lỗi xác nhận thanh toán", {
+          description: result.message || "Không thể xác nhận thanh toán"
+        });
+      }
+    } catch (error: any) {
+      console.error('Lỗi khi xác nhận thanh toán Stripe:', error);
+      toast.error("Lỗi xác nhận thanh toán", {
+        description: "Có lỗi xảy ra khi xác nhận thanh toán"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle Stripe Payment Error
+  const handleStripePaymentError = (error: string) => {
+    toast.error("Lỗi thanh toán", {
+      description: error
+    });
   };
 
   // Cancel Order
@@ -663,7 +702,7 @@ export default function CheckoutPage() {
                         <div>
                           <p className="font-medium text-blue-800">Chọn phương thức thanh toán</p>
                           <p className="text-sm text-blue-600 mt-1">
-                            Hiện tại hỗ trợ thanh toán tiền mặt và VNPay (chuyển hướng).
+                            Hiện tại hỗ trợ thanh toán tiền mặt và thẻ tín dụng/ghi nợ qua Stripe.
                           </p>
                         </div>
                       </div>
@@ -679,11 +718,14 @@ export default function CheckoutPage() {
                         onAmountPaidChange={setAmountPaid}
                       />
                       
-                      <VNPayPaymentMethod
-                        isSelected={selectedPaymentMethod === 'vnpay'}
-                        onSelect={() => setSelectedPaymentMethod('vnpay')}
+                      <StripePaymentMethod
+                        isSelected={selectedPaymentMethod === 'stripe'}
+                        onSelect={() => setSelectedPaymentMethod('stripe')}
                         total={total}
                         orderId={createdOrder?.order_id}
+                        clientSecret={stripeClientSecret}
+                        onPaymentSuccess={handleStripePaymentSuccess}
+                        onPaymentError={handleStripePaymentError}
                       />
                     </div>
 
