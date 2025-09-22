@@ -1,3 +1,10 @@
+---
+- title: "Chương 3: Phân tích thiết kế"
+- description: "Phân tích và thiết kế hệ thống Boba Eco-System"
+---
+
+
+
 # Chương 3: Phân tích thiết kế
 
 ## 3.1 Xác định yêu cầu nghiệp vụ
@@ -656,6 +663,7 @@ stop
 title Biểu đồ ca sử dụng tổng quát - Hệ thống Boba Eco-System
 
 left to right direction
+skinparam packageStyle rectangle
 
 ' Actors
 actor "Nhân viên\n(STAFF)" as Staff
@@ -663,40 +671,74 @@ actor "Quản lý\n(MANAGER)" as Manager
 
 rectangle "Hệ thống Boba Eco-System" #f8f9fa {
 
-  ' Core authentication
-  usecase "Đăng nhập" as Login #e3f2fd
-
-  ' Common use cases
-  together {
-    usecase "Xem menu\nsản phẩm" as ViewMenu #e8f5e8
-    usecase "Tạo đơn hàng" as CreateOrder #e8f5e8
-    usecase "Xử lý thanh toán" as ProcessPayment #e8f5e8
-    usecase "Quản lý khách hàng" as ManageCustomers #e8f5e8
+  ' Authentication Package
+  package "Xác thực" #e3f2fd {
+    usecase "Đăng nhập" as Login
+    usecase "Cập nhật hồ sơ" as UpdateProfile
   }
 
-  ' Optional features
-  usecase "Áp dụng khuyến mãi" as ApplyDiscount #fff3e0
-  usecase "Xem báo cáo\nbán hàng" as ViewSalesReport #fff3e0
-
-  ' Manager exclusive use cases
-  together {
-    usecase "Quản lý sản phẩm" as ManageProducts #f3e5f5
-    usecase "Quản lý nhân viên" as ManageStaff #f3e5f5
-    usecase "Quản lý khuyến mãi" as ManagePromotions #f3e5f5
+  ' Core Business Package
+  package "Nghiệp vụ chính" #e8f5e8 {
+    usecase "Xem menu sản phẩm" as ViewMenu
+    usecase "Tạo đơn hàng" as CreateOrder
+    usecase "Xử lý thanh toán" as ProcessPayment
+    usecase "Tạo hóa đơn" as CreateInvoice
   }
 
-  together {
-    usecase "Quản lý cửa hàng" as ManageStore #ffebee
-    usecase "Xem báo cáo\ntổng quan" as ViewReports #ffebee
+  ' Customer Management Package
+  package "Quản lý khách hàng" #fff3e0 {
+    usecase "Quản lý khách hàng" as ManageCustomers
+    usecase "Quản lý loại thành viên" as ManageMembershipTypes
+    usecase "Cập nhật điểm thành viên" as UpdateMembershipPoints
+  }
+
+  ' Product Management Package
+  package "Quản lý sản phẩm" #f3e5f5 {
+    usecase "Quản lý sản phẩm" as ManageProducts
+    usecase "Quản lý danh mục" as ManageCategories
+    usecase "Quản lý giá size" as ManageProductSizes
+  }
+
+  ' Promotion Management Package
+  package "Quản lý khuyến mãi" #e1f5fe {
+    usecase "Quản lý khuyến mãi" as ManagePromotions
+    usecase "Áp dụng khuyến mãi" as ApplyDiscount
+    usecase "Kiểm tra mã giảm giá" as ValidateDiscount
+  }
+
+  ' Employee Management Package
+  package "Quản lý nhân viên" #ffebee {
+    usecase "Quản lý nhân viên" as ManageEmployees
+    usecase "Phân quyền hệ thống" as ManageRoles
+  }
+
+  ' Reports Package
+  package "Báo cáo & Thống kê" #f1f8e9 {
+    usecase "Xem báo cáo bán hàng" as ViewSalesReport
+    usecase "Báo cáo theo nhân viên" as ViewEmployeeReport
+    usecase "Báo cáo theo sản phẩm" as ViewProductReport
+    usecase "Dashboard tổng quan" as ViewDashboard
+  }
+
+  ' System Management Package
+  package "Quản lý hệ thống" #fce4ec {
+    usecase "Quản lý cửa hàng" as ManageStore
+    usecase "Cấu hình hệ thống" as SystemConfig
   }
 
   ' Include relationships (mandatory behavior)
+  ' Use case lớn bao gồm use case nhỏ như một phần không thể thiếu
   CreateOrder ..> ViewMenu : <<include>>
-  ProcessPayment ..> CreateOrder : <<include>>
+  ProcessPayment ..> CreateInvoice : <<include>>
+  ViewDashboard ..> ViewSalesReport : <<include>>
+  ViewDashboard ..> ViewEmployeeReport : <<include>>
+  ViewDashboard ..> ViewProductReport : <<include>>
 
   ' Extend relationships (optional behavior)
+  ' Use case bổ sung chức năng cho use case có sẵn trong điều kiện nhất định
   ApplyDiscount ..> CreateOrder : <<extend>>
-  ViewReports ..> ViewSalesReport : <<extend>>
+  ValidateDiscount ..> ApplyDiscount : <<extend>>
+  UpdateProfile ..> Login : <<extend>>
 }
 
 ' Staff associations
@@ -704,23 +746,39 @@ Staff --> Login
 Staff --> ViewMenu
 Staff --> CreateOrder
 Staff --> ProcessPayment
+Staff --> CreateInvoice
 Staff --> ManageCustomers
+Staff --> UpdateMembershipPoints
 Staff --> ApplyDiscount
+Staff --> ValidateDiscount
 Staff --> ViewSalesReport
+Staff --> ViewEmployeeReport
+Staff --> ViewProductReport
 
 ' Manager associations
 Manager --> Login
+Manager --> UpdateProfile
 Manager --> ViewMenu
 Manager --> CreateOrder
 Manager --> ProcessPayment
+Manager --> CreateInvoice
 Manager --> ManageCustomers
-Manager --> ApplyDiscount
-Manager --> ViewSalesReport
+Manager --> ManageMembershipTypes
+Manager --> UpdateMembershipPoints
 Manager --> ManageProducts
-Manager --> ManageStaff
+Manager --> ManageCategories
+Manager --> ManageProductSizes
 Manager --> ManagePromotions
+Manager --> ApplyDiscount
+Manager --> ValidateDiscount
+Manager --> ManageEmployees
+Manager --> ManageRoles
+Manager --> ViewSalesReport
+Manager --> ViewEmployeeReport
+Manager --> ViewProductReport
+Manager --> ViewDashboard
 Manager --> ManageStore
-Manager --> ViewReports
+Manager --> SystemConfig
 
 @enduml
 ```
@@ -739,54 +797,69 @@ actor "Nhân viên\n(STAFF)" as Staff
 rectangle "Hệ thống POS - Chức năng Nhân viên" #f8f9fa {
 
   package "Xác thực & Phiên làm việc" #e3f2fd {
-    usecase "Đăng nhập POS" as S_Login
+    usecase "Đăng nhập" as S_Login
     usecase "Đăng xuất" as S_Logout
+    usecase "Cập nhật hồ sơ" as S_UpdateProfile
   }
 
   package "Quản lý Đơn hàng" #e8f5e8 {
+    usecase "Xem menu sản phẩm" as S_ViewMenu
     usecase "Tạo đơn hàng" as S_CreateOrder
     usecase "Xử lý thanh toán" as S_ProcessPayment
     usecase "Tạo hóa đơn" as S_CreateInvoice
-    usecase "Áp dụng khuyến mãi" as S_ApplyDiscount
+    usecase "Hủy đơn hàng" as S_CancelOrder
   }
 
-  package "Quản lý Sản phẩm" #fff3e0 {
-    usecase "Xem menu sản phẩm" as S_ViewMenu
-    usecase "Cập nhật tồn kho" as S_UpdateStock
+  package "Quản lý Khuyến mãi" #fff3e0 {
+    usecase "Áp dụng khuyến mãi" as S_ApplyDiscount
+    usecase "Kiểm tra mã giảm giá" as S_ValidateDiscount
   }
 
   package "Quản lý Khách hàng" #f3e5f5 {
     usecase "Tìm kiếm khách hàng" as S_SearchCustomer
     usecase "Thêm khách hàng mới" as S_AddCustomer
-    usecase "Cập nhật điểm\nthành viên" as S_UpdatePoints
+    usecase "Cập nhật thông tin khách hàng" as S_UpdateCustomer
+    usecase "Cập nhật điểm thành viên" as S_UpdatePoints
   }
 
-  package "Báo cáo Cá nhân" #ffebee {
-    usecase "Xem doanh số\ncá nhân" as S_ViewPersonalSales
+  package "Báo cáo & Thống kê" #ffebee {
+    usecase "Xem báo cáo bán hàng" as S_ViewSalesReport
+    usecase "Xem báo cáo nhân viên" as S_ViewEmployeeReport
+    usecase "Xem báo cáo sản phẩm" as S_ViewProductReport
   }
 }
 
 ' Staff associations
 Staff --> S_Login
 Staff --> S_Logout
+Staff --> S_UpdateProfile
 Staff --> S_ViewMenu
 Staff --> S_CreateOrder
 Staff --> S_ProcessPayment
 Staff --> S_CreateInvoice
+Staff --> S_CancelOrder
 Staff --> S_ApplyDiscount
-Staff --> S_UpdateStock
+Staff --> S_ValidateDiscount
 Staff --> S_SearchCustomer
 Staff --> S_AddCustomer
+Staff --> S_UpdateCustomer
 Staff --> S_UpdatePoints
-Staff --> S_ViewPersonalSales
+Staff --> S_ViewSalesReport
+Staff --> S_ViewEmployeeReport
+Staff --> S_ViewProductReport
 
 ' Include relationships (mandatory behavior)
+' Use case lớn bao gồm use case nhỏ như một phần không thể thiếu
 S_CreateOrder ..> S_ViewMenu : <<include>>
 S_ProcessPayment ..> S_CreateInvoice : <<include>>
 
 ' Extend relationships (optional behavior)
+' Use case bổ sung chức năng cho use case có sẵn trong điều kiện nhất định
 S_ApplyDiscount ..> S_CreateOrder : <<extend>>
-S_UpdatePoints ..> S_AddCustomer : <<extend>>
+S_ValidateDiscount ..> S_ApplyDiscount : <<extend>>
+S_UpdateProfile ..> S_Login : <<extend>>
+S_CancelOrder ..> S_CreateOrder : <<extend>>
+S_UpdatePoints ..> S_UpdateCustomer : <<extend>>
 
 @enduml
 ```
@@ -805,47 +878,56 @@ actor "Quản lý\n(MANAGER)" as Manager
 rectangle "Hệ thống Manager Dashboard - Chức năng Quản lý" #f8f9fa {
 
   package "Xác thực & Phiên làm việc" #e3f2fd {
-    usecase "Đăng nhập Dashboard" as M_Login
+    usecase "Đăng nhập" as M_Login
     usecase "Đăng xuất" as M_Logout
+    usecase "Cập nhật hồ sơ" as M_UpdateProfile
   }
 
   package "Quản lý Sản phẩm & Danh mục" #e8f5e8 {
     usecase "Quản lý sản phẩm" as M_ManageProducts
     usecase "Quản lý danh mục" as M_ManageCategories
-    usecase "Quản lý giá size" as M_ManagePricing
+    usecase "Quản lý size sản phẩm" as M_ManageProductSizes
+    usecase "Xem menu sản phẩm" as M_ViewMenu
   }
 
-  package "Giám sát Đơn hàng & Thanh toán" #fff3e0 {
-    usecase "Giám sát đơn hàng" as M_MonitorOrders
-    usecase "Quản lý thanh toán" as M_ManagePayments
-    usecase "Xử lý hoàn tiền" as M_ProcessRefunds
+  package "Quản lý Đơn hàng & Thanh toán" #fff3e0 {
+    usecase "Tạo đơn hàng" as M_CreateOrder
+    usecase "Xem đơn hàng" as M_ViewOrders
+    usecase "Cập nhật đơn hàng" as M_UpdateOrder
+    usecase "Hủy đơn hàng" as M_CancelOrder
+    usecase "Xử lý thanh toán" as M_ProcessPayment
+    usecase "Tạo hóa đơn" as M_CreateInvoice
   }
 
   package "Quản lý Khách hàng & Thành viên" #f3e5f5 {
     usecase "Quản lý khách hàng" as M_ManageCustomers
     usecase "Quản lý loại thành viên" as M_ManageMembershipTypes
+    usecase "Cập nhật điểm thành viên" as M_UpdateMembershipPoints
   }
 
   package "Quản lý Khuyến mãi" #e1f5fe {
-    usecase "Tạo khuyến mãi" as M_CreatePromotions
-    usecase "Quản lý mã giảm giá" as M_ManageDiscounts
-    usecase "Phân tích hiệu quả" as M_AnalyzePromotions
+    usecase "Quản lý khuyến mãi" as M_ManagePromotions
+    usecase "Áp dụng khuyến mãi" as M_ApplyDiscount
+    usecase "Kiểm tra mã giảm giá" as M_ValidateDiscount
   }
 
   package "Quản lý Nhân viên" #ffebee {
-    usecase "Quản lý tài khoản\nnhân viên" as M_ManageStaff
-    usecase "Phân quyền hệ thống" as M_ManagePermissions
+    usecase "Quản lý nhân viên" as M_ManageEmployees
+    usecase "Quản lý tài khoản" as M_ManageAccounts
+    usecase "Phân quyền hệ thống" as M_ManageRoles
   }
 
   package "Báo cáo & Thống kê" #f1f8e9 {
     usecase "Dashboard tổng quan" as M_Dashboard
-    usecase "Báo cáo doanh thu" as M_RevenueReport
-    usecase "Báo cáo nhân viên" as M_StaffReport
-    usecase "Báo cáo sản phẩm" as M_ProductReport
+    usecase "Báo cáo bán hàng" as M_SalesReport
+    usecase "Báo cáo theo nhân viên" as M_EmployeeReport
+    usecase "Báo cáo theo sản phẩm" as M_ProductReport
+    usecase "Báo cáo theo tháng" as M_MonthlyReport
+    usecase "Báo cáo theo ngày" as M_DailyReport
   }
 
   package "Quản lý Hệ thống" #fce4ec {
-    usecase "Cấu hình cửa hàng" as M_ManageStore
+    usecase "Quản lý cửa hàng" as M_ManageStore
     usecase "Cấu hình hệ thống" as M_SystemConfig
   }
 }
@@ -853,35 +935,206 @@ rectangle "Hệ thống Manager Dashboard - Chức năng Quản lý" #f8f9fa {
 ' Manager associations
 Manager --> M_Login
 Manager --> M_Logout
+Manager --> M_UpdateProfile
 Manager --> M_ManageProducts
 Manager --> M_ManageCategories
-Manager --> M_ManagePricing
-Manager --> M_MonitorOrders
-Manager --> M_ManagePayments
-Manager --> M_ProcessRefunds
+Manager --> M_ManageProductSizes
+Manager --> M_ViewMenu
+Manager --> M_CreateOrder
+Manager --> M_ViewOrders
+Manager --> M_UpdateOrder
+Manager --> M_CancelOrder
+Manager --> M_ProcessPayment
+Manager --> M_CreateInvoice
 Manager --> M_ManageCustomers
 Manager --> M_ManageMembershipTypes
-Manager --> M_CreatePromotions
-Manager --> M_ManageDiscounts
-Manager --> M_AnalyzePromotions
-Manager --> M_ManageStaff
-Manager --> M_ManagePermissions
+Manager --> M_UpdateMembershipPoints
+Manager --> M_ManagePromotions
+Manager --> M_ApplyDiscount
+Manager --> M_ValidateDiscount
+Manager --> M_ManageEmployees
+Manager --> M_ManageAccounts
+Manager --> M_ManageRoles
 Manager --> M_Dashboard
-Manager --> M_RevenueReport
-Manager --> M_StaffReport
+Manager --> M_SalesReport
+Manager --> M_EmployeeReport
 Manager --> M_ProductReport
+Manager --> M_MonthlyReport
+Manager --> M_DailyReport
 Manager --> M_ManageStore
 Manager --> M_SystemConfig
 
 ' Include relationships (mandatory behavior)
-M_CreatePromotions ..> M_ManageDiscounts : <<include>>
-M_Dashboard ..> M_RevenueReport : <<include>>
-M_Dashboard ..> M_StaffReport : <<include>>
+' Use case lớn bao gồm use case nhỏ như một phần không thể thiếu
+M_CreateOrder ..> M_ViewMenu : <<include>>
+M_ProcessPayment ..> M_CreateInvoice : <<include>>
+M_Dashboard ..> M_SalesReport : <<include>>
+M_Dashboard ..> M_EmployeeReport : <<include>>
 M_Dashboard ..> M_ProductReport : <<include>>
 
 ' Extend relationships (optional behavior)
-M_AnalyzePromotions ..> M_CreatePromotions : <<extend>>
-M_ProcessRefunds ..> M_MonitorOrders : <<extend>>
+' Use case bổ sung chức năng cho use case có sẵn trong điều kiện nhất định
+M_ApplyDiscount ..> M_CreateOrder : <<extend>>
+M_ValidateDiscount ..> M_ApplyDiscount : <<extend>>
+M_UpdateProfile ..> M_Login : <<extend>>
+M_CancelOrder ..> M_ViewOrders : <<extend>>
+M_UpdateOrder ..> M_ViewOrders : <<extend>>
+
+@enduml
+```
+
+#### d. Biểu đồ ca tổng hợp theo backend thực tế
+
+```plantuml
+@startuml
+title Biểu đồ ca sử dụng tổng hợp - Hệ thống Boba Eco-System (Backend-based)
+
+left to right direction
+skinparam packageStyle rectangle
+
+' Actors
+actor "Nhân viên\n(STAFF)" as Staff
+actor "Quản lý\n(MANAGER)" as Manager
+
+rectangle "Hệ thống Boba Eco-System" #f8f9fa {
+
+  ' Authentication Module
+  package "Auth Module" #e3f2fd {
+    usecase "Đăng nhập (Login)" as Login
+    usecase "Cập nhật hồ sơ (Update Profile)" as UpdateProfile
+  }
+
+  ' Product Module
+  package "Product Module" #e8f5e8 {
+    usecase "Quản lý sản phẩm (Products)" as ManageProducts
+    usecase "Quản lý danh mục (Categories)" as ManageCategories
+    usecase "Quản lý size (Product Sizes)" as ManageProductSizes
+    usecase "Xem menu sản phẩm" as ViewProducts
+  }
+
+  ' Order Module
+  package "Order Module" #fff3e0 {
+    usecase "Tạo đơn hàng (Create Order)" as CreateOrder
+    usecase "Xem đơn hàng (View Orders)" as ViewOrders
+    usecase "Cập nhật đơn hàng (Update Order)" as UpdateOrder
+    usecase "Hủy đơn hàng (Cancel Order)" as CancelOrder
+    usecase "Kiểm tra khuyến mãi (Validate Discounts)" as ValidateDiscounts
+  }
+
+  ' Payment Module
+  package "Payment Module" #f3e5f5 {
+    usecase "Xử lý thanh toán (Process Payment)" as ProcessPayment
+    usecase "Thanh toán Stripe" as StripePayment
+    usecase "Thanh toán tiền mặt (Cash)" as CashPayment
+  }
+
+  ' Invoice Module
+  package "Invoice Module" #e1f5fe {
+    usecase "Tạo hóa đơn HTML" as CreateInvoiceHTML
+    usecase "Tạo hóa đơn PDF" as CreateInvoicePDF
+    usecase "Xem dữ liệu hóa đơn" as ViewInvoiceData
+  }
+
+  ' Customer Module
+  package "Customer Module" #ffebee {
+    usecase "Quản lý khách hàng (Customers)" as ManageCustomers
+    usecase "Quản lý loại thành viên (Membership Types)" as ManageMembershipTypes
+  }
+
+  ' Employee Module
+  package "Employee Module" #f1f8e9 {
+    usecase "Quản lý nhân viên (Employees)" as ManageEmployees
+    usecase "Quản lý tài khoản (Accounts)" as ManageAccounts
+    usecase "Quản lý quyền (Roles)" as ManageRoles
+  }
+
+  ' Discount Module
+  package "Discount Module" #fce4ec {
+    usecase "Quản lý khuyến mãi (Discounts)" as ManageDiscounts
+    usecase "Áp dụng khuyến mãi" as ApplyDiscounts
+  }
+
+  ' Reports Module
+  package "Reports Module" #e8f5e8 {
+    usecase "Báo cáo bán hàng (Sales Report)" as SalesReport
+    usecase "Báo cáo theo tháng (Monthly Report)" as MonthlyReport
+    usecase "Báo cáo theo ngày (Daily Report)" as DailyReport
+    usecase "Báo cáo nhân viên (Employee Report)" as EmployeeReport
+    usecase "Báo cáo sản phẩm (Product Report)" as ProductReport
+  }
+
+  ' Store Module
+  package "Store Module" #fff3e0 {
+    usecase "Quản lý cửa hàng (Store Management)" as ManageStore
+  }
+}
+
+' Staff associations (operational access)
+Staff --> Login
+Staff --> UpdateProfile
+Staff --> ViewProducts
+Staff --> CreateOrder
+Staff --> ViewOrders
+Staff --> UpdateOrder
+Staff --> CancelOrder
+Staff --> ValidateDiscounts
+Staff --> ProcessPayment
+Staff --> CashPayment
+Staff --> StripePayment
+Staff --> ViewInvoiceData
+Staff --> ManageCustomers
+Staff --> ApplyDiscounts
+Staff --> SalesReport
+Staff --> EmployeeReport
+Staff --> ProductReport
+
+' Manager associations (full access)
+Manager --> Login
+Manager --> UpdateProfile
+Manager --> ManageProducts
+Manager --> ManageCategories
+Manager --> ManageProductSizes
+Manager --> ViewProducts
+Manager --> CreateOrder
+Manager --> ViewOrders
+Manager --> UpdateOrder
+Manager --> CancelOrder
+Manager --> ValidateDiscounts
+Manager --> ProcessPayment
+Manager --> CashPayment
+Manager --> StripePayment
+Manager --> CreateInvoiceHTML
+Manager --> CreateInvoicePDF
+Manager --> ViewInvoiceData
+Manager --> ManageCustomers
+Manager --> ManageMembershipTypes
+Manager --> ManageEmployees
+Manager --> ManageAccounts
+Manager --> ManageRoles
+Manager --> ManageDiscounts
+Manager --> ApplyDiscounts
+Manager --> SalesReport
+Manager --> MonthlyReport
+Manager --> DailyReport
+Manager --> EmployeeReport
+Manager --> ProductReport
+Manager --> ManageStore
+
+' Include relationships (mandatory behavior)
+' Use case lớn bao gồm use case nhỏ như một phần không thể thiếu
+CreateOrder ..> ViewProducts : <<include>>
+ProcessPayment ..> CreateInvoiceHTML : <<include>>
+
+' Extend relationships (optional behavior)
+' Use case bổ sung chức năng cho use case có sẵn trong điều kiện nhất định
+ApplyDiscounts ..> CreateOrder : <<extend>>
+ValidateDiscounts ..> ApplyDiscounts : <<extend>>
+UpdateProfile ..> Login : <<extend>>
+CancelOrder ..> ViewOrders : <<extend>>
+UpdateOrder ..> ViewOrders : <<extend>>
+StripePayment ..> ProcessPayment : <<extend>>
+CashPayment ..> ProcessPayment : <<extend>>
+CreateInvoicePDF ..> CreateInvoiceHTML : <<extend>>
 
 @enduml
 ```
@@ -1185,126 +1438,275 @@ M_ProcessRefunds ..> M_MonitorOrders : <<extend>>
 | Quản lý khách hàng | In hóa đơn | |
 | Quản lý sản phẩm cơ bản | | |
 
-### 3.2.6 Phác họa giao diện người dùng
+### 3.2.6 Thiết kế giao diện người dùng
 
-#### Giao diện đăng nhập
+#### 3.2.6.1 Giao diện đăng nhập
 
 ```plantuml
 @startsalt
-title Giao diện Đăng nhập
+title Giao diện Đăng nhập - Login Interface
 
-{
-  "=== ĐĂNG NHẬP HỆ THỐNG ==="
+{+
+  {^"🧁 Boba Eco-System"
+    "Hệ thống quản lý cửa hàng trà sữa"
+  }
   ==
-  "Tên đăng nhập:" | "                    "
-  "Mật khẩu:" | "                    " | {X}
+  {^"Đăng nhập"
+    "Tên đăng nhập:" | "                         "
+    "Mật khẩu:"      | "                         "
+    []  "Ghi nhớ đăng nhập"
+    ==
+    [Đăng nhập] | [Quên mật khẩu?]
+  }
   ==
-  [Đăng nhập] | [Quên mật khẩu?]
-  ==
-  "Chưa có tài khoản? " | [Đăng ký ngay]
+  "© 2024 Boba Eco-System. All rights reserved."
 }
 @endsalt
 ```
 
-#### Giao diện POS (Point of Sale)
+#### 3.2.6.2 Giao diện POS chính
 
 ```plantuml
 @startsalt
-title Giao diện POS - Điểm bán hàng
+title Giao diện POS - Point of Sale System
 
+{+
+{* File | Orders | Settings | Help }
 {
-  "=== ĐIỂM BÁN HÀNG ===" | [Đăng xuất]
+  {^"Categories"
+    [📦 Tất cả]
+    [🧁 Bánh Cupcake]
+    [🎂 Bánh Sinh Nhật]
+    [☕ Đồ Uống]
+    [🍪 Bánh Cookies]
+    [🥧 Bánh Tart]
+  } |
+  {^"Products Grid"
+    {S
+      [🧁 Red Velvet]   | [🧁 Chocolate]    | [🧁 Vanilla]
+      "Từ 45,000₫"      | "Từ 50,000₫"     | "Từ 40,000₫"
+      [+ Thêm]          | [+ Thêm]         | [+ Thêm]
+
+      [🎂 Birthday Cake] | [☕ Latte]       | [🍪 Choco Chip]
+      "Từ 200,000₫"     | "Từ 65,000₫"     | "Từ 25,000₫"
+      [+ Thêm]          | [+ Thêm]         | [+ Thêm]
+    }
+  } |
+  {^"Order Panel"
+    {^"Thông tin khách hàng"
+      👤 | "Nguyễn Văn A"
+      📞 | "0123456789"
+      👑 | "Gold Member (10% off)"
+      [🔍 Tìm khách hàng]
+    }
+    ==
+    {^"Mã giảm giá"
+      "Nhập mã:" | "SUMMER2024    " | [Áp dụng]
+      --
+      ✅ | "WELCOME10: -10,000₫" | [X]
+    }
+    ==
+    {^"Giỏ hàng"
+      {S
+        "Red Velvet (Medium)" | "x2" | "90,000₫"
+        [- 2 +] | [Xóa]
+        --
+        "Latte (Large)" | "x1" | "65,000₫"
+        [- 1 +] | [Xóa]
+      }
+    }
+    ==
+    "Tạm tính:"     | "155,000₫"
+    "Giảm giá:"     | "-15,500₫"
+    "Thành viên:"   | "-15,500₫"
+    ==
+    "Tổng cộng:"    | "124,000₫"
+    [💳 Thanh toán] | [💾 Lưu đơn]
+  }
+}
+}
+@endsalt
+```
+
+#### 3.2.6.3 Dialog chi tiết sản phẩm
+
+```plantuml
+@startsalt
+title Dialog Chi tiết Sản phẩm - Product Detail
+
+{+
+{^"Chi tiết sản phẩm"                                    [X]
+  🧁 | "Red Velvet Cupcake"
+      | "Category: Cupcakes"
+      | "Bánh cupcake red velvet với kem cheese"
+      | [X] "Sản phẩm đặc biệt"
+
   ==
-  {T
-    + "MENU SẢN PHẨM" | "ĐỚN HÀNG HIỆN TẠI"
-    + {
-      "Trà sữa truyền thống"
-      "Size: " | ^S^ | ^M^ | ^L^
-      "Giá: 35k/40k/45k"
-      [Thêm vào đơn]
-      --
-      "Trà sữa matcha"
-      "Size: " | ^S^ | ^M^ | ^L^
-      "Giá: 40k/45k/50k"
-      [Thêm vào đơn]
-    } | {
-      "Khách hàng: Nguyễn Văn A"
-      "SĐT: 0123456789"
-      --
-      "1x Trà sữa truyền thống (M) - 40k"
-      "2x Trà đào cam sả (L) - 80k"
-      --
-      "Tạm tính: 120k"
-      "Khuyến mãi: -10k"
-      "Thành tiền: 110k"
-      --
-      [Thanh toán tiền mặt] | [Thanh toán thẻ]
+  {^"Chọn kích thước"
+    () "Small (1 cái)"   | "45,000₫"
+    (X) "Medium (2 cái)" | "65,000₫"
+    () "Large (4 cái)"   | "120,000₫"
+  }
+  ==
+  {^"Số lượng"
+    [- 1 +] | "Quantity: 2"
+  }
+  ==
+  "Tổng cộng: 130,000₫"
+
+  [Hủy] | [Thêm vào giỏ]
+}
+}
+@endsalt
+```
+
+#### 3.2.6.4 Giao diện Manager Dashboard
+
+```plantuml
+@startsalt
+title Manager Dashboard - Bảng điều khiển quản lý
+
+{+
+{* Dashboard | Products | Orders | Users | Reports | Settings }
+{
+  {^"Thống kê nhanh"
+    💰 "Doanh thu hôm nay" | 📦 "Đơn hàng" | 👥 "Khách hàng mới" | 📈 "Tăng trưởng"
+    "15,420,000₫"          | "24"          | "12"               | "+12.5%"
+  }
+  ==
+  {^"Biểu đồ doanh thu" | ^"Hoạt động gần đây"
+    {S                  | {S
+      📊 "Chart Area"   | "• Đơn hàng #123 đã tạo (2 phút trước)"
+      "(Recharts)"      | "• Red Velvet hết hàng (15 phút trước)"
+      "Revenue Chart"   | "• Khách hàng mới đăng ký (1 giờ trước)"
+    }                   | }
+  }
+  ==
+  {^"Thao tác nhanh"
+    [+ Sản phẩm mới] | [📋 Xem đơn hàng] | [👥 Quản lý nhân viên] | [📊 Báo cáo]
+  }
+}
+}
+@endsalt
+```
+
+#### 3.2.6.5 Giao diện quản lý sản phẩm
+
+```plantuml
+@startsalt
+title Quản lý Sản phẩm - Product Management
+
+{+
+{* Products | Categories | Sizes | Pricing }
+{
+  {^"Bộ lọc & Tìm kiếm"
+    "🔍 Tìm sản phẩm..." | ^"Danh mục"^ | ^"Trạng thái"^ | [+ Sản phẩm mới]
+  }
+  ==
+  {^"Danh sách sản phẩm"
+    {T#
+    +"Tên sản phẩm"    | "Danh mục"  | "Giá"              | "Tồn kho" | "Trạng thái" | "Thao tác"
+    + "Red Velvet"     | "Cupcakes"  | "45,000-65,000₫"   | "25"      | "Hoạt động"  | [Sửa] [Xóa]
+    + "Chocolate Cake" | "Cakes"     | "200,000₫"         | "10"      | "Hoạt động"  | [Sửa] [Xóa]
+    + "Latte"         | "Beverages" | "45,000-75,000₫"   | "∞"       | "Hoạt động"  | [Sửa] [Xóa]
+    + "Cookies"       | "Cookies"   | "25,000₫"          | "50"      | "Tạm dừng"   | [Sửa] [Xóa]
     }
   }
 }
-@endsalt
-```
-
-#### Giao diện Manager Dashboard
-
-```plantuml
-@startsalt
-title Giao diện Manager Dashboard
-
-{
-  "=== BẢNG ĐIỀU KHIỂN QUẢN LÝ ===" | "Xin chào, Manager" | [Đăng xuất]
-  ==
-  {T
-    + "MENU CHÍNH" | "THỐNG KÊ NHANH"
-    + {
-      [Quản lý Sản phẩm]
-      [Quản lý Nhân viên]
-      [Quản lý Khách hàng]
-      [Quản lý Khuyến mãi]
-      [Báo cáo Doanh thu]
-      [Báo cáo Nhân viên]
-      [Cài đặt Cửa hàng]
-    } | {
-      "=== DOANH THU HÔM NAY ==="
-      "Tổng đơn hàng: 45"
-      "Doanh thu: 2,350,000 VNĐ"
-      "Khách hàng mới: 8"
-      ==
-      "=== TOP SẢN PHẨM ==="
-      "1. Trà sữa truyền thống (15)"
-      "2. Trà đào cam sả (12)"
-      "3. Trà sữa matcha (10)"
-      ==
-      "=== HOẠT ĐỘNG GẦN ĐÂY ==="
-      "10:30 - Đơn hàng #123 hoàn thành"
-      "10:25 - Khách hàng mới đăng ký"
-      "10:20 - Đơn hàng #122 thanh toán"
-    }
-  }
 }
 @endsalt
 ```
 
-#### Giao diện quản lý sản phẩm
+#### 3.2.6.6 Giao diện quản lý đơn hàng
 
 ```plantuml
 @startsalt
-title Giao diện Quản lý Sản phẩm
+title Quản lý Đơn hàng - Order Management
 
+{+
+{/ "Tất cả" | "Đang xử lý" | "Hoàn thành" | "Đã hủy" }
 {
-  "=== QUẢN LÝ SẢN PHẨM ===" | [Thêm sản phẩm mới]
-  ==
-  "Tìm kiếm:" | "                    " | [Tìm]
-  "Danh mục:" | ^Tất cả^ | "Trạng thái:" | ^Hoạt động^
-  ==
-  {T
-    + ID | Tên sản phẩm | Danh mục | Giá (S/M/L) | Trạng thái | Thao tác
-    + 1 | Trà sữa truyền thống | Trà sữa | 35k/40k/45k | Hoạt động | [Sửa] [Xóa]
-    + 2 | Trà sữa matcha | Trà sữa | 40k/45k/50k | Hoạt động | [Sửa] [Xóa]
-    + 3 | Trà đào cam sả | Trà trái cây | 30k/35k/40k | Tạm dừng | [Sửa] [Xóa]
+  {^"Bộ lọc đơn hàng"
+    "📅 Khoảng thời gian" | ^"Trạng thái"^ | ^"Thanh toán"^ | "🔍 Tìm kiếm..."
   }
   ==
-  "Trang 1 của 5" | [Trước] | [Sau]
+  {^"Danh sách đơn hàng"
+    {S#
+    "Mã đơn" | "Khách hàng"   | "Sản phẩm" | "Tổng tiền"  | "Trạng thái"   | "Thanh toán" | "Thao tác"
+    "#001"   | "Nguyễn Văn A" | "3"        | "139,500₫"   | "Đang xử lý"   | "Tiền mặt"   | [Xem] [Sửa]
+    "#002"   | "Trần Thị B"   | "2"        | "95,000₫"    | "Hoàn thành"   | "Thẻ"       | [Xem] [In]
+    "#003"   | "Lê Văn C"     | "1"        | "45,000₫"    | "Đã hủy"      | "-"         | [Xem] [Hoàn tiền]
+    }
+  }
+}
+}
+@endsalt
+```
+
+#### 3.2.6.7 Giao diện quản lý khách hàng
+
+```plantuml
+@startsalt
+title Quản lý Khách hàng - Customer Management
+
+{+
+{/ "Khách hàng" | "Nhân viên" | "Quản lý" | "Loại thành viên" }
+{
+  {^"Bộ lọc khách hàng"
+    "🔍 Tìm khách hàng..." | ^"Hạng thành viên"^ | ^"Trạng thái"^ | [+ Khách hàng mới]
+  }
+  ==
+  {^"Danh sách khách hàng"
+    {S#
+    "Tên"         | "Điện thoại"  | "Email"           | "Hạng"   | "Điểm" | "Đơn hàng" | "Thao tác"
+    "Nguyễn Văn A"| "0123456789"  | "nguyenvana@..."  | "Gold"   | "1,250"| "15"       | [Xem] [Sửa]
+    "Trần Thị B"  | "0987654321"  | "tranthib@..."    | "Silver" | "750"  | "8"        | [Xem] [Sửa]
+    "Lê Văn C"    | "0555666777"  | "levanc@..."      | "Bronze" | "200"  | "3"        | [Xem] [Sửa]
+    }
+  }
+  ==
+  {^"Chi tiết khách hàng: Nguyễn Văn A"
+    👤 "Tên:"        | "Nguyễn Văn A"
+    📞 "Điện thoại:" | "0123456789"
+    📧 "Email:"      | "nguyenvana@email.com"
+    👑 "Hạng:"       | ^"Gold"^
+    🎁 "Điểm:"       | "1,250"
+    📅 "Tham gia:"   | "2024-01-15"
+
+    [Lưu thay đổi] | [Xóa khách hàng]
+  }
+}
+}
+@endsalt
+```
+
+#### 3.2.6.8 Giao diện thanh toán
+
+```plantuml
+@startsalt
+title Giao diện Thanh toán - Payment Interface
+
+{+
+{^"Xử lý Thanh toán - Đơn hàng #001"
+  {^"Thông tin đơn hàng"
+    "Khách hàng:" | "Nguyễn Văn A (Gold Member)"
+    "Tổng tiền:"  | "139,500₫"
+    "Giảm giá:"   | "-15,500₫"
+    "Thành tiền:" | "124,000₫"
+  }
+  ==
+  {^"Phương thức thanh toán"
+    (X) "💵 Tiền mặt"
+    () "💳 Thẻ tín dụng (Stripe)"
+  }
+  ==
+  {^"Thanh toán tiền mặt"
+    "Số tiền nhận:" | "150,000     " | "₫"
+    "Tiền thừa:"    | "26,000₫"
+  }
+  ==
+  [Hủy] | [Xác nhận thanh toán]
+}
 }
 @endsalt
 ```
