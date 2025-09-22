@@ -11,15 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { AccountService } from './account.service';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -29,11 +21,26 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type {
+	account,
+	customer,
+	employee,
+	manager,
+	role,
+} from '../generated/prisma/client'
+import type { AccountService } from './account.service'
+import { CreateAccountDto } from './dto/create-account.dto'
+import { UpdateAccountDto } from './dto/update-account.dto'
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -105,8 +112,8 @@ export class AccountController {
 	 * @param createAccountDto Data to create the account with
 	 * @returns Newly created account object
 	 */
-	async create(@Body() createAccountDto: CreateAccountDto): Promise<any> {
-		return this.accountService.create(createAccountDto);
+	async create(@Body() createAccountDto: CreateAccountDto): Promise<account> {
+		return this.accountService.create(createAccountDto)
 	}
 
 	@Get()
@@ -174,8 +181,8 @@ export class AccountController {
 	 */
 	async findAll(
 		@Query() paginationDto: PaginationDto
-	): Promise<PaginatedResult<any>> {
-		return this.accountService.findAll(paginationDto);
+	): Promise<PaginatedResult<Omit<account, 'password_hash'>>> {
+		return this.accountService.findAll(paginationDto)
 	}
 
 	@Get(':id')
@@ -236,8 +243,15 @@ export class AccountController {
 	 * @param id ID of the account to retrieve
 	 * @returns Account object if found
 	 */
-	async findOne(@Param('id', ParseIntPipe) id: number): Promise<any> {
-		return this.accountService.findOne(id);
+	async findOne(@Param('id', ParseIntPipe) id: number): Promise<
+		Omit<account, 'password_hash'> & {
+			role?: role
+			customer?: customer[]
+			employee?: employee | null
+			manager?: manager | null
+		}
+	> {
+		return this.accountService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -305,8 +319,8 @@ export class AccountController {
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateAccountDto: UpdateAccountDto
-	): Promise<any> {
-		return this.accountService.update(id, updateAccountDto);
+	): Promise<account> {
+		return this.accountService.update(id, updateAccountDto)
 	}
 
 	@Delete(':id')
@@ -357,8 +371,8 @@ export class AccountController {
 		status: 404,
 		description: 'Account with the provided ID not found.',
 	})
-	async remove(@Param('id', ParseIntPipe) id: number): Promise<any> {
-		return this.accountService.remove(id);
+	async remove(@Param('id', ParseIntPipe) id: number): Promise<account> {
+		return this.accountService.remove(id)
 	}
 
 	@Get('admin/test')
@@ -397,6 +411,6 @@ export class AccountController {
 	 * @returns Confirmation message
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Account controller is working!' };
+		return { message: 'Account controller is working!' }
 	}
 }

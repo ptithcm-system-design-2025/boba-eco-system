@@ -92,7 +92,7 @@ export class FirebaseStorageController {
 		@UploadedFile() file: Express.Multer.File,
 		@Body('fileName') fileName?: string,
 		@Body('folder') folder?: string,
-		@CurrentUser() user?: any
+		@CurrentUser() _user?: any
 	) {
 		if (!file) {
 			throw new BadRequestException('Please select a file to upload')
@@ -159,7 +159,7 @@ export class FirebaseStorageController {
 	 */
 	async deleteImage(
 		@Body('imageUrl') imageUrl: string,
-		@CurrentUser() user?: any
+		@CurrentUser() _user?: any
 	) {
 		if (!imageUrl) {
 			throw new BadRequestException(
@@ -205,7 +205,7 @@ export class FirebaseStorageController {
 	 */
 	async listImages(
 		@Query('folder') folder: string = 'products',
-		@CurrentUser() user?: any
+		@CurrentUser() _user?: any
 	) {
 		const gsPaths = await this.firebaseStorageService.listProductImages(folder)
 
@@ -289,7 +289,7 @@ export class FirebaseStorageController {
 		@Body('oldImageUrl') oldImageUrl: string,
 		@Body('fileName') fileName?: string,
 		@Body('folder') folder?: string,
-		@CurrentUser() user?: any
+		@CurrentUser() _user?: any
 	) {
 		if (!file) {
 			throw new BadRequestException('Please select a new image file to upload')

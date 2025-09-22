@@ -1,10 +1,10 @@
-import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
-import * as fs from 'fs';
-import * as path from 'path';
-import { AppModule } from './app.module';
+import { ValidationPipe, VersioningType } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import cookieParser from 'cookie-parser'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { AppModule } from './app.module'
 
 async function bootstrap() {
 	const httpsOptions = {
@@ -14,13 +14,13 @@ async function bootstrap() {
 		cert: fs.readFileSync(
 			path.join(__dirname, '..', 'certificates', 'localhost.pem')
 		),
-	};
+	}
 	const app = await NestFactory.create(AppModule, {
 		httpsOptions,
 		logger: ['error', 'warn', 'log'],
-	});
+	})
 
-	app.use(cookieParser());
+	app.use(cookieParser())
 
 	app.enableCors({
 		origin: [
@@ -33,13 +33,13 @@ async function bootstrap() {
 		allowedHeaders: ['Content-Type', 'Authorization'],
 		exposedHeaders: ['Set-Cookie'],
 		credentials: true,
-	});
-	app.setGlobalPrefix('api');
+	})
+	app.setGlobalPrefix('api')
 	app.enableVersioning({
 		type: VersioningType.URI,
 		defaultVersion: '1',
 		prefix: 'v',
-	});
+	})
 
 	app.useGlobalPipes(
 		new ValidationPipe({
@@ -47,7 +47,7 @@ async function bootstrap() {
 			whitelist: true,
 			forbidNonWhitelisted: true,
 		})
-	);
+	)
 
 	const config = new DocumentBuilder()
 		.setTitle('Cake POS API')
@@ -76,11 +76,11 @@ async function bootstrap() {
 		.addTag('payments', 'Payment processing - Xử lý thanh toán')
 		.addTag('invoices', 'Invoice management - Quản lý hóa đơn')
 		.addTag('reports', 'Reports and analytics - Báo cáo và thống kê')
-		.build();
+		.build()
 
-	const documentFactory = () => SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup('api', app, documentFactory());
+	const documentFactory = () => SwaggerModule.createDocument(app, config)
+	SwaggerModule.setup('api', app, documentFactory())
 
-	await app.listen(process.env.PORT ?? 3000);
+	await app.listen(process.env.PORT ?? 3000)
 }
-bootstrap();
+bootstrap()

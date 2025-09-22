@@ -11,17 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { CustomerService } from './customer.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { customer } from '../generated/prisma/client';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -31,25 +21,32 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
-import type { AccountService } from '../account/account.service';
-import { CreateAccountDto } from '../account/dto/create-account.dto';
-import { UpdateAccountDto } from '../account/dto/update-account.dto';
-import { LockAccountDto } from '../account/dto/lock-account.dto';
+} from '@nestjs/swagger'
+
+import { CreateAccountDto } from '../account/dto/create-account.dto'
+import { LockAccountDto } from '../account/dto/lock-account.dto'
+import { UpdateAccountDto } from '../account/dto/update-account.dto'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { customer } from '../generated/prisma/client'
+import type { CustomerService } from './customer.service'
+import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto'
+import { CreateCustomerDto } from './dto/create-customer.dto'
+import { UpdateCustomerDto } from './dto/update-customer.dto'
 
 @ApiTags('customers')
 @Controller('customers')
 @ApiBearerAuth('JWT-auth')
 @ApiExtraModels(PaginationMetadata)
 export class CustomerController {
-	constructor(
-		private readonly customerService: CustomerService,
-		private readonly accountService: AccountService
-	) {}
+	constructor(private readonly customerService: CustomerService) {}
 
 	@Post()
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -72,14 +69,22 @@ export class CustomerController {
 				full_name: { type: 'string', description: 'Full name' },
 				phone: { type: 'string', description: 'Phone number' },
 				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
+				address: {
+					type: 'string',
+					description: 'Address',
+					nullable: true,
+				},
 				date_of_birth: {
 					type: 'string',
 					format: 'date',
 					description: 'Date of birth',
 					nullable: true,
 				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
+				gender: {
+					type: 'string',
+					description: 'Gender',
+					nullable: true,
+				},
 				membership_type_id: {
 					type: 'number',
 					description: 'Automatically assigned membership type ID',
@@ -115,7 +120,7 @@ export class CustomerController {
 	async create(
 		@Body() createCustomerDto: CreateCustomerDto
 	): Promise<customer> {
-		return this.customerService.create(createCustomerDto);
+		return this.customerService.create(createCustomerDto)
 	}
 
 	@Get()
@@ -156,7 +161,11 @@ export class CustomerController {
 							phone: { type: 'string' },
 							email: { type: 'string', nullable: true },
 							address: { type: 'string', nullable: true },
-							date_of_birth: { type: 'string', format: 'date', nullable: true },
+							date_of_birth: {
+								type: 'string',
+								format: 'date',
+								nullable: true,
+							},
 							gender: { type: 'string', nullable: true },
 							membership_type_id: { type: 'number' },
 							current_points: { type: 'number' },
@@ -183,7 +192,7 @@ export class CustomerController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<customer>> {
-		return this.customerService.findAll(paginationDto);
+		return this.customerService.findAll(paginationDto)
 	}
 
 	@Delete('bulk')
@@ -216,7 +225,10 @@ export class CustomerController {
 								type: 'number',
 								description: 'ID khách hàng không thể xóa',
 							},
-							reason: { type: 'string', description: 'Lý do không thể xóa' },
+							reason: {
+								type: 'string',
+								description: 'Lý do không thể xóa',
+							},
 						},
 					},
 					description: 'Danh sách các khách hàng không thể xóa và lý do',
@@ -255,11 +267,11 @@ export class CustomerController {
 			'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa khách hàng',
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCustomerDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.customerService.bulkDelete(bulkDeleteDto);
+		return this.customerService.bulkDelete(bulkDeleteDto)
 	}
 
 	@Get(':id')
@@ -287,14 +299,22 @@ export class CustomerController {
 				full_name: { type: 'string', description: 'Full name' },
 				phone: { type: 'string', description: 'Phone number' },
 				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
+				address: {
+					type: 'string',
+					description: 'Address',
+					nullable: true,
+				},
 				date_of_birth: {
 					type: 'string',
 					format: 'date',
 					description: 'Date of birth',
 					nullable: true,
 				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
+				gender: {
+					type: 'string',
+					description: 'Gender',
+					nullable: true,
+				},
 				membership_type_id: {
 					type: 'number',
 					description: 'Membership type ID',
@@ -331,7 +351,7 @@ export class CustomerController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<customer | null> {
-		return this.customerService.findOne(id);
+		return this.customerService.findOne(id)
 	}
 
 	@Get('phone/:phone')
@@ -358,7 +378,11 @@ export class CustomerController {
 				full_name: { type: 'string', description: 'Full name' },
 				phone: { type: 'string', description: 'Phone number' },
 				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
+				address: {
+					type: 'string',
+					description: 'Address',
+					nullable: true,
+				},
 				membership_type_id: {
 					type: 'number',
 					description: 'Membership type ID',
@@ -383,7 +407,7 @@ export class CustomerController {
 		description: 'Customer with the provided phone number not found.',
 	})
 	async findByPhone(@Param('phone') phone: string): Promise<customer | null> {
-		return this.customerService.findByPhone(phone);
+		return this.customerService.findByPhone(phone)
 	}
 
 	@Get(':id/account')
@@ -435,7 +459,7 @@ export class CustomerController {
 			'Customer not found or customer does not have a linked account.',
 	})
 	async getCustomerAccount(@Param('id', ParseIntPipe) customerId: number) {
-		return this.customerService.getCustomerAccount(customerId);
+		return this.customerService.getCustomerAccount(customerId)
 	}
 
 	@Post(':id/account')
@@ -506,7 +530,7 @@ export class CustomerController {
 		return this.customerService.createCustomerAccount(
 			customerId,
 			createAccountDto
-		);
+		)
 	}
 
 	@Patch(':id/account')
@@ -572,7 +596,7 @@ export class CustomerController {
 		return this.customerService.updateCustomerAccount(
 			customerId,
 			updateAccountDto
-		);
+		)
 	}
 
 	@Patch(':id/account/lock')
@@ -633,7 +657,7 @@ export class CustomerController {
 		return this.customerService.lockCustomerAccount(
 			customerId,
 			lockAccountDto.is_locked
-		);
+		)
 	}
 
 	@Patch(':id')
@@ -714,7 +738,7 @@ export class CustomerController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateCustomerDto: UpdateCustomerDto
 	): Promise<customer> {
-		return this.customerService.update(id, updateCustomerDto);
+		return this.customerService.update(id, updateCustomerDto)
 	}
 
 	@Delete(':id')
@@ -754,7 +778,7 @@ export class CustomerController {
 			'Conflict - Cannot delete a customer with associated orders or accounts.',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.customerService.remove(id);
+		await this.customerService.remove(id)
 	}
 
 	@Get('test/ping')
@@ -789,7 +813,7 @@ export class CustomerController {
 		description: 'Forbidden - Only MANAGER can perform this test.',
 	})
 	test(): Promise<{ message: string }> {
-		return Promise.resolve({ message: 'Customer controller is working!' });
+		return Promise.resolve({ message: 'Customer controller is working!' })
 	}
 
 	@Get('membership-type/:membershipTypeId')
@@ -869,6 +893,6 @@ export class CustomerController {
 		return this.customerService.findByMembershipType(
 			membershipTypeId,
 			paginationDto
-		);
+		)
 	}
 }

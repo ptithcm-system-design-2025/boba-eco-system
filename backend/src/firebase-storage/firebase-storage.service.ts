@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common'
 import type { ConfigService } from '@nestjs/config'
 import * as admin from 'firebase-admin'
-import * as path from 'path'
+import * as path from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 
 @Injectable()
