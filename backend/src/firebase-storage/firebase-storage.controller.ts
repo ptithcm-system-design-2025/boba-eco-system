@@ -26,6 +26,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface'
 import type { FirebaseStorageService } from './firebase-storage.service'
 
 @ApiTags('Firebase Storage')
@@ -92,7 +93,7 @@ export class FirebaseStorageController {
 		@UploadedFile() file: Express.Multer.File,
 		@Body('fileName') fileName?: string,
 		@Body('folder') folder?: string,
-		@CurrentUser() _user?: any
+		@CurrentUser() _user?: JwtPayload
 	) {
 		if (!file) {
 			throw new BadRequestException('Please select a file to upload')
@@ -159,7 +160,7 @@ export class FirebaseStorageController {
 	 */
 	async deleteImage(
 		@Body('imageUrl') imageUrl: string,
-		@CurrentUser() _user?: any
+		@CurrentUser() _user?: JwtPayload
 	) {
 		if (!imageUrl) {
 			throw new BadRequestException(
@@ -205,7 +206,7 @@ export class FirebaseStorageController {
 	 */
 	async listImages(
 		@Query('folder') folder: string = 'products',
-		@CurrentUser() _user?: any
+		@CurrentUser() _user?: JwtPayload
 	) {
 		const gsPaths = await this.firebaseStorageService.listProductImages(folder)
 
@@ -289,7 +290,7 @@ export class FirebaseStorageController {
 		@Body('oldImageUrl') oldImageUrl: string,
 		@Body('fileName') fileName?: string,
 		@Body('folder') folder?: string,
-		@CurrentUser() _user?: any
+		@CurrentUser() _user?: JwtPayload
 	) {
 		if (!file) {
 			throw new BadRequestException('Please select a new image file to upload')

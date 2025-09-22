@@ -128,7 +128,7 @@ export class PaymentController {
 		let orderIdNum: number | undefined
 		if (orderId) {
 			orderIdNum = parseInt(orderId, 10)
-			if (isNaN(orderIdNum)) {
+			if (Number.isNaN(orderIdNum)) {
 				throw new BadRequestException('Invalid Order ID. Must be a number.')
 			}
 		}
@@ -264,7 +264,7 @@ export class PaymentController {
 	): Promise<{
 		success: boolean
 		message: string
-		payment?: any
+		payment?: payment
 	}> {
 		return this.paymentService.confirmStripePayment(body.paymentIntentId)
 	}

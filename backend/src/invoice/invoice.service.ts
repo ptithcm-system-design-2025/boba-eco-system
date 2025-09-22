@@ -3,8 +3,40 @@ import * as Handlebars from 'handlebars'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as puppeteer from 'puppeteer'
+import type { Prisma } from '../generated/prisma/client'
 import type { PrismaService } from '../prisma/prisma.service'
 import type { StoreService } from '../store/store.service'
+
+type OrderWithRelations = Prisma.orderGetPayload<{
+	include: {
+		customer: true
+		employee: {
+			include: {
+				account: true
+			}
+		}
+		order_product: {
+			include: {
+				product_price: {
+					include: {
+						product: true
+						product_size: true
+					}
+				}
+			}
+		}
+		order_discount: {
+			include: {
+				discount: true
+			}
+		}
+		payment: {
+			include: {
+				payment_method: true
+			}
+		}
+	}
+}>
 
 export interface InvoiceData {
 	order_id: number
@@ -75,7 +107,7 @@ export class InvoiceService {
 			}).format(new Date(date))
 		})
 
-		Handlebars.registerHelper('eq', (a: any, b: any) => {
+		Handlebars.registerHelper('eq', (a: unknown, b: unknown) => {
 			return a === b
 		})
 
@@ -116,37 +148,39 @@ export class InvoiceService {
 	 * @returns The invoice data.
 	 */
 	async getInvoiceData(orderId: number): Promise<InvoiceData> {
-		const order = (await this.prisma.order.findUnique({
-			where: { order_id: orderId },
-			include: {
-				customer: true,
-				employee: {
-					include: {
-						account: true,
+		const order: OrderWithRelations | null = await this.prisma.order.findUnique(
+			{
+				where: { order_id: orderId },
+				include: {
+					customer: true,
+					employee: {
+						include: {
+							account: true,
+						},
 					},
-				},
-				order_product: {
-					include: {
-						product_price: {
-							include: {
-								product: true,
-								product_size: true,
+					order_product: {
+						include: {
+							product_price: {
+								include: {
+									product: true,
+									product_size: true,
+								},
 							},
 						},
 					},
-				},
-				order_discount: {
-					include: {
-						discount: true,
+					order_discount: {
+						include: {
+							discount: true,
+						},
+					},
+					payment: {
+						include: {
+							payment_method: true,
+						},
 					},
 				},
-				payment: {
-					include: {
-						payment_method: true,
-					},
-				},
-			},
-		})) as any
+			}
+		)
 
 		if (!order) {
 			throw new NotFoundException(`Order with ID ${orderId} not found`)
@@ -155,19 +189,16 @@ export class InvoiceService {
 		const storeInfo = await this.storeService.getDefaultStore()
 
 		const totalDiscount = (order.order_discount || []).reduce(
-			(sum: number, od: any) => {
-				const discountAmount =
-					od.discount.discount_type === 'PERCENTAGE'
-						? (Number(od.discount.discount_value) / 100) *
-							Number(order.total_amount || 0)
-						: Number(od.discount.discount_value)
+			(sum: number, od) => {
+				// Use the discount_amount from order_discount table
+				const discountAmount = Number(od.discount_amount || 0)
 				return sum + discountAmount
 			},
 			0
 		)
 
 		const latestPayment = (order.payment || []).sort(
-			(a: any, b: any) =>
+			(a, b) =>
 				new Date(b.payment_time || b.created_at || 0).getTime() -
 				new Date(a.payment_time || a.created_at || 0).getTime()
 		)[0]
@@ -193,7 +224,7 @@ export class InvoiceService {
 			store_phone: storeInfo?.phone || '0123 456 789',
 			store_email: storeInfo?.email || 'info@cakepos.vn',
 			store_tax_code: storeInfo?.tax_code || '0123456789',
-			items: (order.order_product || []).map((op: any) => ({
+			items: (order.order_product || []).map((op) => ({
 				product_name: op.product_price?.product?.name || 'N/A',
 				quantity: op.quantity || 0,
 				unit_price: Number(op.product_price?.price || 0),

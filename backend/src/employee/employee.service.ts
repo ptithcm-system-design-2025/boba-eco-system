@@ -67,7 +67,7 @@ export class EmployeeService {
 	 * @param error The error object.
 	 * @param email The email of the employee being created.
 	 */
-	private handleCreateError(error: any, email: string): never {
+	private handleCreateError(error: unknown, email: string): never {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2002': {
@@ -200,7 +200,7 @@ export class EmployeeService {
 	 * @param error The error object.
 	 * @param employee_id The ID of the employee being updated.
 	 */
-	private handleUpdateError(error: any, employee_id: number): never {
+	private handleUpdateError(error: unknown, employee_id: number): never {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
@@ -254,7 +254,7 @@ export class EmployeeService {
 	 * @param error The error object.
 	 * @param employee_id The ID of the employee being deleted.
 	 */
-	private handleDeleteError(error: any, employee_id: number): never {
+	private handleDeleteError(error: unknown, employee_id: number): never {
 		if (error instanceof NotFoundException) {
 			throw error
 		}
@@ -363,7 +363,7 @@ export class EmployeeService {
 	async updateEmployeeAccount(
 		employeeId: number,
 		accountId: number,
-		updateData: any
+		updateData: Record<string, unknown>
 	) {
 		const employee = await this.prisma.employee.findUnique({
 			where: { employee_id: employeeId },

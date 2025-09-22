@@ -79,7 +79,7 @@ export class CustomerService {
 	 * @param phone The phone number of the customer being created.
 	 * @returns never
 	 */
-	private handleCreateError(error: any, phone: string): never {
+	private handleCreateError(error: unknown, phone: string): never {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2002': {
@@ -231,7 +231,7 @@ export class CustomerService {
 	 * @returns never
 	 */
 	private handleUpdateError(
-		error: any,
+		error: unknown,
 		id: number,
 		updateDto: UpdateCustomerDto
 	): never {
@@ -333,7 +333,7 @@ export class CustomerService {
 	 * @param id The ID of the customer being deleted.
 	 * @returns never
 	 */
-	private handleDeleteError(error: any, id: number): never {
+	private handleDeleteError(error: unknown, id: number): never {
 		if (error instanceof NotFoundException) {
 			throw error
 		}
