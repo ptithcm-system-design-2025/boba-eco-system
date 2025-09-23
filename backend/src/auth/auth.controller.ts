@@ -20,8 +20,15 @@ import {
 	ApiTags,
 } from '@nestjs/swagger'
 import type { Request as ExpressRequest, Response } from 'express'
-import type { AuthTokenService } from './auth-token.service'
+import {
+	ConflictErrorDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
 import type { AuthService } from './auth.service'
+import type { AuthTokenService } from './auth-token.service'
 import { CurrentUser } from './decorators/current-user.decorator'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
@@ -52,41 +59,18 @@ export class AuthController {
 	@ApiResponse({
 		status: 201,
 		description: 'Registration successful',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Success message for registration',
-				},
-				user: {
-					type: 'object',
-					properties: {
-						account_id: {
-							type: 'number',
-							description: 'Account ID',
-						},
-						username: { type: 'string', description: 'Username' },
-						email: { type: 'string', description: 'Email' },
-						customer_id: {
-							type: 'number',
-							description: 'Customer ID',
-						},
-						full_name: { type: 'string', description: 'Full name' },
-						phone: { type: 'string', description: 'Phone number' },
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description:
 			'Bad Request - Invalid input data format or missing required fields',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Username, email, or phone number already exists',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Register a new user account.
@@ -108,41 +92,22 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Login successful',
-		schema: {
-			type: 'object',
-			properties: {
-				access_token: {
-					type: 'string',
-					description: 'JWT access token for authenticating other APIs',
-				},
-				user: {
-					type: 'object',
-					properties: {
-						account_id: {
-							type: 'number',
-							description: 'Account ID',
-						},
-						username: { type: 'string', description: 'Username' },
-						email: { type: 'string', description: 'Email' },
-						phone: { type: 'string', description: 'Phone number' },
-						role: { type: 'string', description: 'User role' },
-						full_name: { type: 'string', description: 'Full name' },
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Missing login credentials',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Incorrect username or password',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found - Account does not exist or has been disabled',
+		type: NotFoundErrorDto,
 	})
 	async login(
 		@Body() loginDto: LoginDto,
@@ -178,20 +143,12 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Logout successful',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Success message for logout',
-					example: 'Logout successful',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid or expired token',
+		type: UnauthorizedErrorDto,
 	})
 	/**
 	 * Logout the currently authenticated user by clearing refresh token cookie.
@@ -215,35 +172,17 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'User profile information',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role: { type: 'string', description: 'User role' },
-				full_name: { type: 'string', description: 'Full name' },
-				avatar: {
-					type: 'string',
-					description: 'Avatar URL',
-					nullable: true,
-				},
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Account creation timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid or expired token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'User information not found',
+		type: NotFoundErrorDto,
 	})
 	/**
 	 * Get current authenticated user's profile.
@@ -266,56 +205,28 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Profile updated successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Success message for update',
-				},
-				user: {
-					type: 'object',
-					properties: {
-						account_id: {
-							type: 'number',
-							description: 'Account ID',
-						},
-						username: { type: 'string', description: 'Username' },
-						email: { type: 'string', description: 'Updated email' },
-						phone: {
-							type: 'string',
-							description: 'Updated phone number',
-						},
-						full_name: {
-							type: 'string',
-							description: 'Updated full name',
-						},
-						updated_at: {
-							type: 'string',
-							format: 'date-time',
-							description: 'Update timestamp',
-						},
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid input data format',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid or expired token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'User information not found',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description:
 			'Conflict - Email or phone number is already in use by another account',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Update profile information for the current authenticated user.
@@ -340,20 +251,13 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Token refreshed successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				access_token: {
-					type: 'string',
-					description: 'New JWT access token for authenticating other APIs',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description:
 			'Cannot refresh token - Refresh token is invalid, expired, or does not exist',
+		type: UnauthorizedErrorDto,
 	})
 	async refreshToken(
 		@Req() req: ExpressRequest,
@@ -391,20 +295,12 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Token revoked successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Success message for token revocation',
-					example: 'Token has been revoked successfully',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid or expired token',
+		type: UnauthorizedErrorDto,
 	})
 	/**
 	 * Revoke the current refresh token forcing the user to re-login.
@@ -426,16 +322,7 @@ export class AuthController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Confirmation message that the controller is working',
-					example: 'Auth controller is working!',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	/**
 	 * Smoke test endpoint for verifying that Auth Controller is working.

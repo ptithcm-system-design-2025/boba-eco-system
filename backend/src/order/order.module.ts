@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { OrderService } from './order.service';
-import { OrderController } from './order.controller';
-import { PrismaModule } from '../prisma/prisma.module';
+import { Module } from '@nestjs/common'
+import { PrismaModule } from '../prisma/prisma.module'
+import { OrderController } from './order.controller'
+import { OrderService } from './order.service'
 
 /**
  * The module for managing orders.

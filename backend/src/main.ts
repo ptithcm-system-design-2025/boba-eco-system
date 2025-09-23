@@ -1,10 +1,13 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import cookieParser from 'cookie-parser'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
+
 import { AppModule } from './app.module'
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
+import { JSendResponseInterceptor } from './common/interceptors/jsend-response.interceptor'
 
 async function bootstrap() {
 	const httpsOptions = {
@@ -49,12 +52,19 @@ async function bootstrap() {
 		})
 	)
 
+	// Register global exception filter for JSend format
+	app.useGlobalFilters(new GlobalExceptionFilter())
+
+	// Register global response interceptor for JSend format
+	app.useGlobalInterceptors(new JSendResponseInterceptor())
+
 	const config = new DocumentBuilder()
-		.setTitle('Cake POS API')
+		.setTitle('Boba Eco-System API')
 		.setDescription(
-			'API documentation for Cake POS System - Hệ thống quản lý cửa hàng bánh ngọt'
+			'API documentation for Boba Eco-System - Hệ thống quản lý cửa hàng trà sữa. All responses follow JSend specification format.'
 		)
 		.setVersion('1.0')
+		.setOpenAPIVersion('3.1.0')
 		.addBearerAuth(
 			{
 				type: 'http',

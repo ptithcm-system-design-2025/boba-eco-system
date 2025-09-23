@@ -1,40 +1,47 @@
 import {
-	Controller,
-	Get,
-	Post,
 	Body,
-	Patch,
-	Param,
+	Controller,
 	Delete,
-	ParseIntPipe,
+	Get,
 	HttpCode,
 	HttpStatus,
+	Param,
+	ParseIntPipe,
+	Patch,
+	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { MembershipTypeService } from './membership-type.service';
-import { CreateMembershipTypeDto } from './dto/create-membership-type.dto';
-import { UpdateMembershipTypeDto } from './dto/update-membership-type.dto';
+} from '@nestjs/common'
 import {
-	type PaginationDto,
-	type PaginatedResult,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { membership_type } from '../generated/prisma/client';
-import {
-	ApiTags,
+	ApiBearerAuth,
+	ApiBody,
+	ApiExtraModels,
 	ApiOperation,
-	ApiResponse,
 	ApiParam,
 	ApiQuery,
-	ApiBody,
-	ApiBearerAuth,
-	ApiExtraModels,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+	ApiResponse,
+	ApiTags,
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { membership_type } from '../generated/prisma/client'
+import { CreateMembershipTypeDto } from './dto/create-membership-type.dto'
+import { UpdateMembershipTypeDto } from './dto/update-membership-type.dto'
+import type { MembershipTypeService } from './membership-type.service'
 
 @ApiTags('membership-types')
 @Controller('membership-types')
@@ -52,21 +59,32 @@ export class MembershipTypeController {
 	@ApiResponse({
 		status: 201,
 		description: 'Membership type created successfully.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict (e.g., type already exists)',
+		type: ConflictErrorDto,
 	})
 	async create(
 		@Body() createDto: CreateMembershipTypeDto
 	): Promise<membership_type> {
-		return this.membershipTypeService.create(createDto);
+		return this.membershipTypeService.create(createDto)
 	}
 
 	@Get()
@@ -96,24 +114,17 @@ export class MembershipTypeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of membership types',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: { type: 'object' },
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<membership_type>> {
-		return this.membershipTypeService.findAll(paginationDto);
+		return this.membershipTypeService.findAll(paginationDto)
 	}
 
 	@Get(':id')
@@ -127,14 +138,26 @@ export class MembershipTypeController {
 		type: Boolean,
 		description: 'Set to true to include customer details',
 	})
-	@ApiResponse({ status: 200, description: 'The membership type' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 404, description: 'Membership type not found' })
+	@ApiResponse({
+		status: 200,
+		description: 'The membership type',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Membership type not found',
+		type: NotFoundErrorDto,
+	})
 	async findOne(
 		@Param('id', ParseIntPipe) id: number,
 		@Query('includeCustomers') includeCustomers?: string
 	): Promise<membership_type | null> {
-		return this.membershipTypeService.findOne(id, includeCustomers === 'true');
+		return this.membershipTypeService.findOne(id, includeCustomers === 'true')
 	}
 
 	@Get('by-type/:type')
@@ -154,9 +177,21 @@ export class MembershipTypeController {
 		type: Boolean,
 		description: 'Set to true to include customer details',
 	})
-	@ApiResponse({ status: 200, description: 'The membership type' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 404, description: 'Membership type not found' })
+	@ApiResponse({
+		status: 200,
+		description: 'The membership type',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Membership type not found',
+		type: NotFoundErrorDto,
+	})
 	async findByType(
 		@Param('type') type: string,
 		@Query('includeCustomers') includeCustomers?: string
@@ -164,7 +199,7 @@ export class MembershipTypeController {
 		return this.membershipTypeService.findByType(
 			type,
 			includeCustomers === 'true'
-		);
+		)
 	}
 
 	@Patch(':id')
@@ -176,23 +211,38 @@ export class MembershipTypeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Membership type updated successfully.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Membership type not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Membership type not found',
+		type: NotFoundErrorDto,
+	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict (e.g., type already exists)',
+		type: ConflictErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateDto: UpdateMembershipTypeDto
 	): Promise<membership_type> {
-		return this.membershipTypeService.update(id, updateDto);
+		return this.membershipTypeService.update(id, updateDto)
 	}
 
 	@Delete(':id')
@@ -204,18 +254,29 @@ export class MembershipTypeController {
 	@ApiResponse({
 		status: 204,
 		description: 'Membership type deleted successfully.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Membership type not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Membership type not found',
+		type: NotFoundErrorDto,
+	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict (cannot delete if associated with customers)',
+		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.membershipTypeService.remove(id);
+		await this.membershipTypeService.remove(id)
 	}
 }

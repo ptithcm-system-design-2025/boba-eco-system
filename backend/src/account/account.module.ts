@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { AccountService } from './account.service';
-import { AccountController } from './account.controller';
-import { PrismaModule } from '../prisma/prisma.module';
+import { Module } from '@nestjs/common'
+import { PrismaModule } from '../prisma/prisma.module'
+import { AccountController } from './account.controller'
+import { AccountService } from './account.service'
 
 /**
  * Module that encapsulates all components related to account management.

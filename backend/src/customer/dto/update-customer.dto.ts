@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger'
 import {
 	IsEnum,
 	IsOptional,
@@ -5,9 +6,8 @@ import {
 	IsString,
 	MaxLength,
 	MinLength,
-} from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { gender_enum } from '../../generated/prisma/client';
+} from 'class-validator'
+import { gender_enum } from '../../generated/prisma/client'
 
 export class UpdateCustomerDto {
 	@ApiPropertyOptional({
@@ -19,7 +19,7 @@ export class UpdateCustomerDto {
 	@IsOptional()
 	@IsString({ message: 'Họ phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Họ không được vượt quá 70 ký tự' })
-	last_name?: string;
+	last_name?: string
 
 	@ApiPropertyOptional({
 		description: 'Tên của khách hàng',
@@ -30,7 +30,7 @@ export class UpdateCustomerDto {
 	@IsOptional()
 	@IsString({ message: 'Tên phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Tên không được vượt quá 70 ký tự' })
-	first_name?: string;
+	first_name?: string
 
 	@ApiPropertyOptional({
 		description: 'Số điện thoại của khách hàng',
@@ -42,7 +42,7 @@ export class UpdateCustomerDto {
 	@IsString({ message: 'Số điện thoại phải là chuỗi ký tự' })
 	@IsPhoneNumber('VN', { message: 'Số điện thoại không đúng định dạng' })
 	@MaxLength(15, { message: 'Số điện thoại không được vượt quá 15 ký tự' })
-	phone?: string;
+	phone?: string
 
 	@ApiPropertyOptional({
 		description: 'Giới tính của khách hàng',
@@ -52,7 +52,7 @@ export class UpdateCustomerDto {
 	})
 	@IsOptional()
 	@IsEnum(gender_enum, { message: 'Giới tính phải là male hoặc female' })
-	gender?: gender_enum;
+	gender?: gender_enum
 
 	@ApiPropertyOptional({
 		description: 'Tên đăng nhập cho tài khoản khách hàng (tùy chọn)',
@@ -63,5 +63,5 @@ export class UpdateCustomerDto {
 	@IsOptional()
 	@IsString({ message: 'Tên đăng nhập phải là chuỗi ký tự' })
 	@MinLength(3, { message: 'Tên đăng nhập phải có ít nhất 3 ký tự' })
-	username?: string;
+	username?: string
 }

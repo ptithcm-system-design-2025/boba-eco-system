@@ -27,6 +27,12 @@ import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import {
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
@@ -53,21 +59,29 @@ export class OrderController {
 	@ApiResponse({
 		status: 201,
 		description: 'Order created successfully.',
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request (e.g., validation error, no products)',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 404,
 		description:
 			'Not Found (e.g., employee, customer, product_price, or discount not found)',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 422,
 		description:
 			'Unprocessable Entity (e.g., product not active, discount not valid)',
+		type: ValidationErrorDto,
 	})
 	async create(@Body() createOrderDto: CreateOrderDto): Promise<order> {
 		return this.orderService.create(createOrderDto)
@@ -113,23 +127,17 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of orders',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: { type: 'object' },
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async findAll(
 		@Query() paginationDto: PaginationDto,
@@ -154,13 +162,26 @@ export class OrderController {
 			'Get a specific order by ID (All roles - CUSTOMER can only view their own orders)',
 	})
 	@ApiParam({ name: 'id', description: 'Order ID', type: Number })
-	@ApiResponse({ status: 200, description: 'The order details' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 200,
+		description: 'The order details',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Order not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Order not found',
+		type: NotFoundErrorDto,
+	})
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<order> {
 		return this.orderService.findOne(id)
 	}
@@ -173,21 +194,36 @@ export class OrderController {
 	})
 	@ApiParam({ name: 'id', description: 'Order ID', type: Number })
 	@ApiBody({ type: UpdateOrderDto })
-	@ApiResponse({ status: 200, description: 'Order updated successfully.' })
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 200,
+		description: 'Order updated successfully.',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Order not found or related entity not found during update',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 422,
 		description:
 			'Unprocessable Entity (e.g., product not active, discount not valid during update)',
+		type: ValidationErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
@@ -206,18 +242,32 @@ export class OrderController {
 			'Changes the order status to CANCELLED. A CUSTOMER can only cancel their own order and only when it is in PENDING status.',
 	})
 	@ApiParam({ name: 'id', description: 'Order ID', type: Number })
-	@ApiResponse({ status: 200, description: 'Order cancelled successfully.' })
+	@ApiResponse({
+		status: 200,
+		description: 'Order cancelled successfully.',
+		type: JSendSuccessDto,
+	})
 	@ApiResponse({
 		status: 400,
 		description:
 			'Bad Request - Order cannot be cancelled (already completed or cancelled)',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions to cancel this order',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Order not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Order not found',
+		type: NotFoundErrorDto,
+	})
 	async cancelOrder(@Param('id', ParseIntPipe) id: number): Promise<order> {
 		return this.orderService.cancelOrder(id)
 	}
@@ -231,13 +281,23 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'Order deleted successfully (returns the deleted order).',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Order not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Order not found',
+		type: NotFoundErrorDto,
+	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<order> {
 		return this.orderService.remove(id)
 	}
@@ -252,11 +312,17 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'List of orders for the employee',
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async findByEmployee(
 		@Param('employeeId', ParseIntPipe) employeeId: number,
@@ -275,11 +341,17 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'List of orders for the customer',
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async findByCustomer(
 		@Param('customerId', ParseIntPipe) customerId: number,
@@ -314,11 +386,17 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'List of orders by status',
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async findByStatus(
 		@Param('status') status: order_status_enum,
@@ -340,49 +418,22 @@ export class OrderController {
 	@ApiResponse({
 		status: 200,
 		description: 'Discount validation result with detailed information',
-		schema: {
-			type: 'object',
-			properties: {
-				valid_discounts: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							discount_id: { type: 'number' },
-							discount_name: { type: 'string' },
-							discount_amount: { type: 'number' },
-							reason: { type: 'string' },
-						},
-					},
-				},
-				invalid_discounts: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							discount_id: { type: 'number' },
-							discount_name: { type: 'string' },
-							reason: { type: 'string' },
-						},
-					},
-				},
-				summary: {
-					type: 'object',
-					properties: {
-						total_checked: { type: 'number' },
-						valid_count: { type: 'number' },
-						invalid_count: { type: 'number' },
-						total_discount_amount: { type: 'number' },
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request - Validation error' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request - Validation error',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async validateDiscounts(@Body() validateDiscountDto: ValidateDiscountDto) {
 		return this.orderService.validateDiscounts(validateDiscountDto)

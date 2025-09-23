@@ -12,6 +12,10 @@ import type {
 	PaginatedResult,
 	PaginationDto,
 } from '../common/dto/pagination.dto'
+import {
+	DuplicatedPhoneException,
+	ResourceNotFoundException,
+} from '../common/exceptions'
 import { type customer, Prisma } from '../generated/prisma/client'
 import type { PrismaService } from '../prisma/prisma.service'
 import type { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto'
@@ -84,6 +88,9 @@ export class CustomerService {
 			switch (error.code) {
 				case 'P2002': {
 					const fieldDescription = this.getUniqueConstraintField(error, phone)
+					if (fieldDescription.includes('phone')) {
+						throw new DuplicatedPhoneException(phone)
+					}
 					throw new ConflictException(
 						`Customer with ${fieldDescription} already exists.`
 					)
@@ -341,7 +348,7 @@ export class CustomerService {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
-					throw new NotFoundException(`Customer with ID ${id} not found`)
+					throw new ResourceNotFoundException('Customer', id)
 				case 'P2003':
 					throw new ConflictException(
 						`Cannot delete customer with ID ${id} due to existing orders or other related data.`

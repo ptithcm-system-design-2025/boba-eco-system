@@ -2,15 +2,15 @@ import {
 	Injectable,
 	NotFoundException,
 	UnprocessableEntityException,
-} from '@nestjs/common';
-import type { PrismaService } from '../prisma/prisma.service';
-import { Decimal } from '@prisma/client/runtime/library';
+} from '@nestjs/common'
+import { Decimal } from '@prisma/client/runtime/library'
+import type { PrismaService } from '../prisma/prisma.service'
 import type {
-	CalculateOrderDto,
-	OrderCalculationResult,
-	CalculateOrderProductDto,
 	CalculateOrderDiscountDto,
-} from './dto/calculate-order.dto';
+	CalculateOrderDto,
+	CalculateOrderProductDto,
+	OrderCalculationResult,
+} from './dto/calculate-order.dto'
 
 @Injectable()
 export class OrderCalculationService {
@@ -22,20 +22,20 @@ export class OrderCalculationService {
 	async calculateOrder(
 		calculateOrderDto: CalculateOrderDto
 	): Promise<OrderCalculationResult> {
-		const { products, discounts } = calculateOrderDto;
+		const { products, discounts } = calculateOrderDto
 
-		const productCalculation = await this.calculateProductsTotal(products);
+		const productCalculation = await this.calculateProductsTotal(products)
 
 		const discountCalculation = await this.calculateDiscounts(
 			discounts || [],
 			productCalculation.total_amount
-		);
+		)
 
 		const final_amount = Math.max(
 			0,
 			productCalculation.total_amount -
 				discountCalculation.total_discount_applied
-		);
+		)
 
 		return {
 			total_amount: productCalculation.total_amount,
@@ -43,7 +43,7 @@ export class OrderCalculationService {
 			total_discount_applied: discountCalculation.total_discount_applied,
 			products: productCalculation.products,
 			discounts: discountCalculation.discounts,
-		};
+		}
 	}
 
 	/**
@@ -53,18 +53,18 @@ export class OrderCalculationService {
 		if (!products || products.length === 0) {
 			throw new UnprocessableEntityException(
 				'Order must contain at least one product.'
-			);
+			)
 		}
 
-		let total_amount = 0;
+		let total_amount = 0
 		const productDetails: Array<{
-			product_price_id: number;
-			quantity: number;
-			unit_price: number;
-			subtotal: number;
-			product_name: string;
-			size_name: string;
-		}> = [];
+			product_price_id: number
+			quantity: number
+			unit_price: number
+			subtotal: number
+			product_name: string
+			size_name: string
+		}> = []
 
 		for (const productDto of products) {
 			const productPriceInfo = await this.prisma.product_price.findUnique({
@@ -73,23 +73,23 @@ export class OrderCalculationService {
 					product: true,
 					product_size: true,
 				},
-			});
+			})
 
 			if (!productPriceInfo) {
 				throw new NotFoundException(
 					`Product price with ID ${productDto.product_price_id} not found.`
-				);
+				)
 			}
 
 			if (!productPriceInfo.is_active) {
 				throw new UnprocessableEntityException(
 					`Giá sản phẩm với ID ${productDto.product_price_id} is not active.`
-				);
+				)
 			}
 
-			const unit_price = Number(productPriceInfo.price);
-			const subtotal = unit_price * productDto.quantity;
-			total_amount += subtotal;
+			const unit_price = Number(productPriceInfo.price)
+			const subtotal = unit_price * productDto.quantity
+			total_amount += subtotal
 
 			productDetails.push({
 				product_price_id: productDto.product_price_id,
@@ -98,13 +98,13 @@ export class OrderCalculationService {
 				subtotal,
 				product_name: productPriceInfo.product.name,
 				size_name: productPriceInfo.product_size.name,
-			});
+			})
 		}
 
 		return {
 			total_amount,
 			products: productDetails,
-		};
+		}
 	}
 
 	/**
@@ -114,72 +114,72 @@ export class OrderCalculationService {
 		discounts: CalculateOrderDiscountDto[],
 		total_amount: number
 	) {
-		let total_discount_applied = 0;
+		let total_discount_applied = 0
 		const discountDetails: Array<{
-			discount_id: number;
-			discount_name: string;
-			discount_value: number;
-			discount_amount: number;
-			max_discount_amount: number;
-		}> = [];
+			discount_id: number
+			discount_name: string
+			discount_value: number
+			discount_amount: number
+			max_discount_amount: number
+		}> = []
 
 		if (!discounts || discounts.length === 0) {
 			return {
 				total_discount_applied,
 				discounts: discountDetails,
-			};
+			}
 		}
 
-		const totalAmountDecimal = new Decimal(total_amount);
+		const totalAmountDecimal = new Decimal(total_amount)
 
 		for (const discountDto of discounts) {
 			const discountInfo = await this.prisma.discount.findUnique({
 				where: { discount_id: discountDto.discount_id },
-			});
+			})
 
 			if (!discountInfo) {
 				throw new NotFoundException(
 					`Discount with ID ${discountDto.discount_id} not found.`
-				);
+				)
 			}
 
 			if (!discountInfo.is_active) {
 				throw new UnprocessableEntityException(
 					`Discount '${discountInfo.name}' is not active.`
-				);
+				)
 			}
 
-			const now = new Date();
+			const now = new Date()
 			if (now > new Date(discountInfo.valid_until)) {
 				throw new UnprocessableEntityException(
 					`Discount '${discountInfo.name}' has expired.`
-				);
+				)
 			}
 
 			if (discountInfo.valid_from && now < new Date(discountInfo.valid_from)) {
 				throw new UnprocessableEntityException(
 					`Discount '${discountInfo.name}' is not yet valid.`
-				);
+				)
 			}
 
 			if (totalAmountDecimal.lessThan(discountInfo.min_required_order_value)) {
 				throw new UnprocessableEntityException(
 					`Order total (${total_amount}) does not meet the minimum required value (${discountInfo.min_required_order_value}) for discount '${discountInfo.name}'.`
-				);
+				)
 			}
 
 			const discountPercentage = new Decimal(
 				discountInfo.discount_value
-			).dividedBy(100);
-			let discountAmount = totalAmountDecimal.times(discountPercentage);
+			).dividedBy(100)
+			let discountAmount = totalAmountDecimal.times(discountPercentage)
 
-			const maxDiscount = new Decimal(discountInfo.max_discount_amount);
+			const maxDiscount = new Decimal(discountInfo.max_discount_amount)
 			if (discountAmount.greaterThan(maxDiscount)) {
-				discountAmount = maxDiscount;
+				discountAmount = maxDiscount
 			}
 
-			const discountAmountNumber = discountAmount.toNumber();
-			total_discount_applied += discountAmountNumber;
+			const discountAmountNumber = discountAmount.toNumber()
+			total_discount_applied += discountAmountNumber
 
 			discountDetails.push({
 				discount_id: discountDto.discount_id,
@@ -187,13 +187,13 @@ export class OrderCalculationService {
 				discount_value: Number(discountInfo.discount_value),
 				discount_amount: discountAmountNumber,
 				max_discount_amount: Number(discountInfo.max_discount_amount),
-			});
+			})
 		}
 
 		return {
 			total_discount_applied,
 			discounts: discountDetails,
-		};
+		}
 	}
 
 	/**
@@ -221,10 +221,10 @@ export class OrderCalculationService {
 					},
 				},
 			},
-		});
+		})
 
 		if (!order) {
-			throw new NotFoundException(`Order with ID ${orderId} not found.`);
+			throw new NotFoundException(`Order with ID ${orderId} not found.`)
 		}
 
 		const products: CalculateOrderProductDto[] = order.order_product.map(
@@ -233,14 +233,14 @@ export class OrderCalculationService {
 				quantity: op.quantity,
 				option: op.option || undefined,
 			})
-		);
+		)
 
 		const discounts: CalculateOrderDiscountDto[] = order.order_discount.map(
 			(od) => ({
 				discount_id: od.discount_id,
 			})
-		);
+		)
 
-		return this.calculateOrder({ products, discounts });
+		return this.calculateOrder({ products, discounts })
 	}
 }

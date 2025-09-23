@@ -11,6 +11,7 @@ import {
 	Patch,
 	Post,
 	Query,
+	Req,
 	UseGuards,
 } from '@nestjs/common'
 import {
@@ -23,10 +24,18 @@ import {
 	ApiResponse,
 	ApiTags,
 } from '@nestjs/swagger'
+import type { Request } from 'express'
 import { ROLES } from '../auth/constants/roles.constant'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
 import {
 	type PaginatedResult,
 	type PaginationDto,
@@ -34,6 +43,7 @@ import {
 } from '../common/dto/pagination.dto'
 import type { payment } from '../generated/prisma/client'
 import { CreatePaymentDto } from './dto/create-payment.dto'
+import { CreateStripePaymentDto } from './dto/create-stripe-payment.dto'
 import { UpdatePaymentDto } from './dto/update-payment.dto'
 import type { PaymentService } from './payment.service'
 
@@ -55,21 +65,28 @@ export class PaymentController {
 	@ApiResponse({
 		status: 201,
 		description: 'The payment has been successfully created.',
-		type: CreatePaymentDto,
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description:
 			'Bad Request (e.g., validation error, invalid order_id or payment_method_id)',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found (e.g., Order or PaymentMethod not found)',
+		type: NotFoundErrorDto,
 	})
 	async create(@Body() createPaymentDto: CreatePaymentDto): Promise<payment> {
 		return this.paymentService.create(createPaymentDto)
@@ -103,23 +120,17 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of payments',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: { type: 'object' },
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async findAll(
 		@Query() paginationDto: PaginationDto,
@@ -145,14 +156,23 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'The payment details',
-		type: CreatePaymentDto,
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Payment not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Payment not found',
+		type: NotFoundErrorDto,
+	})
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<payment | null> {
@@ -170,15 +190,28 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'The payment has been successfully updated.',
-		type: CreatePaymentDto,
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Payment not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Payment not found',
+		type: NotFoundErrorDto,
+	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updatePaymentDto: UpdatePaymentDto
@@ -195,13 +228,23 @@ export class PaymentController {
 	@ApiResponse({
 		status: 204,
 		description: 'The payment has been successfully deleted.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Payment not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Payment not found',
+		type: NotFoundErrorDto,
+	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
 		await this.paymentService.remove(id)
 	}
@@ -215,17 +258,23 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'Stripe payment intent created successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				clientSecret: { type: 'string' },
-				paymentIntentId: { type: 'string' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 404, description: 'Order not found' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Order not found',
+		type: NotFoundErrorDto,
+	})
 	async createStripePaymentIntent(
 		@Body() createStripePaymentDto: CreateStripePaymentDto
 	): Promise<{ clientSecret: string; paymentIntentId: string }> {
@@ -248,17 +297,18 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'Payment confirmation processed successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				success: { type: 'boolean' },
-				message: { type: 'string' },
-				payment: { type: 'object' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Invalid payment intent ID' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Invalid payment intent ID',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	async confirmStripePayment(
 		@Body() body: { paymentIntentId: string }
 	): Promise<{
@@ -272,7 +322,11 @@ export class PaymentController {
 	@Post('stripe/webhook')
 	@HttpCode(HttpStatus.OK)
 	@ApiOperation({ summary: 'Handle Stripe webhook (Public)' })
-	@ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+	@ApiResponse({
+		status: 200,
+		description: 'Webhook processed successfully',
+		type: JSendSuccessDto,
+	})
 	async handleStripeWebhook(
 		@Req() req: Request
 	): Promise<{ received: boolean }> {
@@ -306,11 +360,20 @@ export class PaymentController {
 	@ApiOperation({
 		summary: 'Test endpoint for payment controller (MANAGER)',
 	})
-	@ApiResponse({ status: 200, description: 'Test successful' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 200,
+		description: 'Test successful',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Admin test endpoint to check if the controller is responsive.
@@ -335,23 +398,17 @@ export class PaymentController {
 	@ApiResponse({
 		status: 200,
 		description: 'Danh sách thanh toán theo phương thức',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: { type: 'object' },
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Retrieves payments filtered by a specific payment method.

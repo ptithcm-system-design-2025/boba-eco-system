@@ -2,7 +2,11 @@
 	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
 	"root": true,
 	"files": {
-		"includes": ["**/*.{ts,tsx,js,jsx,json,css}", "!src/generated"],
+		"includes": [
+			"**/*.{ts,tsx,js,jsx,json,css}",
+			"!src/generated",
+			"!node_modules"
+		],
 		"ignoreUnknown": true
 	},
 	"css": {

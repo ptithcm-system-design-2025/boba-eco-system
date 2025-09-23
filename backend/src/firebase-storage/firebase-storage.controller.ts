@@ -27,6 +27,12 @@ import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface'
+import {
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
 import type { FirebaseStorageService } from './firebase-storage.service'
 
 @ApiTags('Firebase Storage')
@@ -68,17 +74,23 @@ export class FirebaseStorageController {
 	@ApiResponse({
 		status: 201,
 		description: 'Image uploaded successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: { type: 'string' },
-				imageUrl: { type: 'string' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Invalid or oversized file' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 403, description: 'Forbidden' })
+	@ApiResponse({
+		status: 400,
+		description: 'Invalid or oversized file',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden',
+		type: ForbiddenErrorDto,
+	})
 	@Roles(ROLES.MANAGER, ROLES.STAFF)
 	/**
 	 * Uploads an image file to Firebase Storage.
@@ -136,20 +148,23 @@ export class FirebaseStorageController {
 	@ApiResponse({
 		status: 200,
 		description: 'Image deleted successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: { type: 'string' },
-				success: { type: 'boolean' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid image URL or file not found',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 403, description: 'Forbidden' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden',
+		type: ForbiddenErrorDto,
+	})
 	@Roles(ROLES.MANAGER, ROLES.STAFF)
 	/**
 	 * Deletes an image from Firebase Storage.
@@ -183,20 +198,18 @@ export class FirebaseStorageController {
 	@ApiResponse({
 		status: 200,
 		description: 'Image list retrieved successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: { type: 'string' },
-				images: {
-					type: 'array',
-					items: { type: 'string' },
-				},
-				count: { type: 'number' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 403, description: 'Forbidden' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden',
+		type: ForbiddenErrorDto,
+	})
 	@Roles(ROLES.MANAGER, ROLES.STAFF)
 	/**
 	 * Lists all images in a specified folder in Firebase Storage.
@@ -259,21 +272,23 @@ export class FirebaseStorageController {
 	@ApiResponse({
 		status: 200,
 		description: 'Image updated successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				message: { type: 'string' },
-				newImageUrl: { type: 'string' },
-				oldImageUrl: { type: 'string' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid file or missing information',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 403, description: 'Forbidden' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 403,
+		description: 'Forbidden',
+		type: ForbiddenErrorDto,
+	})
 	@Roles(ROLES.MANAGER, ROLES.STAFF)
 	/**
 	 * Updates an image in Firebase Storage by deleting the old one and uploading a new one.
@@ -327,13 +342,7 @@ export class FirebaseStorageController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful',
-		schema: {
-			type: 'object',
-			properties: {
-				message: { type: 'string' },
-				status: { type: 'string' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	/**
 	 * Tests the connectivity of the Firebase Storage controller.

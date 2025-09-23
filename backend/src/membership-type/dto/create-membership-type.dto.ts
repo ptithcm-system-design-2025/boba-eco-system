@@ -1,17 +1,17 @@
+import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
-	IsString,
-	IsNotEmpty,
-	MaxLength,
-	IsInt,
-	Min,
-	IsOptional,
 	IsBoolean,
 	IsDateString,
+	IsInt,
+	IsNotEmpty,
 	IsNumber,
+	IsOptional,
+	IsString,
 	Max,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+	MaxLength,
+	Min,
+} from 'class-validator'
 
 export class CreateMembershipTypeDto {
 	@ApiProperty({
@@ -22,7 +22,7 @@ export class CreateMembershipTypeDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(50)
-	type: string;
+	type: string
 
 	@ApiProperty({
 		description: 'Giá trị giảm giá phần trăm 0-100%',
@@ -32,7 +32,7 @@ export class CreateMembershipTypeDto {
 	@Min(0)
 	@Max(100)
 	@Type(() => Number)
-	discount_value: number;
+	discount_value: number
 
 	@ApiProperty({
 		description: 'Điểm yêu cầu để đạt được hạng thành viên này',
@@ -41,7 +41,7 @@ export class CreateMembershipTypeDto {
 	@IsInt()
 	@Min(0)
 	@Type(() => Number)
-	required_point: number;
+	required_point: number
 
 	@ApiProperty({
 		description: 'Mô tả chi tiết về loại thành viên',
@@ -52,7 +52,7 @@ export class CreateMembershipTypeDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(255)
-	description?: string;
+	description?: string
 
 	@ApiProperty({
 		description: 'Ngày hết hạn của loại thành viên (YYYY-MM-DD)',
@@ -61,7 +61,7 @@ export class CreateMembershipTypeDto {
 	})
 	@IsOptional()
 	@IsDateString()
-	valid_until?: string; // Sẽ được chuyển thành Date object
+	valid_until?: string // Sẽ được chuyển thành Date object
 
 	@ApiProperty({
 		description: 'Trạng thái kích hoạt của loại thành viên',
@@ -71,7 +71,7 @@ export class CreateMembershipTypeDto {
 	})
 	@IsOptional()
 	@IsBoolean()
-	is_active?: boolean = true;
+	is_active?: boolean = true
 
 	// created_at và updated_at sẽ tự động được quản lý bởi Prisma
 }

@@ -1,6 +1,6 @@
-import { IsArray, IsInt, ArrayMinSize } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { ArrayMinSize, IsArray, IsInt } from 'class-validator'
 
 export class BulkDeleteEmployeeDto {
 	@ApiProperty({
@@ -12,5 +12,5 @@ export class BulkDeleteEmployeeDto {
 	@ArrayMinSize(1, { message: 'The ID list must not be empty' })
 	@IsInt({ each: true, message: 'Each ID must be an integer' })
 	@Type(() => Number)
-	ids: number[];
+	ids: number[]
 }

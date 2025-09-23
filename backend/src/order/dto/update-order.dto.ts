@@ -9,9 +9,9 @@ import {
 	Min,
 	ValidateNested,
 } from 'class-validator'
+import { CreateOrderDto } from './create-order.dto'
 import { CreateOrderDiscountDto } from './create-order-discount.dto' // Assuming discounts can be updated
 import { CreateOrderProductDto } from './create-order-product.dto' // Assuming products can be updated
-import { CreateOrderDto } from './create-order.dto'
 
 // May need UpdateOrderProductDto and UpdateOrderDiscountDto for more detailed update logic
 

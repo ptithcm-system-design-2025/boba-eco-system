@@ -11,16 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { StoreService } from './store.service';
-import { CreateStoreDto } from './dto/create-store.dto';
-import { UpdateStoreDto } from './dto/update-store.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { store } from '../generated/prisma/client';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -29,11 +20,20 @@ import {
 	ApiParam,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { store } from '../generated/prisma/client'
+import { CreateStoreDto } from './dto/create-store.dto'
+import { UpdateStoreDto } from './dto/update-store.dto'
+import type { StoreService } from './store.service'
 
 @ApiTags('stores')
 @Controller('stores')
@@ -72,7 +72,7 @@ export class StoreController {
 		description: 'Conflict (e.g., email or name already exists)',
 	})
 	async create(@Body() createStoreDto: CreateStoreDto): Promise<store> {
-		return this.storeService.create(createStoreDto);
+		return this.storeService.create(createStoreDto)
 	}
 
 	/**
@@ -111,7 +111,7 @@ export class StoreController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<store>> {
-		return this.storeService.findAll(paginationDto);
+		return this.storeService.findAll(paginationDto)
 	}
 
 	/**
@@ -131,7 +131,7 @@ export class StoreController {
 	})
 	@ApiResponse({ status: 404, description: 'No store found' })
 	async getDefaultStore(): Promise<store | null> {
-		return this.storeService.getDefaultStore();
+		return this.storeService.getDefaultStore()
 	}
 
 	/**
@@ -153,7 +153,7 @@ export class StoreController {
 	})
 	@ApiResponse({ status: 404, description: 'Store not found' })
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<store | null> {
-		return this.storeService.findOne(id);
+		return this.storeService.findOne(id)
 	}
 
 	/**
@@ -188,7 +188,7 @@ export class StoreController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateStoreDto: UpdateStoreDto
 	): Promise<store> {
-		return this.storeService.update(id, updateStoreDto);
+		return this.storeService.update(id, updateStoreDto)
 	}
 
 	/**
@@ -217,6 +217,6 @@ export class StoreController {
 		description: 'Conflict (e.g., due to foreign key constraints)',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.storeService.remove(id);
+		await this.storeService.remove(id)
 	}
 }

@@ -16,12 +16,12 @@ import {
 	type product_price,
 } from '../generated/prisma/client'
 import type { PrismaService } from '../prisma/prisma.service'
-import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
 import type { BulkDeleteProductDto } from './dto/bulk-delete-product.dto'
-import type { CreateProductPriceDto } from './dto/create-product-price.dto'
+import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
 import type { CreateProductDto } from './dto/create-product.dto'
-import type { UpdateProductPriceDto } from './dto/update-product-price.dto'
+import type { CreateProductPriceDto } from './dto/create-product-price.dto'
 import type { UpdateProductDto } from './dto/update-product.dto'
+import type { UpdateProductPriceDto } from './dto/update-product-price.dto'
 
 @Injectable()
 export class ProductService {

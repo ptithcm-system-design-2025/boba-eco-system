@@ -1,44 +1,52 @@
 import {
-	Controller,
-	Get,
-	Post,
 	Body,
-	Patch,
-	Param,
+	Controller,
 	Delete,
-	ParseIntPipe,
-	Query,
+	Get,
 	HttpCode,
 	HttpStatus,
+	Param,
+	ParseIntPipe,
+	Patch,
+	Post,
+	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { ProductService } from './product.service';
-import type { CreateProductDto } from './dto/create-product.dto';
-import type { UpdateProductDto } from './dto/update-product.dto';
-import { CreateProductPriceDto } from './dto/create-product-price.dto';
-import { UpdateProductPriceDto } from './dto/update-product-price.dto';
-import { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto';
-import { BulkDeleteProductDto } from './dto/bulk-delete-product.dto';
+} from '@nestjs/common'
 import {
-	type PaginationDto,
-	type PaginatedResult,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { product, product_price } from '../generated/prisma/client';
-import {
-	ApiTags,
-	ApiOperation,
-	ApiResponse,
-	ApiParam,
-	ApiQuery,
 	ApiBearerAuth,
 	ApiBody,
 	ApiExtraModels,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+	ApiOperation,
+	ApiParam,
+	ApiQuery,
+	ApiResponse,
+	ApiTags,
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { product, product_price } from '../generated/prisma/client'
+import { BulkDeleteProductDto } from './dto/bulk-delete-product.dto'
+import { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
+import type { CreateProductDto } from './dto/create-product.dto'
+import { CreateProductPriceDto } from './dto/create-product-price.dto'
+import type { UpdateProductDto } from './dto/update-product.dto'
+import { UpdateProductPriceDto } from './dto/update-product-price.dto'
+import type { ProductService } from './product.service'
 
 @ApiTags('products')
 @Controller('products')
@@ -58,27 +66,36 @@ export class ProductController {
 	@ApiResponse({
 		status: 201,
 		description: 'The product has been successfully created.',
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request (e.g., validation error, missing size info)',
+		type: ValidationErrorDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Category or ProductSize not found',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description:
 			'Conflict (e.g., product name exists, duplicate price for same size)',
+		type: ConflictErrorDto,
 	})
 	async create(@Body() createProductDto: CreateProductDto): Promise<product> {
-		return this.productService.create(createProductDto);
+		return this.productService.create(createProductDto)
 	}
 
 	@Get()
@@ -117,7 +134,7 @@ export class ProductController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<product>> {
-		return this.productService.findAll(paginationDto);
+		return this.productService.findAll(paginationDto)
 	}
 
 	@Get(':id')
@@ -128,14 +145,21 @@ export class ProductController {
 		description:
 			'Retrieves product details including a list of prices (size information is not included)',
 	})
-	@ApiParam({ name: 'id', description: 'The ID of the product', type: Number })
-	@ApiResponse({ status: 200, description: 'Return the product with prices.' })
+	@ApiParam({
+		name: 'id',
+		description: 'The ID of the product',
+		type: Number,
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Return the product with prices.',
+	})
 	@ApiResponse({ status: 401, description: 'Unauthorized' })
 	@ApiResponse({ status: 404, description: 'Product not found.' })
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<product | null> {
-		return this.productService.findOne(id);
+		return this.productService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -170,7 +194,7 @@ export class ProductController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateProductDto: UpdateProductDto
 	): Promise<product> {
-		return this.productService.update(id, updateProductDto);
+		return this.productService.update(id, updateProductDto)
 	}
 
 	@Delete('bulk')
@@ -196,11 +220,11 @@ export class ProductController {
 	async bulkDeleteProducts(
 		@Body() bulkDeleteDto: BulkDeleteProductDto
 	): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.productService.bulkDelete(bulkDeleteDto);
+		return this.productService.bulkDelete(bulkDeleteDto)
 	}
 
 	@Delete(':id')
@@ -228,7 +252,7 @@ export class ProductController {
 		description: 'Conflict (e.g., product prices are in use in orders)',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.productService.remove(id);
+		await this.productService.remove(id)
 	}
 
 	@Get('category/:categoryId')
@@ -263,7 +287,7 @@ export class ProductController {
 		@Param('categoryId', ParseIntPipe) categoryId: number,
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<product>> {
-		return this.productService.findByCategory(categoryId, paginationDto);
+		return this.productService.findByCategory(categoryId, paginationDto)
 	}
 
 	@Post('prices')
@@ -285,7 +309,10 @@ export class ProductController {
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
 	})
-	@ApiResponse({ status: 404, description: 'Product or ProductSize not found' })
+	@ApiResponse({
+		status: 404,
+		description: 'Product or ProductSize not found',
+	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict (duplicate price for same size)',
@@ -293,7 +320,7 @@ export class ProductController {
 	async createProductPrice(
 		@Body() createProductPriceDto: CreateProductPriceDto
 	): Promise<product_price> {
-		return this.productService.createProductPrice(createProductPriceDto);
+		return this.productService.createProductPrice(createProductPriceDto)
 	}
 
 	@Patch('prices/:priceId')
@@ -327,7 +354,7 @@ export class ProductController {
 		return this.productService.updateProductPrice(
 			priceId,
 			updateProductPriceDto
-		);
+		)
 	}
 
 	@Delete('prices/:priceId')
@@ -360,7 +387,7 @@ export class ProductController {
 	async removeProductPrice(
 		@Param('priceId', ParseIntPipe) priceId: number
 	): Promise<void> {
-		await this.productService.removeProductPrice(priceId);
+		await this.productService.removeProductPrice(priceId)
 	}
 
 	@Delete('prices/bulk')
@@ -385,11 +412,11 @@ export class ProductController {
 	async bulkDeleteProductPrices(
 		@Body() bulkDeleteDto: BulkDeleteProductPriceDto
 	): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.productService.bulkDeleteProductPrices(bulkDeleteDto);
+		return this.productService.bulkDeleteProductPrices(bulkDeleteDto)
 	}
 
 	@Get(':productId/prices')
@@ -411,6 +438,6 @@ export class ProductController {
 	async getProductPrices(
 		@Param('productId', ParseIntPipe) productId: number
 	): Promise<product_price[]> {
-		return this.productService.getProductPrices(productId);
+		return this.productService.getProductPrices(productId)
 	}
 }

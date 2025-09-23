@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, IsUrl } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsNotEmpty, IsString, IsUrl } from 'class-validator'
 
 export class DeleteImageDto {
 	@ApiProperty({
@@ -9,5 +9,5 @@ export class DeleteImageDto {
 	@IsNotEmpty()
 	@IsString()
 	@IsUrl()
-	imageUrl: string;
+	imageUrl: string
 }
