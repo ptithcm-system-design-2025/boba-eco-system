@@ -1,0 +1,4 @@
+[submodule "docs"]
+	path = docs
+	url = git@github.com:ptithcm-system-design-2025/boba-eco-system-docs.git
+	branch = main
