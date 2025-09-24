@@ -1,43 +1,50 @@
 import {
-	Controller,
-	Get,
-	Post,
 	Body,
-	Patch,
-	Param,
+	Controller,
 	Delete,
-	ParseIntPipe,
+	Get,
 	HttpCode,
 	HttpStatus,
+	Param,
+	ParseIntPipe,
+	Patch,
+	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { EmployeeService } from './employee.service';
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { BulkDeleteEmployeeDto } from './dto/bulk-delete-employee.dto';
+} from '@nestjs/common'
 import {
-	type PaginationDto,
-	type PaginatedResult,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { employee } from '../generated/prisma/client';
-import {
-	ApiTags,
-	ApiOperation,
-	ApiResponse,
-	ApiParam,
-	ApiBody,
 	ApiBearerAuth,
-	ApiQuery,
+	ApiBody,
 	ApiExtraModels,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
-import { LockAccountDto } from '../account/dto/lock-account.dto';
-import { UpdateAccountDto } from '../account/dto/update-account.dto';
+	ApiOperation,
+	ApiParam,
+	ApiQuery,
+	ApiResponse,
+	ApiTags,
+} from '@nestjs/swagger'
+import { LockAccountDto } from '../account/dto/lock-account.dto'
+import { UpdateAccountDto } from '../account/dto/update-account.dto'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { employee } from '../generated/prisma/client'
+import { BulkDeleteEmployeeDto } from './dto/bulk-delete-employee.dto'
+import { CreateEmployeeDto } from './dto/create-employee.dto'
+import { UpdateEmployeeDto } from './dto/update-employee.dto'
+import type { EmployeeService } from './employee.service'
 
 @ApiTags('employees')
 @Controller('employees')
@@ -59,57 +66,32 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 201,
 		description: 'Employee created successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'Employee ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				email: { type: 'string', description: 'Email address' },
-				phone: { type: 'string', description: 'Phone number' },
-				address: { type: 'string', description: 'Address', nullable: true },
-				date_of_birth: {
-					type: 'string',
-					format: 'date',
-					description: 'Date of birth',
-					nullable: true,
-				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
-				hire_date: {
-					type: 'string',
-					format: 'date',
-					description: 'Hire date',
-				},
-				position: { type: 'string', description: 'Position', nullable: true },
-				salary: { type: 'number', description: 'Salary', nullable: true },
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid input data format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can create employees.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Email or phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	async create(
 		@Body() createEmployeeDto: CreateEmployeeDto
 	): Promise<employee> {
-		return this.employeeService.create(createEmployeeDto);
+		return this.employeeService.create(createEmployeeDto)
 	}
 
 	@Get()
@@ -137,45 +119,23 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Successfully retrieved paginated list of employees.',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							employee_id: { type: 'number' },
-							full_name: { type: 'string' },
-							email: { type: 'string' },
-							phone: { type: 'string' },
-							position: { type: 'string', nullable: true },
-							hire_date: { type: 'string', format: 'date' },
-							is_active: { type: 'boolean' },
-							created_at: { type: 'string', format: 'date-time' },
-							updated_at: { type: 'string', format: 'date-time' },
-						},
-					},
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Forbidden - Only MANAGER and STAFF can view the employee list.',
+		type: ForbiddenErrorDto,
 	})
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<employee>> {
-		return this.employeeService.findAll(paginationDto);
+		return this.employeeService.findAll(paginationDto)
 	}
 
 	@Get('email/:email')
@@ -195,39 +155,25 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Detailed employee information.',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'Employee ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				email: { type: 'string', description: 'Email address' },
-				phone: { type: 'string', description: 'Phone number' },
-				address: { type: 'string', description: 'Address', nullable: true },
-				position: { type: 'string', description: 'Position', nullable: true },
-				hire_date: {
-					type: 'string',
-					format: 'date',
-					description: 'Hire date',
-				},
-				salary: { type: 'number', description: 'Salary', nullable: true },
-				is_active: { type: 'boolean', description: 'Active status' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can search for employees by email.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found - No employee found with the provided email.',
+		type: NotFoundErrorDto,
 	})
 	async findByEmail(@Param('email') email: string): Promise<employee | null> {
-		return this.employeeService.findByEmail(email);
+		return this.employeeService.findByEmail(email)
 	}
 
 	@Delete('bulk')
@@ -243,70 +189,29 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Bulk delete process completed with detailed results.',
-		schema: {
-			type: 'object',
-			properties: {
-				deleted: {
-					type: 'array',
-					items: { type: 'number' },
-					description: 'List of successfully deleted employee IDs.',
-				},
-				failed: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							id: {
-								type: 'number',
-								description: 'ID of the employee that could not be deleted',
-							},
-							reason: {
-								type: 'string',
-								description: 'Reason for deletion failure',
-							},
-						},
-					},
-					description:
-						'List of employees that could not be deleted and the reasons why.',
-				},
-				summary: {
-					type: 'object',
-					properties: {
-						total: {
-							type: 'number',
-							description: 'Total number of employees requested for deletion.',
-						},
-						success: {
-							type: 'number',
-							description: 'Number of successfully deleted employees.',
-						},
-						failed: {
-							type: 'number',
-							description: 'Number of employees that could not be deleted.',
-						},
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid ID list format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can delete employees.',
+		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteEmployeeDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.employeeService.bulkDelete(bulkDeleteDto);
+		return this.employeeService.bulkDelete(bulkDeleteDto)
 	}
 
 	@Get(':id')
@@ -326,59 +231,28 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Detailed employee information.',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'Employee ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				email: { type: 'string', description: 'Email address' },
-				phone: { type: 'string', description: 'Phone number' },
-				address: { type: 'string', description: 'Address', nullable: true },
-				date_of_birth: {
-					type: 'string',
-					format: 'date',
-					description: 'Date of birth',
-					nullable: true,
-				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
-				hire_date: {
-					type: 'string',
-					format: 'date',
-					description: 'Hire date',
-				},
-				position: { type: 'string', description: 'Position', nullable: true },
-				salary: { type: 'number', description: 'Salary', nullable: true },
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Forbidden - Only MANAGER and STAFF can view employee information.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found - No employee found with the provided ID.',
+		type: NotFoundErrorDto,
 	})
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<employee | null> {
-		return this.employeeService.findOne(id);
+		return this.employeeService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -399,65 +273,38 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Employee information updated successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'Employee ID' },
-				full_name: { type: 'string', description: 'Updated full name' },
-				email: { type: 'string', description: 'Updated email address' },
-				phone: { type: 'string', description: 'Updated phone number' },
-				address: {
-					type: 'string',
-					description: 'Updated address',
-					nullable: true,
-				},
-				position: {
-					type: 'string',
-					description: 'Updated position',
-					nullable: true,
-				},
-				salary: {
-					type: 'number',
-					description: 'Updated salary',
-					nullable: true,
-				},
-				is_active: {
-					type: 'boolean',
-					description: 'Updated active status',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid update data format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can update employee information.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found - No employee found with the provided ID.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Email or phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateEmployeeDto: UpdateEmployeeDto
 	): Promise<employee> {
-		return this.employeeService.update(id, updateEmployeeDto);
+		return this.employeeService.update(id, updateEmployeeDto)
 	}
 
 	@Patch(':id/account/lock')
@@ -478,37 +325,27 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Account lock status changed successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'Employee ID' },
-				account_id: { type: 'number', description: 'Account ID' },
-				is_locked: { type: 'boolean', description: 'New lock status' },
-				locked_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Timestamp of the lock status change',
-					nullable: true,
-				},
-				message: { type: 'string', description: 'Result message' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid lock status format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can lock/unlock employee accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Not Found - Employee not found or has no account.',
+		type: NotFoundErrorDto,
 	})
 	async lockEmployeeAccount(
 		@Param('id', ParseIntPipe) employeeId: number,
@@ -517,7 +354,7 @@ export class EmployeeController {
 		return this.employeeService.lockEmployeeAccount(
 			employeeId,
 			lockAccountDto.is_locked
-		);
+		)
 	}
 
 	@Patch(':id/account/:accountId')
@@ -544,48 +381,35 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Cập nhật thông tin tài khoản thành công',
-		schema: {
-			type: 'object',
-			properties: {
-				employee_id: { type: 'number', description: 'ID nhân viên' },
-				account_id: { type: 'number', description: 'ID tài khoản' },
-				username: { type: 'string', description: 'Tên đăng nhập đã cập nhật' },
-				email: { type: 'string', description: 'Email đã cập nhật' },
-				phone: { type: 'string', description: 'Số điện thoại đã cập nhật' },
-				is_active: {
-					type: 'boolean',
-					description: 'Trạng thái hoạt động tài khoản',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Thời gian cập nhật',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description:
 			'Yêu cầu không hợp lệ - Dữ liệu tài khoản không đúng định dạng',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Chưa xác thực - Token không hợp lệ',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Không có quyền truy cập - Chỉ MANAGER mới có thể cập nhật tài khoản nhân viên',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Không tìm thấy nhân viên hoặc tài khoản với ID được cung cấp',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description:
 			'Xung đột dữ liệu - Tên đăng nhập, email hoặc số điện thoại đã tồn tại',
+		type: ConflictErrorDto,
 	})
 	async updateEmployeeAccount(
 		@Param('id', ParseIntPipe) employeeId: number,
@@ -596,7 +420,7 @@ export class EmployeeController {
 			employeeId,
 			accountId,
 			updateAccountDto
-		);
+		)
 	}
 
 	@Delete(':id')
@@ -636,7 +460,7 @@ export class EmployeeController {
 			'Conflict - Cannot delete employee with associated orders or other important data.',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.employeeService.remove(id);
+		await this.employeeService.remove(id)
 	}
 
 	@Get('admin/test')
@@ -651,26 +475,19 @@ export class EmployeeController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful.',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Confirmation message that the controller is working.',
-					example: 'Employee controller is working!',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can perform this test.',
+		type: ForbiddenErrorDto,
 	})
 	async test(): Promise<{ message: string }> {
-		return { message: 'Employee controller is working!' };
+		return { message: 'Employee controller is working!' }
 	}
 }

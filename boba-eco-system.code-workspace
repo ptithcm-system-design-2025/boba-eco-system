@@ -58,6 +58,7 @@
         "augment.completions.enableQuickSuggestions": true,
         "augment.experimental.terminal.vscodeTerminalStrategy": "VSCode",
         "augment.nextEdit.enableBackgroundSuggestions": false,
-        "markdown-preview-enhanced.plantumlJarPath": "/home/PNguyen/development/plantuml/build/libs/plantuml.jar"
+        "markdown-preview-enhanced.plantumlJarPath": "/home/PNguyen/development/plantuml/build/libs/plantuml.jar",
+        "markdown-preview-enhanced.enableTypographer": true
     }
 }

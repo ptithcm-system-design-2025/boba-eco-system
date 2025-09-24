@@ -16,12 +16,12 @@ import {
 	type product_price,
 } from '../generated/prisma/client'
 import type { PrismaService } from '../prisma/prisma.service'
-import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
 import type { BulkDeleteProductDto } from './dto/bulk-delete-product.dto'
-import type { CreateProductPriceDto } from './dto/create-product-price.dto'
+import type { BulkDeleteProductPriceDto } from './dto/bulk-delete-product-price.dto'
 import type { CreateProductDto } from './dto/create-product.dto'
-import type { UpdateProductPriceDto } from './dto/update-product-price.dto'
+import type { CreateProductPriceDto } from './dto/create-product-price.dto'
 import type { UpdateProductDto } from './dto/update-product.dto'
+import type { UpdateProductPriceDto } from './dto/update-product-price.dto'
 
 @Injectable()
 export class ProductService {
@@ -113,14 +113,19 @@ export class ProductService {
 				} = size_data
 				try {
 					const upsertedSize = await this.prisma.product_size.upsert({
-						where: { unit_name: { unit: sizeUnit, name: sizeName } },
+						where: {
+							unit_name: { unit: sizeUnit, name: sizeName },
+						},
 						create: {
 							name: sizeName,
 							unit: sizeUnit,
 							quantity: sizeQuantity,
 							description: sizeDescription,
 						},
-						update: { quantity: sizeQuantity, description: sizeDescription },
+						update: {
+							quantity: sizeQuantity,
+							description: sizeDescription,
+						},
 					})
 					productSizeId = upsertedSize.size_id
 				} catch (e) {
@@ -129,7 +134,12 @@ export class ProductService {
 						e.code === 'P2002'
 					) {
 						const existingSize = await this.prisma.product_size.findUnique({
-							where: { unit_name: { unit: sizeUnit, name: sizeName } },
+							where: {
+								unit_name: {
+									unit: sizeUnit,
+									name: sizeName,
+								},
+							},
 						})
 						if (!existingSize) {
 							throw new InternalServerErrorException(
@@ -161,9 +171,9 @@ export class ProductService {
 			}
 
 			;(
-				productData.product_price!
-					.create as Prisma.product_priceCreateWithoutProductInput[]
-			).push({
+				productData.product_price
+					?.create as Prisma.product_priceCreateWithoutProductInput[]
+			)?.push({
 				price: price,
 				is_active: is_active !== undefined ? is_active : true,
 				product_size: {
@@ -596,7 +606,10 @@ export class ProductService {
 						quantity: sizeQuantity,
 						description: sizeDescription,
 					},
-					update: { quantity: sizeQuantity, description: sizeDescription },
+					update: {
+						quantity: sizeQuantity,
+						description: sizeDescription,
+					},
 				})
 				productSizeId = upsertedSize.size_id
 			} catch (e) {
@@ -605,7 +618,9 @@ export class ProductService {
 					e.code === 'P2002'
 				) {
 					const existingSize = await this.prisma.product_size.findUnique({
-						where: { unit_name: { unit: sizeUnit, name: sizeName } },
+						where: {
+							unit_name: { unit: sizeUnit, name: sizeName },
+						},
 					})
 					if (!existingSize) {
 						throw new InternalServerErrorException(

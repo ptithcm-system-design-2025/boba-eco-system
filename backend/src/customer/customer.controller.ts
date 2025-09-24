@@ -11,17 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { CustomerService } from './customer.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { customer } from '../generated/prisma/client';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -31,25 +21,39 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
-import type { AccountService } from '../account/account.service';
-import { CreateAccountDto } from '../account/dto/create-account.dto';
-import { UpdateAccountDto } from '../account/dto/update-account.dto';
-import { LockAccountDto } from '../account/dto/lock-account.dto';
+} from '@nestjs/swagger'
+
+import { CreateAccountDto } from '../account/dto/create-account.dto'
+import { LockAccountDto } from '../account/dto/lock-account.dto'
+import { UpdateAccountDto } from '../account/dto/update-account.dto'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendSuccessDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { customer } from '../generated/prisma/client'
+import type { CustomerService } from './customer.service'
+import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto'
+import { CreateCustomerDto } from './dto/create-customer.dto'
+import { UpdateCustomerDto } from './dto/update-customer.dto'
 
 @ApiTags('customers')
 @Controller('customers')
 @ApiBearerAuth('JWT-auth')
 @ApiExtraModels(PaginationMetadata)
 export class CustomerController {
-	constructor(
-		private readonly customerService: CustomerService,
-		private readonly accountService: AccountService
-	) {}
+	constructor(private readonly customerService: CustomerService) {}
 
 	@Post()
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -65,57 +69,32 @@ export class CustomerController {
 		status: 201,
 		description:
 			'Customer created successfully with automatic membership type and points.',
-		schema: {
-			type: 'object',
-			properties: {
-				customer_id: { type: 'number', description: 'Customer ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				phone: { type: 'string', description: 'Phone number' },
-				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
-				date_of_birth: {
-					type: 'string',
-					format: 'date',
-					description: 'Date of birth',
-					nullable: true,
-				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
-				membership_type_id: {
-					type: 'number',
-					description: 'Automatically assigned membership type ID',
-				},
-				current_points: {
-					type: 'number',
-					description: 'Automatically assigned current points',
-				},
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid request - Input data is not in the correct format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER and STAFF can create customers.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	async create(
 		@Body() createCustomerDto: CreateCustomerDto
 	): Promise<customer> {
-		return this.customerService.create(createCustomerDto);
+		return this.customerService.create(createCustomerDto)
 	}
 
 	@Get()
@@ -143,47 +122,23 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Successfully retrieved paginated list of customers.',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							customer_id: { type: 'number' },
-							full_name: { type: 'string' },
-							phone: { type: 'string' },
-							email: { type: 'string', nullable: true },
-							address: { type: 'string', nullable: true },
-							date_of_birth: { type: 'string', format: 'date', nullable: true },
-							gender: { type: 'string', nullable: true },
-							membership_type_id: { type: 'number' },
-							current_points: { type: 'number' },
-							created_at: { type: 'string', format: 'date-time' },
-							updated_at: { type: 'string', format: 'date-time' },
-						},
-					},
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Forbidden - Only MANAGER and STAFF can view the customer list.',
+		type: ForbiddenErrorDto,
 	})
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<customer>> {
-		return this.customerService.findAll(paginationDto);
+		return this.customerService.findAll(paginationDto)
 	}
 
 	@Delete('bulk')
@@ -199,67 +154,30 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Quá trình xóa hàng loạt hoàn thành với kết quả chi tiết',
-		schema: {
-			type: 'object',
-			properties: {
-				deleted: {
-					type: 'array',
-					items: { type: 'number' },
-					description: 'Danh sách ID các khách hàng đã xóa thành công',
-				},
-				failed: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							id: {
-								type: 'number',
-								description: 'ID khách hàng không thể xóa',
-							},
-							reason: { type: 'string', description: 'Lý do không thể xóa' },
-						},
-					},
-					description: 'Danh sách các khách hàng không thể xóa và lý do',
-				},
-				summary: {
-					type: 'object',
-					properties: {
-						total: {
-							type: 'number',
-							description: 'Tổng số khách hàng được yêu cầu xóa',
-						},
-						success: {
-							type: 'number',
-							description: 'Số khách hàng xóa thành công',
-						},
-						failed: {
-							type: 'number',
-							description: 'Số khách hàng không thể xóa',
-						},
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Yêu cầu không hợp lệ - Danh sách ID không đúng định dạng',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Chưa xác thực - Token không hợp lệ',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Không có quyền truy cập - Chỉ MANAGER mới có thể xóa khách hàng',
+		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCustomerDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.customerService.bulkDelete(bulkDeleteDto);
+		return this.customerService.bulkDelete(bulkDeleteDto)
 	}
 
 	@Get(':id')
@@ -280,58 +198,27 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Detailed customer information.',
-		schema: {
-			type: 'object',
-			properties: {
-				customer_id: { type: 'number', description: 'Customer ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				phone: { type: 'string', description: 'Phone number' },
-				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
-				date_of_birth: {
-					type: 'string',
-					format: 'date',
-					description: 'Date of birth',
-					nullable: true,
-				},
-				gender: { type: 'string', description: 'Gender', nullable: true },
-				membership_type_id: {
-					type: 'number',
-					description: 'Membership type ID',
-				},
-				current_points: {
-					type: 'number',
-					description: 'Current loyalty points',
-				},
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - CUSTOMER can only view their own information.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Customer with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<customer | null> {
-		return this.customerService.findOne(id);
+		return this.customerService.findOne(id)
 	}
 
 	@Get('phone/:phone')
@@ -351,39 +238,25 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Detailed customer information.',
-		schema: {
-			type: 'object',
-			properties: {
-				customer_id: { type: 'number', description: 'Customer ID' },
-				full_name: { type: 'string', description: 'Full name' },
-				phone: { type: 'string', description: 'Phone number' },
-				email: { type: 'string', description: 'Email', nullable: true },
-				address: { type: 'string', description: 'Address', nullable: true },
-				membership_type_id: {
-					type: 'number',
-					description: 'Membership type ID',
-				},
-				current_points: {
-					type: 'number',
-					description: 'Current loyalty points',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER and STAFF can search for customers.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Customer with the provided phone number not found.',
+		type: NotFoundErrorDto,
 	})
 	async findByPhone(@Param('phone') phone: string): Promise<customer | null> {
-		return this.customerService.findByPhone(phone);
+		return this.customerService.findByPhone(phone)
 	}
 
 	@Get(':id/account')
@@ -404,38 +277,26 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: "Customer's account information.",
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role_id: { type: 'number', description: 'Role ID' },
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - CUSTOMER can only view their own account.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description:
 			'Customer not found or customer does not have a linked account.',
+		type: NotFoundErrorDto,
 	})
 	async getCustomerAccount(@Param('id', ParseIntPipe) customerId: number) {
-		return this.customerService.getCustomerAccount(customerId);
+		return this.customerService.getCustomerAccount(customerId)
 	}
 
 	@Post(':id/account')
@@ -457,47 +318,33 @@ export class CustomerController {
 	@ApiResponse({
 		status: 201,
 		description: 'Successfully created an account for the customer.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'New account ID' },
-				customer_id: { type: 'number', description: 'Customer ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role_id: {
-					type: 'number',
-					description: 'Role ID (defaults to CUSTOMER)',
-				},
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid request - Account data is not in the correct format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER and STAFF can create accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Customer with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description:
 			'Conflict - Username already exists or the customer already has an account.',
+		type: ConflictErrorDto,
 	})
 	async createCustomerAccount(
 		@Param('id', ParseIntPipe) customerId: number,
@@ -506,7 +353,7 @@ export class CustomerController {
 		return this.customerService.createCustomerAccount(
 			customerId,
 			createAccountDto
-		);
+		)
 	}
 
 	@Patch(':id/account')
@@ -528,42 +375,33 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Account updated successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				customer_id: { type: 'number', description: 'Customer ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Updated email' },
-				phone: { type: 'string', description: 'Updated phone number' },
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid request - Update data is not in the correct format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - CUSTOMER can only update their own account.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description:
 			'Customer not found or customer does not have a linked account.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Username already exists.',
+		type: ConflictErrorDto,
 	})
 	async updateCustomerAccount(
 		@Param('id', ParseIntPipe) customerId: number,
@@ -572,7 +410,7 @@ export class CustomerController {
 		return this.customerService.updateCustomerAccount(
 			customerId,
 			updateAccountDto
-		);
+		)
 	}
 
 	@Patch(':id/account/lock')
@@ -593,38 +431,28 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Successfully changed the account lock status.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				customer_id: { type: 'number', description: 'Customer ID' },
-				is_locked: { type: 'boolean', description: 'New lock status' },
-				locked_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Timestamp of the lock status change',
-					nullable: true,
-				},
-				message: { type: 'string', description: 'Result message' },
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid request - Lock status is not in the correct format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can lock/unlock accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description:
 			'Customer not found or customer does not have a linked account.',
+		type: NotFoundErrorDto,
 	})
 	async lockCustomerAccount(
 		@Param('id', ParseIntPipe) customerId: number,
@@ -633,7 +461,7 @@ export class CustomerController {
 		return this.customerService.lockCustomerAccount(
 			customerId,
 			lockAccountDto.is_locked
-		);
+		)
 	}
 
 	@Patch(':id')
@@ -655,66 +483,38 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Customer information updated successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				customer_id: { type: 'number', description: 'Customer ID' },
-				full_name: { type: 'string', description: 'Updated full name' },
-				phone: { type: 'string', description: 'Updated phone number' },
-				email: {
-					type: 'string',
-					description: 'Updated email',
-					nullable: true,
-				},
-				address: {
-					type: 'string',
-					description: 'Updated address',
-					nullable: true,
-				},
-				date_of_birth: {
-					type: 'string',
-					format: 'date',
-					description: 'Updated date of birth',
-					nullable: true,
-				},
-				gender: {
-					type: 'string',
-					description: 'Updated gender',
-					nullable: true,
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Invalid request - Update data is not in the correct format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - CUSTOMER can only update their own information.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Customer with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateCustomerDto: UpdateCustomerDto
 	): Promise<customer> {
-		return this.customerService.update(id, updateCustomerDto);
+		return this.customerService.update(id, updateCustomerDto)
 	}
 
 	@Delete(':id')
@@ -739,22 +539,26 @@ export class CustomerController {
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can delete customers.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Customer with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description:
 			'Conflict - Cannot delete a customer with associated orders or accounts.',
+		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.customerService.remove(id);
+		await this.customerService.remove(id)
 	}
 
 	@Get('test/ping')
@@ -769,27 +573,20 @@ export class CustomerController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful.',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Confirmation message that the controller is working.',
-					example: 'Customer controller is working!',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can perform this test.',
+		type: ForbiddenErrorDto,
 	})
 	test(): Promise<{ message: string }> {
-		return Promise.resolve({ message: 'Customer controller is working!' });
+		return Promise.resolve({ message: 'Customer controller is working!' })
 	}
 
 	@Get('membership-type/:membershipTypeId')
@@ -825,42 +622,23 @@ export class CustomerController {
 		status: 200,
 		description:
 			'Successfully retrieved paginated list of customers by membership type.',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							customer_id: { type: 'number' },
-							full_name: { type: 'string' },
-							phone: { type: 'string' },
-							email: { type: 'string', nullable: true },
-							current_points: { type: 'number' },
-							membership_type_id: { type: 'number' },
-							created_at: { type: 'string', format: 'date-time' },
-						},
-					},
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Forbidden - Only STAFF and MANAGER can view customers by membership type.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Membership type with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	async findByMembershipType(
 		@Param('membershipTypeId', ParseIntPipe) membershipTypeId: number,
@@ -869,6 +647,6 @@ export class CustomerController {
 		return this.customerService.findByMembershipType(
 			membershipTypeId,
 			paginationDto
-		);
+		)
 	}
 }

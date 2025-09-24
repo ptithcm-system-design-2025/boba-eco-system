@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer'
 import {
 	IsBoolean,
 	IsDateString,
@@ -8,19 +9,18 @@ import {
 	Matches,
 	MaxLength,
 	Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from 'class-validator'
 
 export class CreateDiscountDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(100)
-	name: string;
+	name: string
 
 	@IsOptional()
 	@IsString()
 	@MaxLength(255)
-	description?: string;
+	description?: string
 
 	@IsString()
 	@IsNotEmpty()
@@ -28,50 +28,50 @@ export class CreateDiscountDto {
 	@Matches(/^[A-Z0-9]+$/, {
 		message: 'Coupon code must be uppercase alphanumeric and unique.',
 	})
-	coupon_code: string;
+	coupon_code: string
 
 	@IsNumber({ maxDecimalPlaces: 2 })
 	@Min(0)
 	@Type(() => Number)
-	discount_value: number;
+	discount_value: number
 
 	@IsNumber()
 	@Min(0)
 	@Type(() => Number)
-	min_required_order_value: number;
+	min_required_order_value: number
 
 	@IsNumber()
 	@Min(0)
 	@Type(() => Number)
-	max_discount_amount: number;
+	max_discount_amount: number
 
 	@IsOptional()
 	@IsNumber()
 	@Min(0)
 	@Type(() => Number)
-	min_required_product?: number;
+	min_required_product?: number
 
 	@IsOptional()
 	@IsDateString()
-	valid_from?: string;
+	valid_from?: string
 
 	@IsDateString()
 	@IsNotEmpty()
-	valid_until: string;
+	valid_until: string
 
 	@IsOptional()
 	@IsNumber()
 	@Min(1)
 	@Type(() => Number)
-	max_uses?: number;
+	max_uses?: number
 
 	@IsOptional()
 	@IsNumber()
 	@Min(1)
 	@Type(() => Number)
-	max_uses_per_customer?: number;
+	max_uses_per_customer?: number
 
 	@IsBoolean()
 	@IsOptional()
-	is_active: boolean = true;
+	is_active: boolean = true
 }

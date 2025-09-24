@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { MembershipTypeService } from './membership-type.service';
-import { MembershipTypeController } from './membership-type.controller';
-import { PrismaModule } from '../prisma/prisma.module';
+import { Module } from '@nestjs/common'
+import { PrismaModule } from '../prisma/prisma.module'
+import { MembershipTypeController } from './membership-type.controller'
+import { MembershipTypeService } from './membership-type.service'
 
 @Module({
 	imports: [PrismaModule],

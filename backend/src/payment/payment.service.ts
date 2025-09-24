@@ -255,7 +255,7 @@ export class PaymentService {
 		orderId: number,
 		amount: number,
 		status: payment_status_enum,
-		paymentIntentId: string
+		_paymentIntentId: string
 	): Promise<PaymentWithRelations> {
 		const existingPayment = await this.prisma.payment.findFirst({
 			where: {

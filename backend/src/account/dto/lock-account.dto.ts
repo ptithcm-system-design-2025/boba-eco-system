@@ -1,5 +1,5 @@
-import { IsBoolean, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsBoolean, IsNotEmpty } from 'class-validator'
 
 /**
  * DTO for locking or unlocking an account.
@@ -14,5 +14,5 @@ export class LockAccountDto {
 	})
 	@IsBoolean({ message: 'is_locked must be a boolean value.' })
 	@IsNotEmpty({ message: 'is_locked is required.' })
-	is_locked: boolean;
+	is_locked: boolean
 }

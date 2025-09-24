@@ -1,13 +1,13 @@
+import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
 	IsInt,
 	IsNotEmpty,
-	Min,
+	IsOptional,
 	IsString,
 	MaxLength,
-	IsOptional,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+	Min,
+} from 'class-validator'
 
 export class CreateOrderProductDto {
 	@ApiProperty({
@@ -18,7 +18,7 @@ export class CreateOrderProductDto {
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	product_price_id: number;
+	product_price_id: number
 
 	@ApiProperty({
 		description: 'The quantity of the product',
@@ -29,7 +29,7 @@ export class CreateOrderProductDto {
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	quantity: number;
+	quantity: number
 
 	@ApiProperty({
 		description: 'Optional note for the product in the order',
@@ -40,5 +40,5 @@ export class CreateOrderProductDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(500)
-	option?: string;
+	option?: string
 }

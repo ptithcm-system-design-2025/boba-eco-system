@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { CategoryService } from './category.service';
-import { CategoryController } from './category.controller';
+import { Module } from '@nestjs/common'
+import { CategoryController } from './category.controller'
+import { CategoryService } from './category.service'
 /**
  * Module that bundles CategoryController and CategoryService.
  * Provides category-related functionality to the application.

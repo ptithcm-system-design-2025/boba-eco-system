@@ -11,17 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { DiscountService } from './discount.service';
-import { CreateDiscountDto } from './dto/create-discount.dto';
-import { UpdateDiscountDto } from './dto/update-discount.dto';
-import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { discount } from '../generated/prisma';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -31,11 +21,30 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendPaginatedSuccessDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { discount } from '../generated/prisma/client'
+import type { DiscountService } from './discount.service'
+import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto'
+import { CreateDiscountDto } from './dto/create-discount.dto'
+import { UpdateDiscountDto } from './dto/update-discount.dto'
 
 @ApiTags('discounts')
 @Controller('discounts')
@@ -64,21 +73,32 @@ export class DiscountController {
 	@ApiResponse({
 		status: 201,
 		description: 'The discount has been successfully created.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request.' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request.',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict. Discount name or coupon code already exists.',
+		type: ConflictErrorDto,
 	})
 	async create(
 		@Body() createDiscountDto: CreateDiscountDto
 	): Promise<discount> {
-		return this.discountService.create(createDiscountDto);
+		return this.discountService.create(createDiscountDto)
 	}
 
 	/**
@@ -105,24 +125,17 @@ export class DiscountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of discounts',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: { type: 'object' },
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<discount>> {
-		return this.discountService.findAll(paginationDto);
+		return this.discountService.findAll(paginationDto)
 	}
 
 	/**
@@ -139,19 +152,29 @@ export class DiscountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Bulk delete completed with results',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 400, description: 'Bad Request' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 400,
+		description: 'Bad Request',
+		type: ValidationErrorDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteDiscountDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.discountService.bulkDelete(bulkDeleteDto);
+		return this.discountService.bulkDelete(bulkDeleteDto)
 	}
 
 	/**
@@ -163,14 +186,30 @@ export class DiscountController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
 	@ApiOperation({ summary: 'Get a discount by ID (All roles)' })
-	@ApiParam({ name: 'id', description: 'The ID of the discount', type: Number })
-	@ApiResponse({ status: 200, description: 'Return the discount.' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
-	@ApiResponse({ status: 404, description: 'Discount not found.' })
+	@ApiParam({
+		name: 'id',
+		description: 'The ID of the discount',
+		type: Number,
+	})
+	@ApiResponse({
+		status: 200,
+		description: 'Return the discount.',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
+	@ApiResponse({
+		status: 404,
+		description: 'Discount not found.',
+		type: NotFoundErrorDto,
+	})
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<discount | null> {
-		return this.discountService.findOne(id);
+		return this.discountService.findOne(id)
 	}
 
 	/**
@@ -187,16 +226,25 @@ export class DiscountController {
 		description: 'The coupon code associated with the discount',
 		type: String,
 	})
-	@ApiResponse({ status: 200, description: 'Return the discount.' })
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 200,
+		description: 'Return the discount.',
+		type: JSendSuccessDto,
+	})
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 404,
 		description: 'Discount with this coupon code not found.',
+		type: NotFoundErrorDto,
 	})
 	async findByCouponCode(
 		@Param('couponCode') couponCode: string
 	): Promise<discount | null> {
-		return this.discountService.findByCouponCode(couponCode);
+		return this.discountService.findByCouponCode(couponCode)
 	}
 
 	/**
@@ -218,22 +266,33 @@ export class DiscountController {
 	@ApiResponse({
 		status: 200,
 		description: 'The discount has been successfully updated.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Discount not found.' })
+	@ApiResponse({
+		status: 404,
+		description: 'Discount not found.',
+		type: NotFoundErrorDto,
+	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict. Coupon code or other unique constraint violation.',
+		type: ConflictErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateDiscountDto: UpdateDiscountDto
 	): Promise<discount> {
-		return this.discountService.update(id, updateDiscountDto);
+		return this.discountService.update(id, updateDiscountDto)
 	}
 
 	/**
@@ -253,18 +312,29 @@ export class DiscountController {
 	@ApiResponse({
 		status: 204,
 		description: 'The discount has been successfully deleted.',
+		type: JSendSuccessDto,
 	})
-	@ApiResponse({ status: 401, description: 'Unauthorized' })
+	@ApiResponse({
+		status: 401,
+		description: 'Unauthorized',
+		type: UnauthorizedErrorDto,
+	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Insufficient permissions',
+		type: ForbiddenErrorDto,
 	})
-	@ApiResponse({ status: 404, description: 'Discount not found.' })
+	@ApiResponse({
+		status: 404,
+		description: 'Discount not found.',
+		type: NotFoundErrorDto,
+	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict. Discount is associated with other records.',
+		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.discountService.remove(id);
+		await this.discountService.remove(id)
 	}
 }

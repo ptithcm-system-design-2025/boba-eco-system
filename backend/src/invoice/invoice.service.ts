@@ -1,37 +1,69 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { PrismaService } from '../prisma/prisma.service';
-import type { StoreService } from '../store/store.service';
-import * as Handlebars from 'handlebars';
-import * as puppeteer from 'puppeteer';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import * as Handlebars from 'handlebars'
+import * as puppeteer from 'puppeteer'
+import type { Prisma } from '../generated/prisma/client'
+import type { PrismaService } from '../prisma/prisma.service'
+import type { StoreService } from '../store/store.service'
+
+type OrderWithRelations = Prisma.orderGetPayload<{
+	include: {
+		customer: true
+		employee: {
+			include: {
+				account: true
+			}
+		}
+		order_product: {
+			include: {
+				product_price: {
+					include: {
+						product: true
+						product_size: true
+					}
+				}
+			}
+		}
+		order_discount: {
+			include: {
+				discount: true
+			}
+		}
+		payment: {
+			include: {
+				payment_method: true
+			}
+		}
+	}
+}>
 
 export interface InvoiceData {
-	order_id: number;
-	order_time: Date;
-	customer_name?: string;
-	customer_phone?: string;
-	employee_name: string;
-	store_name: string;
-	store_address: string;
-	store_phone: string;
-	store_email?: string;
-	store_tax_code?: string;
+	order_id: number
+	order_time: Date
+	customer_name?: string
+	customer_phone?: string
+	employee_name: string
+	store_name: string
+	store_address: string
+	store_phone: string
+	store_email?: string
+	store_tax_code?: string
 	items: Array<{
-		product_name: string;
-		quantity: number;
-		unit_price: number;
-		total_price: number;
-	}>;
-	subtotal: number;
-	discount_amount: number;
-	final_amount: number;
-	payment_method: string;
-	amount_paid: number;
-	change_amount: number;
-	payment_time: Date;
-	payment_status: string;
-	print_time: string;
+		product_name: string
+		quantity: number
+		unit_price: number
+		total_price: number
+	}>
+	subtotal: number
+	discount_amount: number
+	final_amount: number
+	payment_method: string
+	amount_paid: number
+	change_amount: number
+	payment_time: Date
+	payment_status: string
+	print_time: string
 }
 
 @Injectable()
@@ -39,7 +71,7 @@ export interface InvoiceData {
  * Service for handling invoice generation and data retrieval.
  */
 export class InvoiceService {
-	private templatePath: string;
+	private templatePath: string
 
 	/**
 	 * @param prisma The Prisma database service.
@@ -49,8 +81,8 @@ export class InvoiceService {
 		private prisma: PrismaService,
 		private storeService: StoreService
 	) {
-		this.templatePath = path.join(__dirname, 'templates', 'invoice.hbs');
-		this.setupHandlebarsHelpers();
+		this.templatePath = path.join(__dirname, 'templates', 'invoice.hbs')
+		this.setupHandlebarsHelpers()
 	}
 
 	/**
@@ -61,8 +93,8 @@ export class InvoiceService {
 			return new Intl.NumberFormat('vi-VN', {
 				style: 'currency',
 				currency: 'VND',
-			}).format(amount);
-		});
+			}).format(amount)
+		})
 
 		Handlebars.registerHelper('formatDate', (date: Date) => {
 			return new Intl.DateTimeFormat('vi-VN', {
@@ -72,42 +104,42 @@ export class InvoiceService {
 				hour: '2-digit',
 				minute: '2-digit',
 				second: '2-digit',
-			}).format(new Date(date));
-		});
+			}).format(new Date(date))
+		})
 
-		Handlebars.registerHelper('eq', (a: any, b: any) => {
-			return a === b;
-		});
+		Handlebars.registerHelper('eq', (a: unknown, b: unknown) => {
+			return a === b
+		})
 
 		Handlebars.registerHelper('increment', (value: number) => {
-			return value + 1;
-		});
+			return value + 1
+		})
 
 		Handlebars.registerHelper('getPaymentStatusText', (status: string) => {
 			switch (status) {
 				case 'PAID':
-					return 'Paid';
+					return 'Paid'
 				case 'PENDING':
-					return 'Pending';
+					return 'Pending'
 				case 'PROCESSING':
-					return 'Processing';
+					return 'Processing'
 				default:
-					return 'Unknown';
+					return 'Unknown'
 			}
-		});
+		})
 
 		Handlebars.registerHelper('getPaymentStatusClass', (status: string) => {
 			switch (status) {
 				case 'PAID':
-					return 'status-paid';
+					return 'status-paid'
 				case 'PENDING':
-					return 'status-pending';
+					return 'status-pending'
 				case 'PROCESSING':
-					return 'status-processing';
+					return 'status-processing'
 				default:
-					return 'status-pending';
+					return 'status-pending'
 			}
-		});
+		})
 	}
 
 	/**
@@ -116,72 +148,74 @@ export class InvoiceService {
 	 * @returns The invoice data.
 	 */
 	async getInvoiceData(orderId: number): Promise<InvoiceData> {
-		const order = (await this.prisma.order.findUnique({
-			where: { order_id: orderId },
-			include: {
-				customer: true,
-				employee: {
-					include: {
-						account: true,
+		const order: OrderWithRelations | null = await this.prisma.order.findUnique(
+			{
+				where: { order_id: orderId },
+				include: {
+					customer: true,
+					employee: {
+						include: {
+							account: true,
+						},
 					},
-				},
-				order_product: {
-					include: {
-						product_price: {
-							include: {
-								product: true,
-								product_size: true,
+					order_product: {
+						include: {
+							product_price: {
+								include: {
+									product: true,
+									product_size: true,
+								},
 							},
 						},
 					},
-				},
-				order_discount: {
-					include: {
-						discount: true,
+					order_discount: {
+						include: {
+							discount: true,
+						},
+					},
+					payment: {
+						include: {
+							payment_method: true,
+						},
 					},
 				},
-				payment: {
-					include: {
-						payment_method: true,
-					},
-				},
-			},
-		})) as any;
+			}
+		)
 
 		if (!order) {
-			throw new NotFoundException(`Order with ID ${orderId} not found`);
+			throw new NotFoundException(`Order with ID ${orderId} not found`)
 		}
 
-		const storeInfo = await this.storeService.getDefaultStore();
+		const storeInfo = await this.storeService.getDefaultStore()
 
 		const totalDiscount = (order.order_discount || []).reduce(
-			(sum: number, od: any) => {
-				const discountAmount =
-					od.discount.discount_type === 'PERCENTAGE'
-						? (Number(od.discount.discount_value) / 100) *
-							Number(order.total_amount || 0)
-						: Number(od.discount.discount_value);
-				return sum + discountAmount;
+			(sum: number, od) => {
+				// Use the discount_amount from order_discount table
+				const discountAmount = Number(od.discount_amount || 0)
+				return sum + discountAmount
 			},
 			0
-		);
+		)
 
 		const latestPayment = (order.payment || []).sort(
-			(a: any, b: any) =>
+			(a, b) =>
 				new Date(b.payment_time || b.created_at || 0).getTime() -
 				new Date(a.payment_time || a.created_at || 0).getTime()
-		)[0];
+		)[0]
 
 		const invoiceData: InvoiceData = {
 			order_id: order.order_id,
 			order_time: new Date(order.order_time || order.created_at || new Date()),
 			customer_name: order.customer
-				? `${order.customer.first_name || ''} ${order.customer.last_name || ''}`.trim() ||
-					'Guest'
+				? `${order.customer.first_name || ''} ${
+						order.customer.last_name || ''
+					}`.trim() || 'Guest'
 				: 'Guest',
 			customer_phone: order.customer?.phone || '',
 			employee_name: order.employee
-				? `${order.employee.first_name || ''} ${order.employee.last_name || ''}`.trim() ||
+				? `${order.employee.first_name || ''} ${
+						order.employee.last_name || ''
+					}`.trim() ||
 					order.employee.account?.username ||
 					'N/A'
 				: 'N/A',
@@ -190,7 +224,7 @@ export class InvoiceService {
 			store_phone: storeInfo?.phone || '0123 456 789',
 			store_email: storeInfo?.email || 'info@cakepos.vn',
 			store_tax_code: storeInfo?.tax_code || '0123456789',
-			items: (order.order_product || []).map((op: any) => ({
+			items: (order.order_product || []).map((op) => ({
 				product_name: op.product_price?.product?.name || 'N/A',
 				quantity: op.quantity || 0,
 				unit_price: Number(op.product_price?.price || 0),
@@ -214,9 +248,9 @@ export class InvoiceService {
 				minute: '2-digit',
 				second: '2-digit',
 			}).format(new Date()),
-		};
+		}
 
-		return invoiceData;
+		return invoiceData
 	}
 
 	/**
@@ -225,9 +259,9 @@ export class InvoiceService {
 	 * @returns The generated HTML string.
 	 */
 	generateInvoiceHTML(invoiceData: InvoiceData): string {
-		const template = this.getInvoiceTemplate();
-		const compiledTemplate = Handlebars.compile(template);
-		return compiledTemplate(invoiceData);
+		const template = this.getInvoiceTemplate()
+		const compiledTemplate = Handlebars.compile(template)
+		return compiledTemplate(invoiceData)
 	}
 
 	/**
@@ -236,17 +270,17 @@ export class InvoiceService {
 	 * @returns A buffer containing the PDF data.
 	 */
 	async generateInvoicePDF(orderId: number): Promise<Buffer> {
-		const invoiceData = await this.getInvoiceData(orderId);
-		const html = this.generateInvoiceHTML(invoiceData);
+		const invoiceData = await this.getInvoiceData(orderId)
+		const html = this.generateInvoiceHTML(invoiceData)
 
 		const browser = await puppeteer.launch({
 			headless: true,
 			args: ['--no-sandbox', '--disable-setuid-sandbox'],
-		});
+		})
 
 		try {
-			const page = await browser.newPage();
-			await page.setContent(html, { waitUntil: 'networkidle0' });
+			const page = await browser.newPage()
+			await page.setContent(html, { waitUntil: 'networkidle0' })
 
 			const pdf = await page.pdf({
 				format: 'A4',
@@ -257,11 +291,11 @@ export class InvoiceService {
 					bottom: '20px',
 					left: '20px',
 				},
-			});
+			})
 
-			return Buffer.from(pdf);
+			return Buffer.from(pdf)
 		} finally {
-			await browser.close();
+			await browser.close()
 		}
 	}
 
@@ -271,11 +305,11 @@ export class InvoiceService {
 	 */
 	private getInvoiceTemplate(): string {
 		try {
-			return fs.readFileSync(this.templatePath, 'utf8');
+			return fs.readFileSync(this.templatePath, 'utf8')
 		} catch (error) {
 			throw new NotFoundException(
 				`Could not read invoice template: ${error.message}`
-			);
+			)
 		}
 	}
 }

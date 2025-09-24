@@ -1,5 +1,5 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class UploadImageDto {
 	@ApiProperty({
@@ -11,7 +11,7 @@ export class UploadImageDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(100)
-	fileName?: string;
+	fileName?: string
 
 	@ApiProperty({
 		description: 'Storage folder (default: products)',
@@ -22,5 +22,5 @@ export class UploadImageDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(50)
-	folder?: string;
+	folder?: string
 }

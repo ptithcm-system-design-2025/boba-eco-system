@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class CreateRoleDto {
 	@ApiProperty({
@@ -8,7 +8,7 @@ export class CreateRoleDto {
 	})
 	@IsString()
 	@IsNotEmpty()
-	name: string;
+	name: string
 
 	@ApiProperty({
 		example: 'A user with management privileges',
@@ -17,5 +17,5 @@ export class CreateRoleDto {
 	})
 	@IsString()
 	@IsOptional()
-	description?: string;
+	description?: string
 }

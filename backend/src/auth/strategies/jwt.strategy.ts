@@ -1,8 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { PrismaService } from '../../prisma/prisma.service';
-import type { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { PassportStrategy } from '@nestjs/passport'
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import type { PrismaService } from '../../prisma/prisma.service'
+import type { JwtPayload } from '../interfaces/jwt-payload.interface'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			ignoreExpiration: false,
 			secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
-		});
+		})
 	}
 
 	async validate(payload: JwtPayload) {
@@ -20,10 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			include: {
 				role: true,
 			},
-		});
+		})
 
 		if (!account || !account.is_active || account.is_locked) {
-			throw new UnauthorizedException('Tài khoản không hợp lệ hoặc đã bị khóa');
+			throw new UnauthorizedException('Account is not valid')
 		}
 
 		return {
@@ -33,6 +33,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			role_name: account.role.name,
 			is_active: account.is_active,
 			is_locked: account.is_locked,
-		};
+		}
 	}
 }

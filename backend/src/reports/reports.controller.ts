@@ -1,17 +1,17 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiOperation,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import type { ReportsService } from './reports.service';
-import type { SalesReportQueryDto } from './dto/sales-report-query.dto';
-import { SalesReportResponseDto } from './dto/sales-report-response.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import type { SalesReportQueryDto } from './dto/sales-report-query.dto'
+import { SalesReportResponseDto } from './dto/sales-report-response.dto'
+import type { ReportsService } from './reports.service'
 
 @ApiTags('reports')
 @Controller('reports')
@@ -43,7 +43,7 @@ export class ReportsController {
 	async getSalesReport(
 		@Query() query: SalesReportQueryDto
 	): Promise<SalesReportResponseDto> {
-		return this.reportsService.getSalesReport(query);
+		return this.reportsService.getSalesReport(query)
 	}
 
 	@Get('sales/monthly')
@@ -62,8 +62,8 @@ export class ReportsController {
 		@Query() query: SalesReportQueryDto
 	): Promise<SalesReportResponseDto> {
 		// Đảm bảo không có tháng cụ thể để lấy dữ liệu cả năm
-		const { month, ...restQuery } = query;
-		return this.reportsService.getSalesReport(restQuery);
+		const { month: _month, ...restQuery } = query
+		return this.reportsService.getSalesReport(restQuery)
 	}
 
 	@Get('sales/daily')
@@ -83,9 +83,9 @@ export class ReportsController {
 	): Promise<SalesReportResponseDto> {
 		// Đảm bảo có tháng để lấy dữ liệu theo ngày
 		if (!query.month) {
-			query.month = new Date().getMonth() + 1;
+			query.month = new Date().getMonth() + 1
 		}
-		return this.reportsService.getSalesReport(query);
+		return this.reportsService.getSalesReport(query)
 	}
 
 	@Get('sales/employee')
@@ -103,7 +103,7 @@ export class ReportsController {
 	async getEmployeeSalesReport(
 		@Query() query: SalesReportQueryDto
 	): Promise<SalesReportResponseDto> {
-		return this.reportsService.getSalesReport(query);
+		return this.reportsService.getSalesReport(query)
 	}
 
 	@Get('sales/products')
@@ -121,6 +121,6 @@ export class ReportsController {
 	async getProductSalesReport(
 		@Query() query: SalesReportQueryDto
 	): Promise<SalesReportResponseDto> {
-		return this.reportsService.getSalesReport(query);
+		return this.reportsService.getSalesReport(query)
 	}
 }

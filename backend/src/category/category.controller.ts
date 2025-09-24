@@ -1,41 +1,50 @@
 import {
-	Controller,
-	Get,
-	Post,
 	Body,
-	Patch,
-	Param,
+	Controller,
 	Delete,
-	ParseIntPipe,
+	Get,
 	HttpCode,
 	HttpStatus,
-	UseGuards,
+	Param,
+	ParseIntPipe,
+	Patch,
+	Post,
 	Query,
-} from '@nestjs/common';
-import type { CategoryService } from './category.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto';
+	UseGuards,
+} from '@nestjs/common'
 import {
-	type PaginationDto,
-	type PaginatedResult,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
-import type { category } from '../generated/prisma/client';
-import {
-	ApiTags,
-	ApiOperation,
-	ApiResponse,
-	ApiParam,
-	ApiBody,
 	ApiBearerAuth,
-	ApiQuery,
+	ApiBody,
 	ApiExtraModels,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+	ApiOperation,
+	ApiParam,
+	ApiQuery,
+	ApiResponse,
+	ApiTags,
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendPaginatedSuccessDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type { category } from '../generated/prisma/client'
+import type { CategoryService } from './category.service'
+import { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto'
+import { CreateCategoryDto } from './dto/create-category.dto'
+import { UpdateCategoryDto } from './dto/update-category.dto'
 
 @ApiTags('categories')
 @Controller('categories')
@@ -60,45 +69,27 @@ export class CategoryController {
 	@ApiResponse({
 		status: 201,
 		description: 'Category created successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				category_id: { type: 'number', description: 'Category ID' },
-				name: { type: 'string', description: 'Category name' },
-				description: {
-					type: 'string',
-					description: 'Category description',
-					nullable: true,
-				},
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid input data format',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER and STAFF can create categories',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Category name already exists',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Create a new category.
@@ -108,7 +99,7 @@ export class CategoryController {
 	async create(
 		@Body() createCategoryDto: CreateCategoryDto
 	): Promise<category> {
-		return this.categoryService.create(createCategoryDto);
+		return this.categoryService.create(createCategoryDto)
 	}
 
 	@Get()
@@ -136,32 +127,12 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of categories retrieved successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							category_id: { type: 'number' },
-							name: { type: 'string' },
-							description: { type: 'string', nullable: true },
-							is_active: { type: 'boolean' },
-							created_at: { type: 'string', format: 'date-time' },
-							updated_at: { type: 'string', format: 'date-time' },
-						},
-					},
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	/**
 	 * Retrieve all categories with pagination.
@@ -171,7 +142,7 @@ export class CategoryController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<category>> {
-		return this.categoryService.findAll(paginationDto);
+		return this.categoryService.findAll(paginationDto)
 	}
 
 	@Get(':id')
@@ -190,37 +161,17 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Detailed category information',
-		schema: {
-			type: 'object',
-			properties: {
-				category_id: { type: 'number', description: 'Category ID' },
-				name: { type: 'string', description: 'Category name' },
-				description: {
-					type: 'string',
-					description: 'Category description',
-					nullable: true,
-				},
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Category with the provided ID not found',
+		type: NotFoundErrorDto,
 	})
 	/**
 	 * Retrieve a category by its ID.
@@ -230,7 +181,7 @@ export class CategoryController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<category | null> {
-		return this.categoryService.findOne(id);
+		return this.categoryService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -251,47 +202,32 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Category updated successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				category_id: { type: 'number', description: 'Category ID' },
-				name: { type: 'string', description: 'Updated category name' },
-				description: {
-					type: 'string',
-					description: 'Updated category description',
-					nullable: true,
-				},
-				is_active: {
-					type: 'boolean',
-					description: 'Updated active status',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Last update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid input data format',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER and STAFF can update categories',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Category with the provided ID not found',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Category name already exists',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Update an existing category.
@@ -303,7 +239,7 @@ export class CategoryController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateCategoryDto: UpdateCategoryDto
 	): Promise<category> {
-		return this.categoryService.update(id, updateCategoryDto);
+		return this.categoryService.update(id, updateCategoryDto)
 	}
 
 	@Delete('bulk')
@@ -319,63 +255,22 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Bulk deletion process completed with detailed results',
-		schema: {
-			type: 'object',
-			properties: {
-				deleted: {
-					type: 'array',
-					items: { type: 'number' },
-					description: 'List of successfully deleted category IDs',
-				},
-				failed: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							id: {
-								type: 'number',
-								description: 'ID of the category that could not be deleted',
-							},
-							reason: {
-								type: 'string',
-								description: 'Reason for deletion failure',
-							},
-						},
-					},
-					description:
-						'List of categories that could not be deleted and the reasons',
-				},
-				summary: {
-					type: 'object',
-					properties: {
-						total: {
-							type: 'number',
-							description: 'Total number of categories requested for deletion',
-						},
-						success: {
-							type: 'number',
-							description: 'Number of successfully deleted categories',
-						},
-						failed: {
-							type: 'number',
-							description: 'Number of categories that failed to delete',
-						},
-					},
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid ID list format',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can delete categories',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Bulk delete categories.
@@ -383,11 +278,11 @@ export class CategoryController {
 	 * @returns Result of bulk deletion including deleted and failed IDs.
 	 */
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCategoryDto): Promise<{
-		deleted: number[];
-		failed: { id: number; reason: string }[];
-		summary: { total: number; success: number; failed: number };
+		deleted: number[]
+		failed: { id: number; reason: string }[]
+		summary: { total: number; success: number; failed: number }
 	}> {
-		return this.categoryService.bulkDelete(bulkDeleteDto);
+		return this.categoryService.bulkDelete(bulkDeleteDto)
 	}
 
 	@Delete(':id')
@@ -407,36 +302,27 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Category deleted successfully',
-		schema: {
-			type: 'object',
-			properties: {
-				category_id: {
-					type: 'number',
-					description: 'ID of the deleted category',
-				},
-				name: { type: 'string', description: 'Name of the deleted category' },
-				message: {
-					type: 'string',
-					description: 'Confirmation message for successful deletion',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can delete categories',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Category with the provided ID not found',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - The category is being used by other products',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Delete a category by its ID.
@@ -444,7 +330,7 @@ export class CategoryController {
 	 * @returns The deleted category entity.
 	 */
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<category> {
-		return this.categoryService.remove(id);
+		return this.categoryService.remove(id)
 	}
 
 	@Get('admin/test')
@@ -458,30 +344,23 @@ export class CategoryController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Confirmation message that the controller is working',
-					example: 'Category controller is working!',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can perform this test',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Smoke test endpoint for CategoryController.
 	 * @returns Confirmation message that the controller is working.
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Category controller is working!' };
+		return { message: 'Category controller is working!' }
 	}
 }

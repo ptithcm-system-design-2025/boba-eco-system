@@ -11,15 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common';
-import type { AccountService } from './account.service';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
-import {
-	type PaginatedResult,
-	type PaginationDto,
-	PaginationMetadata,
-} from '../common/dto/pagination.dto';
+} from '@nestjs/common'
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -29,11 +21,35 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ROLES } from '../auth/constants/roles.constant';
+} from '@nestjs/swagger'
+import { ROLES } from '../auth/constants/roles.constant'
+import { Roles } from '../auth/decorators/roles.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { RolesGuard } from '../auth/guards/roles.guard'
+import {
+	ConflictErrorDto,
+	ForbiddenErrorDto,
+	JSendPaginatedSuccessDto,
+	JSendSuccessDto,
+	NotFoundErrorDto,
+	UnauthorizedErrorDto,
+	ValidationErrorDto,
+} from '../common/dto/jsend-response.dto'
+import {
+	type PaginatedResult,
+	type PaginationDto,
+	PaginationMetadata,
+} from '../common/dto/pagination.dto'
+import type {
+	account,
+	customer,
+	employee,
+	manager,
+	role,
+} from '../generated/prisma/client'
+import type { AccountService } from './account.service'
+import { CreateAccountDto } from './dto/create-account.dto'
+import { UpdateAccountDto } from './dto/update-account.dto'
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -60,44 +76,28 @@ export class AccountController {
 	@ApiResponse({
 		status: 201,
 		description: 'Account created successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role_id: { type: 'number', description: 'Role ID' },
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description:
 			'Bad Request - Invalid input data format or missing required fields.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid or missing token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can create accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Username, email, or phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Creates a new account.
@@ -105,8 +105,8 @@ export class AccountController {
 	 * @param createAccountDto Data to create the account with
 	 * @returns Newly created account object
 	 */
-	async create(@Body() createAccountDto: CreateAccountDto): Promise<any> {
-		return this.accountService.create(createAccountDto);
+	async create(@Body() createAccountDto: CreateAccountDto): Promise<account> {
+		return this.accountService.create(createAccountDto)
 	}
 
 	@Get()
@@ -133,38 +133,17 @@ export class AccountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Paginated list of accounts retrieved successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				data: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							account_id: { type: 'number' },
-							username: { type: 'string' },
-							email: { type: 'string' },
-							phone: { type: 'string' },
-							role_id: { type: 'number' },
-							is_active: { type: 'boolean' },
-							created_at: { type: 'string', format: 'date-time' },
-							updated_at: { type: 'string', format: 'date-time' },
-						},
-					},
-				},
-				pagination: {
-					$ref: '#/components/schemas/PaginationMetadata',
-				},
-			},
-		},
+		type: JSendPaginatedSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can view the account list.',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Retrieves a paginated list of all accounts.
@@ -174,8 +153,8 @@ export class AccountController {
 	 */
 	async findAll(
 		@Query() paginationDto: PaginationDto
-	): Promise<PaginatedResult<any>> {
-		return this.accountService.findAll(paginationDto);
+	): Promise<PaginatedResult<Omit<account, 'password_hash'>>> {
+		return this.accountService.findAll(paginationDto)
 	}
 
 	@Get(':id')
@@ -195,40 +174,23 @@ export class AccountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Account details.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role_id: { type: 'number', description: 'Role ID' },
-				is_active: { type: 'boolean', description: 'Active status' },
-				created_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Creation timestamp',
-				},
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description:
 			'Forbidden - Only MANAGER and STAFF can view account information.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Account with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	/**
 	 * Retrieves a single account by its ID.
@@ -236,8 +198,15 @@ export class AccountController {
 	 * @param id ID of the account to retrieve
 	 * @returns Account object if found
 	 */
-	async findOne(@Param('id', ParseIntPipe) id: number): Promise<any> {
-		return this.accountService.findOne(id);
+	async findOne(@Param('id', ParseIntPipe) id: number): Promise<
+		Omit<account, 'password_hash'> & {
+			role?: role
+			customer?: customer[]
+			employee?: employee | null
+			manager?: manager | null
+		}
+	> {
+		return this.accountService.findOne(id)
 	}
 
 	@Patch(':id')
@@ -258,42 +227,32 @@ export class AccountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Account updated successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: { type: 'number', description: 'Account ID' },
-				username: { type: 'string', description: 'Username' },
-				email: { type: 'string', description: 'Email' },
-				phone: { type: 'string', description: 'Phone number' },
-				role_id: { type: 'number', description: 'Role ID' },
-				is_active: { type: 'boolean', description: 'Active status' },
-				updated_at: {
-					type: 'string',
-					format: 'date-time',
-					description: 'Update timestamp',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 400,
 		description: 'Bad Request - Invalid input data format.',
+		type: ValidationErrorDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can update accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Account with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
 		status: 409,
 		description: 'Conflict - Username, email, or phone number already exists.',
+		type: ConflictErrorDto,
 	})
 	/**
 	 * Updates an existing account.
@@ -305,8 +264,8 @@ export class AccountController {
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateAccountDto: UpdateAccountDto
-	): Promise<any> {
-		return this.accountService.update(id, updateAccountDto);
+	): Promise<account> {
+		return this.accountService.update(id, updateAccountDto)
 	}
 
 	@Delete(':id')
@@ -327,38 +286,25 @@ export class AccountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Account deleted successfully.',
-		schema: {
-			type: 'object',
-			properties: {
-				account_id: {
-					type: 'number',
-					description: 'ID of the deleted account',
-				},
-				username: {
-					type: 'string',
-					description: 'Username of the deleted account',
-				},
-				message: {
-					type: 'string',
-					description: 'Confirmation message',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can delete accounts.',
+		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
 		status: 404,
 		description: 'Account with the provided ID not found.',
+		type: NotFoundErrorDto,
 	})
-	async remove(@Param('id', ParseIntPipe) id: number): Promise<any> {
-		return this.accountService.remove(id);
+	async remove(@Param('id', ParseIntPipe) id: number): Promise<account> {
+		return this.accountService.remove(id)
 	}
 
 	@Get('admin/test')
@@ -372,24 +318,17 @@ export class AccountController {
 	@ApiResponse({
 		status: 200,
 		description: 'Test successful.',
-		schema: {
-			type: 'object',
-			properties: {
-				message: {
-					type: 'string',
-					description: 'Confirmation message that the controller is working.',
-					example: 'Account controller is working!',
-				},
-			},
-		},
+		type: JSendSuccessDto,
 	})
 	@ApiResponse({
 		status: 401,
 		description: 'Unauthorized - Invalid token.',
+		type: UnauthorizedErrorDto,
 	})
 	@ApiResponse({
 		status: 403,
 		description: 'Forbidden - Only MANAGER can perform this test.',
+		type: ForbiddenErrorDto,
 	})
 	/**
 	 * Smoke test endpoint to verify that the controller is working.
@@ -397,6 +336,6 @@ export class AccountController {
 	 * @returns Confirmation message
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Account controller is working!' };
+		return { message: 'Account controller is working!' }
 	}
 }

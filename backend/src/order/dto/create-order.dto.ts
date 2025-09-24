@@ -1,19 +1,18 @@
+import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
+	ArrayMinSize,
+	ArrayNotEmpty,
 	IsInt,
 	IsNotEmpty,
-	Min,
 	IsOptional,
 	IsString,
 	MaxLength,
+	Min,
 	ValidateNested,
-	ArrayNotEmpty,
-	ArrayMinSize,
-	IsEnum,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { CreateOrderProductDto } from './create-order-product.dto';
-import { CreateOrderDiscountDto } from './create-order-discount.dto';
+} from 'class-validator'
+import { CreateOrderDiscountDto } from './create-order-discount.dto'
+import { CreateOrderProductDto } from './create-order-product.dto'
 
 export class CreateOrderDto {
 	@ApiProperty({
@@ -24,7 +23,7 @@ export class CreateOrderDto {
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	employee_id: number;
+	employee_id: number
 
 	@ApiProperty({
 		description: 'The ID of the customer (if any)',
@@ -35,7 +34,7 @@ export class CreateOrderDto {
 	@IsInt()
 	@Min(1)
 	@Type(() => Number)
-	customer_id?: number;
+	customer_id?: number
 
 	@ApiProperty({
 		description: 'Custom note for the entire order',
@@ -46,7 +45,7 @@ export class CreateOrderDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(1000)
-	customize_note?: string;
+	customize_note?: string
 
 	@ApiProperty({
 		description: 'List of products in the order',
@@ -57,7 +56,7 @@ export class CreateOrderDto {
 	@ArrayMinSize(1)
 	@ValidateNested({ each: true })
 	@Type(() => CreateOrderProductDto)
-	products: CreateOrderProductDto[];
+	products: CreateOrderProductDto[]
 
 	@ApiProperty({
 		description: 'List of discount codes applied to the order',
@@ -67,7 +66,7 @@ export class CreateOrderDto {
 	@IsOptional()
 	@ValidateNested({ each: true })
 	@Type(() => CreateOrderDiscountDto)
-	discounts?: CreateOrderDiscountDto[];
+	discounts?: CreateOrderDiscountDto[]
 
 	// status will be managed by the service, defaulting to PROCESSING
 

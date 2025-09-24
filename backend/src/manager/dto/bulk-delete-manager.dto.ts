@@ -1,6 +1,6 @@
-import { ArrayMinSize, IsArray, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { ArrayMinSize, IsArray, IsInt } from 'class-validator'
 
 export class BulkDeleteManagerDto {
 	@ApiProperty({
@@ -12,5 +12,5 @@ export class BulkDeleteManagerDto {
 	@ArrayMinSize(1, { message: 'Danh sách ID không được rỗng' })
 	@IsInt({ each: true, message: 'Mỗi ID phải là số nguyên' })
 	@Type(() => Number)
-	ids: number[];
+	ids: number[]
 }

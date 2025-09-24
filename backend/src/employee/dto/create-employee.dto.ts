@@ -1,12 +1,12 @@
+import { ApiProperty } from '@nestjs/swagger'
 import {
-	IsString,
-	IsNotEmpty,
-	MaxLength,
 	IsEmail,
+	IsNotEmpty,
 	IsPhoneNumber,
+	IsString,
+	MaxLength,
 	MinLength,
-} from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+} from 'class-validator'
 
 export class CreateEmployeeDto {
 	@ApiProperty({
@@ -18,7 +18,7 @@ export class CreateEmployeeDto {
 	@IsString({ message: 'First name must be a string' })
 	@IsNotEmpty({ message: 'First name is required' })
 	@MaxLength(70, { message: 'First name must not exceed 70 characters' })
-	first_name: string;
+	first_name: string
 
 	@ApiProperty({
 		description: 'The last name of the employee',
@@ -29,7 +29,7 @@ export class CreateEmployeeDto {
 	@IsString({ message: 'Last name must be a string' })
 	@IsNotEmpty({ message: 'Last name is required' })
 	@MaxLength(70, { message: 'Last name must not exceed 70 characters' })
-	last_name: string;
+	last_name: string
 
 	@ApiProperty({
 		description: 'The email address of the employee',
@@ -41,7 +41,7 @@ export class CreateEmployeeDto {
 	@IsEmail({}, { message: 'Invalid email format' })
 	@IsNotEmpty({ message: 'Email is required' })
 	@MaxLength(255, { message: 'Email must not exceed 255 characters' })
-	email: string;
+	email: string
 
 	@ApiProperty({
 		description: 'The phone number of the employee',
@@ -52,7 +52,7 @@ export class CreateEmployeeDto {
 	@IsPhoneNumber('VN', { message: 'Invalid phone number format' })
 	@IsNotEmpty({ message: 'Phone number is required' })
 	@MaxLength(15, { message: 'Phone number must not exceed 15 characters' })
-	phone: string;
+	phone: string
 
 	@ApiProperty({
 		description: 'The position of the employee',
@@ -63,7 +63,7 @@ export class CreateEmployeeDto {
 	@IsString({ message: 'Position must be a string' })
 	@IsNotEmpty({ message: 'Position is required' })
 	@MaxLength(100, { message: 'Position must not exceed 100 characters' })
-	position: string;
+	position: string
 
 	/**
 	 * The username for the employee's account.
@@ -78,5 +78,5 @@ export class CreateEmployeeDto {
 	@IsString({ message: 'Username must be a string' })
 	@IsNotEmpty({ message: 'Username is required' })
 	@MinLength(3, { message: 'Username must be at least 3 characters long' })
-	username: string;
+	username: string
 }
