@@ -1,7 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types' // Helper for Update DTOs
-import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator'
-import { CreateAccountDto } from './create-account.dto'
+import { PartialType } from '@nestjs/mapped-types'; // Helper for Update DTOs
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import { CreateAccountDto } from './create-account.dto';
 
 export class UpdateAccountDto extends PartialType(CreateAccountDto) {
 	@ApiProperty({
@@ -14,7 +14,7 @@ export class UpdateAccountDto extends PartialType(CreateAccountDto) {
 	@IsOptional()
 	@IsString({ message: 'username must be a string.' })
 	@MinLength(3, { message: 'username must be at least 3 characters long.' })
-	username?: string
+	username?: string;
 
 	@ApiProperty({
 		description: 'The new password (minimum 8 characters).',
@@ -26,7 +26,7 @@ export class UpdateAccountDto extends PartialType(CreateAccountDto) {
 	@IsOptional()
 	@IsString({ message: 'password must be a string.' })
 	@MinLength(8, { message: 'password must be at least 8 characters long.' })
-	password?: string
+	password?: string;
 
 	@ApiProperty({
 		description: 'The active status of the account.',
@@ -36,7 +36,7 @@ export class UpdateAccountDto extends PartialType(CreateAccountDto) {
 	})
 	@IsOptional()
 	@IsBoolean({ message: 'is_active must be a boolean value.' })
-	is_active?: boolean
+	is_active?: boolean;
 
 	@ApiProperty({
 		description: 'The lock status of the account.',
@@ -46,5 +46,5 @@ export class UpdateAccountDto extends PartialType(CreateAccountDto) {
 	})
 	@IsOptional()
 	@IsBoolean({ message: 'is_locked must be a boolean value.' })
-	is_locked?: boolean
+	is_locked?: boolean;
 }

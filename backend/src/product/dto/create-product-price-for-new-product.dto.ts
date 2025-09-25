@@ -1,13 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	IsBoolean,
 	IsInt,
 	IsNotEmpty,
 	IsOptional,
 	ValidateNested,
-} from 'class-validator'
-import { CreateProductSizeForProductDto } from './create-product-size.dto'
+} from 'class-validator';
+import { CreateProductSizeForProductDto } from './create-product-size.dto';
 
 export class CreateProductPriceForNewProductDto {
 	@ApiPropertyOptional({
@@ -17,7 +17,7 @@ export class CreateProductPriceForNewProductDto {
 	})
 	@IsOptional()
 	@IsInt({ message: 'size_id must be an integer' })
-	size_id?: number
+	size_id?: number;
 
 	@ApiPropertyOptional({
 		description: 'New size information (if creating a new size)',
@@ -26,7 +26,7 @@ export class CreateProductPriceForNewProductDto {
 	@IsOptional()
 	@ValidateNested()
 	@Type(() => CreateProductSizeForProductDto)
-	size_data?: CreateProductSizeForProductDto
+	size_data?: CreateProductSizeForProductDto;
 
 	@ApiProperty({
 		description: 'The price of the product (in VND)',
@@ -35,7 +35,7 @@ export class CreateProductPriceForNewProductDto {
 	})
 	@IsNotEmpty({ message: 'price cannot be empty' })
 	@IsInt({ message: 'price must be an integer' })
-	price: number
+	price: number;
 
 	@ApiPropertyOptional({
 		description: 'The active status of the price',
@@ -45,5 +45,5 @@ export class CreateProductPriceForNewProductDto {
 	})
 	@IsOptional()
 	@IsBoolean({ message: 'is_active must be a boolean value' })
-	is_active?: boolean
+	is_active?: boolean;
 }

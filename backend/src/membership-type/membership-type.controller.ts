@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,34 +21,36 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { membership_type } from '../generated/prisma/client'
-import { CreateMembershipTypeDto } from './dto/create-membership-type.dto'
-import { UpdateMembershipTypeDto } from './dto/update-membership-type.dto'
-import type { MembershipTypeService } from './membership-type.service'
+} from '../common/dto/pagination.dto';
+import type { membership_type } from '../generated/prisma/client';
+import { CreateMembershipTypeDto } from './dto/create-membership-type.dto';
+import { UpdateMembershipTypeDto } from './dto/update-membership-type.dto';
+import type { MembershipTypeService } from './membership-type.service';
 
 @ApiTags('membership-types')
 @Controller('membership-types')
 @ApiBearerAuth()
 @ApiExtraModels(PaginationMetadata)
 export class MembershipTypeController {
-	constructor(private readonly membershipTypeService: MembershipTypeService) {}
+	constructor(
+		private readonly membershipTypeService: MembershipTypeService
+	) {}
 
 	@Post()
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -84,7 +86,7 @@ export class MembershipTypeController {
 	async create(
 		@Body() createDto: CreateMembershipTypeDto
 	): Promise<membership_type> {
-		return this.membershipTypeService.create(createDto)
+		return this.membershipTypeService.create(createDto);
 	}
 
 	@Get()
@@ -124,7 +126,7 @@ export class MembershipTypeController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<membership_type>> {
-		return this.membershipTypeService.findAll(paginationDto)
+		return this.membershipTypeService.findAll(paginationDto);
 	}
 
 	@Get(':id')
@@ -157,7 +159,10 @@ export class MembershipTypeController {
 		@Param('id', ParseIntPipe) id: number,
 		@Query('includeCustomers') includeCustomers?: string
 	): Promise<membership_type | null> {
-		return this.membershipTypeService.findOne(id, includeCustomers === 'true')
+		return this.membershipTypeService.findOne(
+			id,
+			includeCustomers === 'true'
+		);
 	}
 
 	@Get('by-type/:type')
@@ -199,7 +204,7 @@ export class MembershipTypeController {
 		return this.membershipTypeService.findByType(
 			type,
 			includeCustomers === 'true'
-		)
+		);
 	}
 
 	@Patch(':id')
@@ -242,7 +247,7 @@ export class MembershipTypeController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateDto: UpdateMembershipTypeDto
 	): Promise<membership_type> {
-		return this.membershipTypeService.update(id, updateDto)
+		return this.membershipTypeService.update(id, updateDto);
 	}
 
 	@Delete(':id')
@@ -277,6 +282,6 @@ export class MembershipTypeController {
 		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.membershipTypeService.remove(id)
+		await this.membershipTypeService.remove(id);
 	}
 }

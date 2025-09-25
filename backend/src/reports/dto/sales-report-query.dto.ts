@@ -1,6 +1,6 @@
-import { ApiPropertyOptional } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
-import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class SalesReportQueryDto {
 	@ApiPropertyOptional({
@@ -12,7 +12,7 @@ export class SalesReportQueryDto {
 	@IsInt({ message: 'Tháng phải là số nguyên' })
 	@Min(1, { message: 'Tháng phải từ 1 đến 12' })
 	@Max(12, { message: 'Tháng phải từ 1 đến 12' })
-	month?: number
+	month?: number;
 
 	@ApiPropertyOptional({
 		description: 'Năm báo cáo',
@@ -22,7 +22,7 @@ export class SalesReportQueryDto {
 	@Type(() => Number)
 	@IsInt({ message: 'Năm phải là số nguyên' })
 	@Min(2020, { message: 'Năm phải từ 2020 trở đi' })
-	year?: number
+	year?: number;
 
 	@ApiPropertyOptional({
 		description: 'ID nhân viên (để báo cáo theo nhân viên cụ thể)',
@@ -31,5 +31,5 @@ export class SalesReportQueryDto {
 	@IsOptional()
 	@Type(() => Number)
 	@IsInt({ message: 'Employee ID phải là số nguyên' })
-	employee_id?: number
+	employee_id?: number;
 }

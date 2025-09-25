@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	IsEmail,
 	IsInt,
@@ -7,7 +7,7 @@ import {
 	IsOptional,
 	IsString,
 	Min,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreateStripePaymentDto {
 	@ApiProperty({ description: 'ID của đơn hàng cần thanh toán', example: 1 })
@@ -15,7 +15,7 @@ export class CreateStripePaymentDto {
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	orderId: number
+	orderId: number;
 
 	@ApiProperty({
 		description: 'Loại tiền tệ',
@@ -25,7 +25,7 @@ export class CreateStripePaymentDto {
 	})
 	@IsOptional()
 	@IsString()
-	currency?: string = 'vnd'
+	currency?: string = 'vnd';
 
 	@ApiProperty({
 		description: 'Thông tin mô tả đơn hàng',
@@ -34,7 +34,7 @@ export class CreateStripePaymentDto {
 	})
 	@IsOptional()
 	@IsString()
-	orderInfo?: string
+	orderInfo?: string;
 
 	@ApiProperty({
 		description: 'Email khách hàng để gửi biên lai',
@@ -43,5 +43,5 @@ export class CreateStripePaymentDto {
 	})
 	@IsOptional()
 	@IsEmail()
-	customerEmail?: string
+	customerEmail?: string;
 }

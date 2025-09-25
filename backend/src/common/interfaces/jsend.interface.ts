@@ -9,8 +9,8 @@
  */
 
 export interface JSendSuccess<T = unknown> {
-	status: 'success'
-	data: T
+	status: 'success';
+	data: T;
 }
 
 /**
@@ -18,8 +18,8 @@ export interface JSendSuccess<T = unknown> {
  * Used when the API call fails due to client error (validation, missing data, etc.)
  */
 export interface JSendFail<T = unknown> {
-	status: 'fail'
-	data: T
+	status: 'fail';
+	data: T;
 }
 
 /**
@@ -27,10 +27,10 @@ export interface JSendFail<T = unknown> {
  * Used when the API call fails due to server error (exception, system error, etc.)
  */
 export interface JSendError {
-	status: 'error'
-	message: string
-	code?: string | number
-	data?: unknown
+	status: 'error';
+	message: string;
+	code?: string | number;
+	data?: unknown;
 }
 
 /**
@@ -39,24 +39,24 @@ export interface JSendError {
 export type JSendResponse<T = unknown> =
 	| JSendSuccess<T>
 	| JSendFail<T>
-	| JSendError
+	| JSendError;
 
 /**
  * Helper type for pagination responses
  */
 export interface JSendPaginatedSuccess<T = unknown> {
-	status: 'success'
+	status: 'success';
 	data: {
-		items: T[]
+		items: T[];
 		pagination: {
-			page: number
-			limit: number
-			total: number
-			totalPages: number
-			hasNext: boolean
-			hasPrev: boolean
-		}
-	}
+			page: number;
+			limit: number;
+			total: number;
+			totalPages: number;
+			hasNext: boolean;
+			hasPrev: boolean;
+		};
+	};
 }
 
 /**
@@ -70,7 +70,7 @@ export namespace JSendHelper {
 		return {
 			status: 'success',
 			data,
-		}
+		};
 	}
 
 	/**
@@ -80,7 +80,7 @@ export namespace JSendHelper {
 		return {
 			status: 'fail',
 			data,
-		}
+		};
 	}
 
 	/**
@@ -94,17 +94,17 @@ export namespace JSendHelper {
 		const response: JSendError = {
 			status: 'error',
 			message,
-		}
+		};
 
 		if (code !== undefined) {
-			response.code = code
+			response.code = code;
 		}
 
 		if (data !== undefined) {
-			response.data = data
+			response.data = data;
 		}
 
-		return response
+		return response;
 	}
 
 	/**
@@ -113,12 +113,12 @@ export namespace JSendHelper {
 	export function paginatedSuccess<T>(
 		items: T[],
 		pagination: {
-			page: number
-			limit: number
-			total: number
-			totalPages: number
-			hasNext: boolean
-			hasPrev: boolean
+			page: number;
+			limit: number;
+			total: number;
+			totalPages: number;
+			hasNext: boolean;
+			hasPrev: boolean;
 		}
 	): JSendPaginatedSuccess<T> {
 		return {
@@ -127,6 +127,6 @@ export namespace JSendHelper {
 				items,
 				pagination,
 			},
-		}
+		};
 	}
 }

@@ -1,7 +1,7 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger' // Hoặc '@nestjs/mapped-types'
-import { Type } from 'class-transformer'
-import { IsDateString, IsNumber, IsOptional, Min } from 'class-validator'
-import { CreatePaymentDto } from './create-payment.dto'
+import { ApiProperty, PartialType } from '@nestjs/swagger'; // Hoặc '@nestjs/mapped-types'
+import { Type } from 'class-transformer';
+import { IsDateString, IsNumber, IsOptional, Min } from 'class-validator';
+import { CreatePaymentDto } from './create-payment.dto';
 
 export class UpdatePaymentDto extends PartialType(CreatePaymentDto) {
 	// Ghi đè hoặc thêm các trường cụ thể cho update nếu cần
@@ -16,7 +16,7 @@ export class UpdatePaymentDto extends PartialType(CreatePaymentDto) {
 	@IsNumber({ maxDecimalPlaces: 2 })
 	@Min(0)
 	@Type(() => Number)
-	amount_paid?: number
+	amount_paid?: number;
 
 	// status sẽ được service quản lý, không cho phép client cập nhật
 
@@ -27,7 +27,7 @@ export class UpdatePaymentDto extends PartialType(CreatePaymentDto) {
 	})
 	@IsOptional()
 	@IsDateString()
-	payment_time?: string
+	payment_time?: string;
 
 	// Không cho phép cập nhật order_id và payment_method_id thông qua DTO này
 	// Nếu muốn cho phép, bỏ comment các dòng dưới và xóa chúng khỏi CreatePaymentDto trong PartialType

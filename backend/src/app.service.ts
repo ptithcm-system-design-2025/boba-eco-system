@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common';
 
 /**
  * AppService provides basic application functionality.
@@ -11,6 +11,6 @@ export class AppService {
 	 * @returns A hello world string
 	 */
 	getHello(): string {
-		return 'Hello World!'
+		return 'Hello World!';
 	}
 }

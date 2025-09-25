@@ -36,7 +36,7 @@
             "editor.wordWrapColumn": 72,
             "editor.formatOnPaste": true,
             "editor.wrappingIndent": "indent",
-            "editor.defaultFormatter": "esbenp.prettier-vscode"
+            "editor.defaultFormatter": "biomejs.biome"
         },
         "scm.inputFontFamily": "mono",
         "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Source Code Pro', 'Fira Code', Menlo, Monaco, 'Courier New', monospace",
@@ -54,11 +54,23 @@
                 "comments": false
             }
         },
+        "[typescript][javascript][css][json][typescriptreact]": {
+            "editor.defaultFormatter": "biomejs.biome",
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": "explicit",
+                "source.organizeImports.biome": "explicit",
+                "source.fixAll.biome": "explicit"
+            }
+        },
         "augment.completions.enableAutomaticCompletions": false,
         "augment.completions.enableQuickSuggestions": true,
         "augment.experimental.terminal.vscodeTerminalStrategy": "VSCode",
         "augment.nextEdit.enableBackgroundSuggestions": false,
         "markdown-preview-enhanced.plantumlJarPath": "/home/PNguyen/development/plantuml/build/libs/plantuml.jar",
-        "markdown-preview-enhanced.enableTypographer": true
+        "markdown-preview-enhanced.enableTypographer": true,
+        "editor.defaultFormatter": "biomejs.biome",
+        "[jsonc]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
     }
 }

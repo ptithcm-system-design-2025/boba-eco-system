@@ -3,13 +3,13 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-} from '@nestjs/common'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
-import * as bcrypt from 'bcrypt'
+} from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import * as bcrypt from 'bcrypt';
 import type {
 	PaginatedResult,
 	PaginationDto,
-} from '../common/dto/pagination.dto'
+} from '../common/dto/pagination.dto';
 import type {
 	account,
 	customer,
@@ -17,17 +17,17 @@ import type {
 	manager,
 	Prisma,
 	role,
-} from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { CreateAccountDto } from './dto/create-account.dto'
-import type { UpdateAccountDto } from './dto/update-account.dto'
+} from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { CreateAccountDto } from './dto/create-account.dto';
+import type { UpdateAccountDto } from './dto/update-account.dto';
 
 type AccountResponse = Omit<account, 'password_hash'> & {
-	role?: role
-	customer?: customer[]
-	employee?: employee | null
-	manager?: manager | null
-}
+	role?: role;
+	customer?: customer[];
+	employee?: employee | null;
+	manager?: manager | null;
+};
 
 /**
  * Service responsible for handling account-related business logic.
@@ -45,16 +45,16 @@ export class AccountService {
 	 * @throws {NotFoundException} If the specified role does not exist.
 	 */
 	async create(createAccountDto: CreateAccountDto): Promise<account> {
-		const { username, password, role_id, is_active } = createAccountDto
+		const { username, password, role_id, is_active } = createAccountDto;
 
 		const existingUser = await this.prisma.account.findUnique({
 			where: { username },
-		})
+		});
 		if (existingUser) {
-			throw new ConflictException('Username already exists')
+			throw new ConflictException('Username already exists');
 		}
 
-		const hashedPassword = await bcrypt.hash(password, 10)
+		const hashedPassword = await bcrypt.hash(password, 10);
 
 		try {
 			return this.prisma.account.create({
@@ -65,14 +65,16 @@ export class AccountService {
 					is_active: is_active ?? false,
 					is_locked: false,
 				},
-			})
+			});
 		} catch (error) {
 			if (error instanceof PrismaClientKnownRequestError) {
 				if (error.code === 'P2003') {
-					throw new NotFoundException(`Role with ID ${role_id} does not exist.`)
+					throw new NotFoundException(
+						`Role with ID ${role_id} does not exist.`
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 
@@ -84,8 +86,8 @@ export class AccountService {
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<AccountResponse>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.account.findMany({
@@ -104,9 +106,9 @@ export class AccountService {
 				orderBy: { account_id: 'desc' },
 			}),
 			this.prisma.account.count(),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -118,7 +120,7 @@ export class AccountService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	/**
@@ -144,11 +146,11 @@ export class AccountService {
 				employee: true,
 				manager: true,
 			},
-		})
+		});
 		if (!acc) {
-			throw new NotFoundException(`Account with ID ${id} does not exist`)
+			throw new NotFoundException(`Account with ID ${id} does not exist`);
 		}
-		return acc
+		return acc;
 	}
 
 	/**
@@ -162,8 +164,8 @@ export class AccountService {
 			include: {
 				role: true,
 			},
-		})
-		return acc
+		});
+		return acc;
 	}
 
 	/**
@@ -179,17 +181,19 @@ export class AccountService {
 		id: number,
 		updateAccountDto: UpdateAccountDto
 	): Promise<account> {
-		const { password, role_id, ...otherData } = updateAccountDto
+		const { password, role_id, ...otherData } = updateAccountDto;
 
 		if (role_id !== undefined) {
-			throw new BadRequestException('Updating the account role is not allowed')
+			throw new BadRequestException(
+				'Updating the account role is not allowed'
+			);
 		}
 
 		const existingAccount = await this.prisma.account.findUnique({
 			where: { account_id: id },
-		})
+		});
 		if (!existingAccount) {
-			throw new NotFoundException(`Account with ID ${id} does not exist`)
+			throw new NotFoundException(`Account with ID ${id} does not exist`);
 		}
 
 		if (
@@ -198,18 +202,18 @@ export class AccountService {
 		) {
 			const conflictingUser = await this.prisma.account.findUnique({
 				where: { username: updateAccountDto.username },
-			})
+			});
 			if (conflictingUser) {
 				throw new ConflictException(
 					`Username '${updateAccountDto.username}' already exists.`
-				)
+				);
 			}
 		}
 
-		const dataToUpdate: Prisma.accountUpdateInput = { ...otherData }
+		const dataToUpdate: Prisma.accountUpdateInput = { ...otherData };
 
 		if (password) {
-			dataToUpdate.password_hash = await bcrypt.hash(password, 10)
+			dataToUpdate.password_hash = await bcrypt.hash(password, 10);
 		}
 
 		try {
@@ -219,21 +223,21 @@ export class AccountService {
 				include: {
 					role: true,
 				},
-			})
+			});
 		} catch (error) {
 			if (error instanceof PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
 					throw new NotFoundException(
 						`Account with ID ${id} not found for update.`
-					)
+					);
 				}
 				if (error.code === 'P2003' && updateAccountDto.role_id) {
 					throw new NotFoundException(
 						`Role with ID ${updateAccountDto.role_id} does not exist.`
-					)
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 
@@ -247,14 +251,16 @@ export class AccountService {
 		try {
 			return await this.prisma.account.delete({
 				where: { account_id: id },
-			})
+			});
 		} catch (error) {
 			if (error instanceof PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
-					throw new NotFoundException(`Account with ID ${id} not found`)
+					throw new NotFoundException(
+						`Account with ID ${id} not found`
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 }

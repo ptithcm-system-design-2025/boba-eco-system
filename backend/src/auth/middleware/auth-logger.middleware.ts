@@ -1,14 +1,14 @@
-import { Injectable, Logger, type NestMiddleware } from '@nestjs/common'
-import type { NextFunction, Request, Response } from 'express'
+import { Injectable, Logger, type NestMiddleware } from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
 
 @Injectable()
 export class AuthLoggerMiddleware implements NestMiddleware {
-	private logger = new Logger('AuthLogger')
+	private logger = new Logger('AuthLogger');
 
 	use(req: Request, _res: Response, next: NextFunction) {
-		const { method, originalUrl, ip } = req
-		const userAgent = req.get('User-Agent') || ''
-		const authorization = req.get('Authorization')
+		const { method, originalUrl, ip } = req;
+		const userAgent = req.get('User-Agent') || '';
+		const authorization = req.get('Authorization');
 
 		if (authorization) {
 			this.logger.log(
@@ -16,9 +16,9 @@ export class AuthLoggerMiddleware implements NestMiddleware {
 					0,
 					20
 				)}...`
-			)
+			);
 		}
 
-		next()
+		next();
 	}
 }

@@ -1,8 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
-import type { JwtService } from '@nestjs/jwt'
-import type { account, role } from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { JwtPayload } from './interfaces/jwt-payload.interface'
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import type { JwtService } from '@nestjs/jwt';
+import type { account, role } from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { JwtPayload } from './interfaces/jwt-payload.interface';
 
 /**
  * Service responsible for generating and refreshing authentication tokens.
@@ -27,17 +27,17 @@ export class AuthTokenService {
 			username: account.username,
 			role_id: account.role_id,
 			role_name: account.role.name,
-		}
+		};
 
-		const access_token = this.jwtService.sign(payload)
+		const access_token = this.jwtService.sign(payload);
 		const refresh_token = this.jwtService.sign(payload, {
 			expiresIn: '7d',
-		})
+		});
 
 		return {
 			access_token,
 			refresh_token,
-		}
+		};
 	}
 
 	/**
@@ -50,7 +50,7 @@ export class AuthTokenService {
 		refresh_token: string
 	): Promise<{ access_token: string; refresh_token: string }> {
 		try {
-			const payload = this.jwtService.verify(refresh_token)
+			const payload = this.jwtService.verify(refresh_token);
 			const account = await this.prisma.account.findFirst({
 				where: {
 					account_id: payload.sub,
@@ -60,17 +60,17 @@ export class AuthTokenService {
 				include: {
 					role: true,
 				},
-			})
+			});
 
 			if (!account) {
 				throw new UnauthorizedException(
 					'Invalid account or account has been locked'
-				)
+				);
 			}
 
-			return this.generateTokens(account)
+			return this.generateTokens(account);
 		} catch (_error) {
-			throw new UnauthorizedException('Invalid or expired refresh token')
+			throw new UnauthorizedException('Invalid or expired refresh token');
 		}
 	}
 }

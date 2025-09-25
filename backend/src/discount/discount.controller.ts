@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,11 +21,11 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
@@ -34,17 +34,17 @@ import {
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { discount } from '../generated/prisma/client'
-import type { DiscountService } from './discount.service'
-import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto'
-import { CreateDiscountDto } from './dto/create-discount.dto'
-import { UpdateDiscountDto } from './dto/update-discount.dto'
+} from '../common/dto/pagination.dto';
+import type { discount } from '../generated/prisma/client';
+import type { DiscountService } from './discount.service';
+import { BulkDeleteDiscountDto } from './dto/bulk-delete-discount.dto';
+import { CreateDiscountDto } from './dto/create-discount.dto';
+import { UpdateDiscountDto } from './dto/update-discount.dto';
 
 @ApiTags('discounts')
 @Controller('discounts')
@@ -98,7 +98,7 @@ export class DiscountController {
 	async create(
 		@Body() createDiscountDto: CreateDiscountDto
 	): Promise<discount> {
-		return this.discountService.create(createDiscountDto)
+		return this.discountService.create(createDiscountDto);
 	}
 
 	/**
@@ -135,7 +135,7 @@ export class DiscountController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<discount>> {
-		return this.discountService.findAll(paginationDto)
+		return this.discountService.findAll(paginationDto);
 	}
 
 	/**
@@ -170,11 +170,11 @@ export class DiscountController {
 		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteDiscountDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		return this.discountService.bulkDelete(bulkDeleteDto)
+		return this.discountService.bulkDelete(bulkDeleteDto);
 	}
 
 	/**
@@ -209,7 +209,7 @@ export class DiscountController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<discount | null> {
-		return this.discountService.findOne(id)
+		return this.discountService.findOne(id);
 	}
 
 	/**
@@ -244,7 +244,7 @@ export class DiscountController {
 	async findByCouponCode(
 		@Param('couponCode') couponCode: string
 	): Promise<discount | null> {
-		return this.discountService.findByCouponCode(couponCode)
+		return this.discountService.findByCouponCode(couponCode);
 	}
 
 	/**
@@ -285,14 +285,15 @@ export class DiscountController {
 	})
 	@ApiResponse({
 		status: 409,
-		description: 'Conflict. Coupon code or other unique constraint violation.',
+		description:
+			'Conflict. Coupon code or other unique constraint violation.',
 		type: ConflictErrorDto,
 	})
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateDiscountDto: UpdateDiscountDto
 	): Promise<discount> {
-		return this.discountService.update(id, updateDiscountDto)
+		return this.discountService.update(id, updateDiscountDto);
 	}
 
 	/**
@@ -335,6 +336,6 @@ export class DiscountController {
 		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.discountService.remove(id)
+		await this.discountService.remove(id);
 	}
 }

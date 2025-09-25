@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -20,20 +20,20 @@ import {
 	ApiParam,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { product_price, product_size } from '../generated/prisma/client'
-import { CreateProductSizeDto } from './dto/create-product-size.dto'
-import { UpdateProductSizeDto } from './dto/update-product-size.dto'
-import type { ProductSizeService } from './product-size.service'
+} from '../common/dto/pagination.dto';
+import type { product_price, product_size } from '../generated/prisma/client';
+import { CreateProductSizeDto } from './dto/create-product-size.dto';
+import { UpdateProductSizeDto } from './dto/update-product-size.dto';
+import type { ProductSizeService } from './product-size.service';
 
 @ApiTags('product-sizes')
 @Controller('product-sizes')
@@ -70,7 +70,7 @@ export class ProductSizeController {
 	async create(
 		@Body() createProductSizeDto: CreateProductSizeDto
 	): Promise<product_size> {
-		return this.productSizeService.create(createProductSizeDto)
+		return this.productSizeService.create(createProductSizeDto);
 	}
 
 	/**
@@ -108,7 +108,7 @@ export class ProductSizeController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<product_size>> {
-		return this.productSizeService.findAll(paginationDto)
+		return this.productSizeService.findAll(paginationDto);
 	}
 
 	/**
@@ -134,7 +134,7 @@ export class ProductSizeController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<product_size | null> {
-		return this.productSizeService.findOne(id)
+		return this.productSizeService.findOne(id);
 	}
 
 	/**
@@ -171,7 +171,7 @@ export class ProductSizeController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateProductSizeDto: UpdateProductSizeDto
 	): Promise<product_size> {
-		return this.productSizeService.update(id, updateProductSizeDto)
+		return this.productSizeService.update(id, updateProductSizeDto);
 	}
 
 	/**
@@ -203,7 +203,7 @@ export class ProductSizeController {
 		description: 'Conflict - The product size is currently in use.',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.productSizeService.remove(id)
+		await this.productSizeService.remove(id);
 	}
 
 	/**
@@ -248,7 +248,10 @@ export class ProductSizeController {
 		@Param('id', ParseIntPipe) id: number,
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<product_price>> {
-		return this.productSizeService.getProductPricesBySize(id, paginationDto)
+		return this.productSizeService.getProductPricesBySize(
+			id,
+			paginationDto
+		);
 	}
 
 	/**
@@ -267,6 +270,6 @@ export class ProductSizeController {
 		description: 'Forbidden - Insufficient permissions',
 	})
 	async test(): Promise<{ message: string }> {
-		return { message: 'Product Size controller is working!' }
+		return { message: 'Product Size controller is working!' };
 	}
 }

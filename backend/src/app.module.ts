@@ -1,27 +1,27 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
-import Joi from 'joi'
-import { AccountModule } from './account/account.module'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
-import { AuthModule } from './auth/auth.module'
-import { CategoryModule } from './category/category.module'
-import { CustomerModule } from './customer/customer.module'
-import { DiscountModule } from './discount/discount.module'
-import { EmployeeModule } from './employee/employee.module'
-import { FirebaseStorageModule } from './firebase-storage/firebase-storage.module'
-import { InvoiceModule } from './invoice/invoice.module'
-import { ManagerModule } from './manager/manager.module'
-import { MembershipTypeModule } from './membership-type/membership-type.module'
-import { OrderModule } from './order/order.module'
-import { PaymentModule } from './payment/payment.module'
-import { PaymentMethodModule } from './payment-method/payment-method.module'
-import { PrismaModule } from './prisma/prisma.module'
-import { ProductModule } from './product/product.module'
-import { ProductSizeModule } from './product-size/product-size.module'
-import { ReportsModule } from './reports/reports.module'
-import { RoleModule } from './role/role.module'
-import { StoreModule } from './store/store.module'
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import Joi from 'joi';
+import { AccountModule } from './account/account.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { CategoryModule } from './category/category.module';
+import { CustomerModule } from './customer/customer.module';
+import { DiscountModule } from './discount/discount.module';
+import { EmployeeModule } from './employee/employee.module';
+import { FirebaseStorageModule } from './firebase-storage/firebase-storage.module';
+import { InvoiceModule } from './invoice/invoice.module';
+import { ManagerModule } from './manager/manager.module';
+import { MembershipTypeModule } from './membership-type/membership-type.module';
+import { OrderModule } from './order/order.module';
+import { PaymentModule } from './payment/payment.module';
+import { PaymentMethodModule } from './payment-method/payment-method.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { ProductModule } from './product/product.module';
+import { ProductSizeModule } from './product-size/product-size.module';
+import { ReportsModule } from './reports/reports.module';
+import { RoleModule } from './role/role.module';
+import { StoreModule } from './store/store.module';
 
 @Module({
 	imports: [
@@ -29,7 +29,9 @@ import { StoreModule } from './store/store.module'
 			isGlobal: true,
 			envFilePath: ['.env', '.env.development'],
 			validationSchema: Joi.object({
-				NODE_ENV: Joi.string().valid('development', 'production').required(),
+				NODE_ENV: Joi.string()
+					.valid('development', 'production')
+					.required(),
 				PORT: Joi.number().default(3000),
 				DATABASE_URL: Joi.string().required(),
 				DATABASE_HOST: Joi.string().required(),

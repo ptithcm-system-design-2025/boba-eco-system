@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsInt, IsOptional, Min } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsInt, IsOptional, Min } from 'class-validator';
 
 export class ValidateDiscountDto {
 	@ApiProperty({
@@ -10,7 +10,7 @@ export class ValidateDiscountDto {
 	})
 	@IsOptional()
 	@IsInt({ message: 'customer_id must be an integer' })
-	customer_id?: number
+	customer_id?: number;
 
 	@ApiProperty({
 		description: 'List of discount IDs to validate',
@@ -19,7 +19,7 @@ export class ValidateDiscountDto {
 	})
 	@IsArray({ message: 'discount_ids must be an array' })
 	@IsInt({ each: true, message: 'Each discount_id must be an integer' })
-	discount_ids: number[]
+	discount_ids: number[];
 
 	@ApiProperty({
 		description: 'The total amount of the order (in VND)',
@@ -29,7 +29,7 @@ export class ValidateDiscountDto {
 	})
 	@IsInt({ message: 'total_amount must be an integer' })
 	@Min(0, { message: 'total_amount must be greater than or equal to 0' })
-	total_amount: number
+	total_amount: number;
 
 	@ApiProperty({
 		description: 'The number of products in the order',
@@ -39,5 +39,5 @@ export class ValidateDiscountDto {
 	})
 	@IsInt({ message: 'product_count must be an integer' })
 	@Min(1, { message: 'product_count must be greater than 0' })
-	product_count: number
+	product_count: number;
 }

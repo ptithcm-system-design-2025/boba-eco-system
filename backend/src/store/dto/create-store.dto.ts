@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger' // For Swagger documentation
+import { ApiProperty } from '@nestjs/swagger'; // For Swagger documentation
 import {
 	IsDateString,
 	IsEmail,
@@ -6,7 +6,7 @@ import {
 	IsString,
 	Matches,
 	MaxLength,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreateStoreDto {
 	@ApiProperty({
@@ -17,7 +17,7 @@ export class CreateStoreDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(100)
-	name: string
+	name: string;
 
 	@ApiProperty({
 		description: 'Địa chỉ của cửa hàng',
@@ -27,7 +27,7 @@ export class CreateStoreDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(255)
-	address: string
+	address: string;
 
 	@ApiProperty({
 		description: 'Số điện thoại của cửa hàng',
@@ -39,7 +39,7 @@ export class CreateStoreDto {
 	@IsNotEmpty()
 	@MaxLength(15)
 	@Matches(/^\\+?[1-9]\\d{1,14}$/, { message: 'Số điện thoại không hợp lệ.' })
-	phone: string
+	phone: string;
 
 	@ApiProperty({
 		description: 'Thời gian mở cửa hàng (HH:mm hoặc HH:mm:ss)',
@@ -51,7 +51,7 @@ export class CreateStoreDto {
 	@Matches(/^([01]\\d|2[0-3]):([0-5]\\d)(:([0-5]\\d))?$/, {
 		message: 'Thời gian mở cửa không hợp lệ. Định dạng HH:mm hoặc HH:mm:ss',
 	})
-	opening_time: string // Dạng string 'HH:mm:ss' hoặc 'HH:mm'
+	opening_time: string; // Dạng string 'HH:mm:ss' hoặc 'HH:mm'
 
 	@ApiProperty({
 		description: 'Thời gian đóng cửa hàng (HH:mm hoặc HH:mm:ss)',
@@ -61,9 +61,10 @@ export class CreateStoreDto {
 	@IsString() // Sẽ được Prisma chuyển đổi thành DateTime
 	@IsNotEmpty()
 	@Matches(/^([01]\\d|2[0-3]):([0-5]\\d)(:([0-5]\\d))?$/, {
-		message: 'Thời gian đóng cửa không hợp lệ. Định dạng HH:mm hoặc HH:mm:ss',
+		message:
+			'Thời gian đóng cửa không hợp lệ. Định dạng HH:mm hoặc HH:mm:ss',
 	})
-	closing_time: string // Dạng string 'HH:mm:ss' hoặc 'HH:mm'
+	closing_time: string; // Dạng string 'HH:mm:ss' hoặc 'HH:mm'
 
 	@ApiProperty({
 		description: 'Địa chỉ email của cửa hàng',
@@ -73,7 +74,7 @@ export class CreateStoreDto {
 	@IsEmail()
 	@IsNotEmpty()
 	@MaxLength(100)
-	email: string
+	email: string;
 
 	@ApiProperty({
 		description: 'Ngày khai trương cửa hàng (YYYY-MM-DD)',
@@ -81,7 +82,7 @@ export class CreateStoreDto {
 	})
 	@IsDateString()
 	@IsNotEmpty()
-	opening_date: string // Dạng string 'YYYY-MM-DD'
+	opening_date: string; // Dạng string 'YYYY-MM-DD'
 
 	@ApiProperty({
 		description: 'Mã số thuế của cửa hàng',
@@ -91,7 +92,7 @@ export class CreateStoreDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(20)
-	tax_code: string
+	tax_code: string;
 
 	// created_at và updated_at sẽ tự động được quản lý bởi Prisma
 }

@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { ArrayNotEmpty, IsArray, IsInt } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger';
+import { ArrayNotEmpty, IsArray, IsInt } from 'class-validator';
 
 export class BulkDeleteCategoryDto {
 	@ApiProperty({
@@ -10,5 +10,5 @@ export class BulkDeleteCategoryDto {
 	@IsArray({ message: 'ids must be an array' })
 	@ArrayNotEmpty({ message: 'The ID list cannot be empty' })
 	@IsInt({ each: true, message: 'Each ID must be an integer' })
-	ids: number[]
+	ids: number[];
 }

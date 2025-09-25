@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreatePaymentMethodDto {
 	@ApiProperty({
@@ -10,7 +10,7 @@ export class CreatePaymentMethodDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(50)
-	name: string
+	name: string;
 
 	@ApiProperty({
 		description: 'Mô tả chi tiết về phương thức thanh toán',
@@ -21,5 +21,5 @@ export class CreatePaymentMethodDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(255)
-	description?: string
+	description?: string;
 }

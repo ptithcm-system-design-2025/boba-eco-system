@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common'
-import { AccountModule } from '../account/account.module'
-import { PrismaModule } from '../prisma/prisma.module'
-import { CustomerController } from './customer.controller'
-import { CustomerService } from './customer.service'
+import { Module } from '@nestjs/common';
+import { AccountModule } from '../account/account.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { CustomerController } from './customer.controller';
+import { CustomerService } from './customer.service';
 
 /**
  * @module CustomerModule

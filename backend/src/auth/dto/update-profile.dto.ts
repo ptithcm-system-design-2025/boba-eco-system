@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger';
 import {
 	IsEmail,
 	IsEnum,
@@ -7,8 +7,8 @@ import {
 	Matches,
 	MaxLength,
 	MinLength,
-} from 'class-validator'
-import { gender_enum } from '../../generated/prisma/enums'
+} from 'class-validator';
+import { gender_enum } from '../../generated/prisma/enums';
 
 export class UpdateProfileDto {
 	@ApiProperty({
@@ -21,7 +21,7 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsString({ message: 'Tên đăng nhập phải là chuỗi ký tự' })
 	@MinLength(3, { message: 'Tên đăng nhập phải có ít nhất 3 ký tự' })
-	username?: string
+	username?: string;
 
 	@ApiProperty({
 		description: 'Mật khẩu mới (tối thiểu 8 ký tự)',
@@ -33,7 +33,7 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsString({ message: 'Mật khẩu phải là chuỗi ký tự' })
 	@MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
-	password?: string
+	password?: string;
 
 	@ApiProperty({
 		description: 'Họ',
@@ -45,7 +45,7 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsString({ message: 'Họ phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Họ không được vượt quá 70 ký tự' })
-	last_name?: string
+	last_name?: string;
 
 	@ApiProperty({
 		description: 'Tên',
@@ -57,7 +57,7 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsString({ message: 'Tên phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Tên không được vượt quá 70 ký tự' })
-	first_name?: string
+	first_name?: string;
 
 	@ApiProperty({
 		description: 'Giới tính',
@@ -67,7 +67,7 @@ export class UpdateProfileDto {
 	})
 	@IsOptional()
 	@IsEnum(gender_enum, { message: 'Giới tính không hợp lệ' })
-	gender?: gender_enum
+	gender?: gender_enum;
 
 	@ApiProperty({
 		description: 'Số điện thoại (10-11 số)',
@@ -82,7 +82,7 @@ export class UpdateProfileDto {
 	@Matches(/^[0-9+\-\s()]{10,15}$/, {
 		message: 'Số điện thoại không hợp lệ',
 	})
-	phone?: string
+	phone?: string;
 
 	@ApiProperty({
 		description: 'Email',
@@ -94,7 +94,7 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsEmail({}, { message: 'Email không hợp lệ' })
 	@MaxLength(100, { message: 'Email không được vượt quá 100 ký tự' })
-	email?: string
+	email?: string;
 
 	@ApiProperty({
 		description: 'Chức vụ (chỉ dành cho nhân viên)',
@@ -106,5 +106,5 @@ export class UpdateProfileDto {
 	@IsOptional()
 	@IsString({ message: 'Chức vụ phải là chuỗi ký tự' })
 	@MaxLength(50, { message: 'Chức vụ không được vượt quá 50 ký tự' })
-	position?: string
+	position?: string;
 }

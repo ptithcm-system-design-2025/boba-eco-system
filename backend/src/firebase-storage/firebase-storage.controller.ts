@@ -11,8 +11,8 @@ import {
 	UploadedFile,
 	UseGuards,
 	UseInterceptors,
-} from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -20,20 +20,20 @@ import {
 	ApiOperation,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
-import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import {
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
-import type { FirebaseStorageService } from './firebase-storage.service'
+} from '../common/dto/jsend-response.dto';
+import type { FirebaseStorageService } from './firebase-storage.service';
 
 @ApiTags('Firebase Storage')
 @Controller('firebase-storage')
@@ -108,23 +108,24 @@ export class FirebaseStorageController {
 		@CurrentUser() _user?: JwtPayload
 	) {
 		if (!file) {
-			throw new BadRequestException('Please select a file to upload')
+			throw new BadRequestException('Please select a file to upload');
 		}
 
 		const gsPath = await this.firebaseStorageService.uploadProductImage(
 			file,
 			fileName,
 			folder || 'products'
-		)
+		);
 
 		// Convert to public URL for backward compatibility with frontend
-		const imageUrl = this.firebaseStorageService.convertGsToPublicUrl(gsPath)
+		const imageUrl =
+			this.firebaseStorageService.convertGsToPublicUrl(gsPath);
 
 		return {
 			message: 'Image uploaded successfully',
 			imageUrl,
 			gsPath, // Also return gs:// path for future use
-		}
+		};
 	}
 
 	@Delete('delete')
@@ -180,16 +181,16 @@ export class FirebaseStorageController {
 		if (!imageUrl) {
 			throw new BadRequestException(
 				'Please provide the URL of the image to delete'
-			)
+			);
 		}
 
 		const success =
-			await this.firebaseStorageService.deleteProductImage(imageUrl)
+			await this.firebaseStorageService.deleteProductImage(imageUrl);
 
 		return {
 			message: 'Image deleted successfully',
 			success,
-		}
+		};
 	}
 
 	@Get('list')
@@ -221,19 +222,20 @@ export class FirebaseStorageController {
 		@Query('folder') folder: string = 'products',
 		@CurrentUser() _user?: JwtPayload
 	) {
-		const gsPaths = await this.firebaseStorageService.listProductImages(folder)
+		const gsPaths =
+			await this.firebaseStorageService.listProductImages(folder);
 
 		// Convert gs:// paths to public URLs for backward compatibility
 		const images = gsPaths.map((gsPath) =>
 			this.firebaseStorageService.convertGsToPublicUrl(gsPath)
-		)
+		);
 
 		return {
 			message: 'Image list retrieved successfully',
 			images,
 			gsPaths, // Also return gs:// paths for future use
 			count: images.length,
-		}
+		};
 	}
 
 	@Post('update')
@@ -308,13 +310,15 @@ export class FirebaseStorageController {
 		@CurrentUser() _user?: JwtPayload
 	) {
 		if (!file) {
-			throw new BadRequestException('Please select a new image file to upload')
+			throw new BadRequestException(
+				'Please select a new image file to upload'
+			);
 		}
 
 		if (!oldImageUrl) {
 			throw new BadRequestException(
 				'Please provide the URL of the old image to be replaced'
-			)
+			);
 		}
 
 		const newGsPath = await this.firebaseStorageService.updateProductImage(
@@ -322,18 +326,18 @@ export class FirebaseStorageController {
 			file,
 			fileName,
 			folder || 'products'
-		)
+		);
 
 		// Convert to public URL for backward compatibility
 		const newImageUrl =
-			this.firebaseStorageService.convertGsToPublicUrl(newGsPath)
+			this.firebaseStorageService.convertGsToPublicUrl(newGsPath);
 
 		return {
 			message: 'Image updated successfully',
 			newImageUrl,
 			newGsPath, // Also return gs:// path for future use
 			oldImageUrl,
-		}
+		};
 	}
 
 	@Get('test')
@@ -352,6 +356,6 @@ export class FirebaseStorageController {
 		return {
 			message: 'Firebase Storage controller is active!',
 			status: 'OK',
-		}
+		};
 	}
 }

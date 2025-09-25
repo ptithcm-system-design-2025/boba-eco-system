@@ -3,24 +3,24 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-} from '@nestjs/common'
-import type { AccountService } from '../account/account.service'
-import type { CreateAccountDto } from '../account/dto/create-account.dto'
-import type { UpdateAccountDto } from '../account/dto/update-account.dto'
-import { ROLES } from '../auth/constants/roles.constant'
+} from '@nestjs/common';
+import type { AccountService } from '../account/account.service';
+import type { CreateAccountDto } from '../account/dto/create-account.dto';
+import type { UpdateAccountDto } from '../account/dto/update-account.dto';
+import { ROLES } from '../auth/constants/roles.constant';
 import type {
 	PaginatedResult,
 	PaginationDto,
-} from '../common/dto/pagination.dto'
+} from '../common/dto/pagination.dto';
 import {
 	DuplicatedPhoneException,
 	ResourceNotFoundException,
-} from '../common/exceptions'
-import { type customer, Prisma } from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto'
-import type { CreateCustomerDto } from './dto/create-customer.dto'
-import type { UpdateCustomerDto } from './dto/update-customer.dto'
+} from '../common/exceptions';
+import { type customer, Prisma } from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto';
+import type { CreateCustomerDto } from './dto/create-customer.dto';
+import type { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -30,18 +30,20 @@ export class CustomerService {
 	) {}
 
 	async create(createCustomerDto: CreateCustomerDto): Promise<customer> {
-		const { phone, username, ...customerData } = createCustomerDto
+		const { phone, username, ...customerData } = createCustomerDto;
 
 		try {
 			return await this.prisma.$transaction(async (tx) => {
-				const lowestMembershipType = await tx.membership_type.findFirst({
-					orderBy: { required_point: 'asc' },
-				})
+				const lowestMembershipType = await tx.membership_type.findFirst(
+					{
+						orderBy: { required_point: 'asc' },
+					}
+				);
 
 				if (!lowestMembershipType) {
 					throw new BadRequestException(
 						'No membership types found in the system'
-					)
+					);
 				}
 
 				const data: Prisma.customerCreateInput = {
@@ -50,10 +52,11 @@ export class CustomerService {
 					current_points: lowestMembershipType.required_point,
 					membership_type: {
 						connect: {
-							membership_type_id: lowestMembershipType.membership_type_id,
+							membership_type_id:
+								lowestMembershipType.membership_type_id,
 						},
 					},
-				}
+				};
 
 				if (username) {
 					const account = await this.accountService.create({
@@ -61,19 +64,19 @@ export class CustomerService {
 						password: '12345678',
 						role_id: await this.getCustomerRoleId(),
 						is_active: true,
-					})
+					});
 					data.account = {
 						connect: { account_id: account.account_id },
-					}
+					};
 				}
 
 				return await tx.customer.create({
 					data,
 					include: { account: true, membership_type: true },
-				})
-			})
+				});
+			});
 		} catch (error) {
-			this.handleCreateError(error, phone)
+			this.handleCreateError(error, phone);
 		}
 	}
 
@@ -87,21 +90,28 @@ export class CustomerService {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2002': {
-					const fieldDescription = this.getUniqueConstraintField(error, phone)
+					const fieldDescription = this.getUniqueConstraintField(
+						error,
+						phone
+					);
 					if (fieldDescription.includes('phone')) {
-						throw new DuplicatedPhoneException(phone)
+						throw new DuplicatedPhoneException(phone);
 					}
 					throw new ConflictException(
 						`Customer with ${fieldDescription} already exists.`
-					)
+					);
 				}
 				case 'P2025':
-					throw new BadRequestException('Related record does not exist.')
+					throw new BadRequestException(
+						'Related record does not exist.'
+					);
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
@@ -115,23 +125,23 @@ export class CustomerService {
 		phone: string
 	): string {
 		if (error.meta?.target) {
-			const target = error.meta.target
-			let targetString: string
+			const target = error.meta.target;
+			let targetString: string;
 
 			if (Array.isArray(target)) {
-				targetString = target.join(', ')
+				targetString = target.join(', ');
 			} else if (typeof target === 'string') {
-				targetString = target
+				targetString = target;
 			} else {
-				targetString = JSON.stringify(target)
+				targetString = JSON.stringify(target);
 			}
 
 			if (targetString.includes('phone')) {
-				return `phone number '${phone}'`
+				return `phone number '${phone}'`;
 			}
-			return `information ${targetString}`
+			return `information ${targetString}`;
 		}
-		return 'the provided unique information'
+		return 'the provided unique information';
 	}
 
 	/**
@@ -141,20 +151,20 @@ export class CustomerService {
 	private async getCustomerRoleId(): Promise<number> {
 		const customerRole = await this.prisma.role.findFirst({
 			where: { name: ROLES.CUSTOMER },
-		})
+		});
 		if (!customerRole) {
 			throw new BadRequestException(
 				'CUSTOMER role does not exist in the system'
-			)
+			);
 		}
-		return customerRole.role_id
+		return customerRole.role_id;
 	}
 
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<customer>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.customer.findMany({
@@ -163,9 +173,9 @@ export class CustomerService {
 				orderBy: { customer_id: 'desc' },
 			}),
 			this.prisma.customer.count(),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -177,7 +187,7 @@ export class CustomerService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	async findOne(id: number): Promise<customer | null> {
@@ -199,34 +209,34 @@ export class CustomerService {
 				},
 				membership_type: true,
 			},
-		})
+		});
 		if (!customerDetails) {
-			throw new NotFoundException(`Customer with ID ${id} not found`)
+			throw new NotFoundException(`Customer with ID ${id} not found`);
 		}
-		return customerDetails
+		return customerDetails;
 	}
 
 	async findByPhone(phone: string): Promise<customer | null> {
 		return this.prisma.customer.findUnique({
 			where: { phone },
 			include: { membership_type: true },
-		})
+		});
 	}
 
 	async update(
 		id: number,
 		updateCustomerDto: UpdateCustomerDto
 	): Promise<customer> {
-		const data: Prisma.customerUpdateInput = { ...updateCustomerDto }
+		const data: Prisma.customerUpdateInput = { ...updateCustomerDto };
 
 		try {
 			return await this.prisma.customer.update({
 				where: { customer_id: id },
 				data,
 				include: { account: true, membership_type: true },
-			})
+			});
 		} catch (error) {
-			this.handleUpdateError(error, id, updateCustomerDto)
+			this.handleUpdateError(error, id, updateCustomerDto);
 		}
 	}
 
@@ -245,23 +255,27 @@ export class CustomerService {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
-					throw new NotFoundException(`Customer with ID ${id} not found.`)
+					throw new NotFoundException(
+						`Customer with ID ${id} not found.`
+					);
 				case 'P2002': {
 					if (updateDto.phone && this.isPhoneConstraintError(error)) {
 						throw new ConflictException(
 							`Customer with phone number '${updateDto.phone}' already exists.`
-						)
+						);
 					}
-					const field = this.getConstraintField(error)
+					const field = this.getConstraintField(error);
 					throw new ConflictException(
 						`Unique constraint violation on: ${field}.`
-					)
+					);
 				}
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
@@ -273,15 +287,15 @@ export class CustomerService {
 		error: Prisma.PrismaClientKnownRequestError
 	): boolean {
 		if (error.meta?.target) {
-			const target = error.meta.target
+			const target = error.meta.target;
 			if (typeof target === 'string') {
-				return target.includes('phone')
+				return target.includes('phone');
 			}
 			if (Array.isArray(target)) {
-				return target.includes('phone')
+				return target.includes('phone');
 			}
 		}
-		return false
+		return false;
 	}
 
 	/**
@@ -293,16 +307,16 @@ export class CustomerService {
 		error: Prisma.PrismaClientKnownRequestError
 	): string {
 		if (error.meta?.target) {
-			const target = error.meta.target
+			const target = error.meta.target;
 			if (Array.isArray(target)) {
-				return target.join(', ')
+				return target.join(', ');
 			}
 			if (typeof target === 'string') {
-				return target
+				return target;
 			}
-			return JSON.stringify(target)
+			return JSON.stringify(target);
 		}
-		return 'unknown field'
+		return 'unknown field';
 	}
 
 	async remove(id: number): Promise<customer> {
@@ -311,26 +325,28 @@ export class CustomerService {
 				const customerWithAccount = await tx.customer.findUnique({
 					where: { customer_id: id },
 					include: { account: true },
-				})
+				});
 
 				if (!customerWithAccount) {
-					throw new NotFoundException(`Customer with ID ${id} not found`)
+					throw new NotFoundException(
+						`Customer with ID ${id} not found`
+					);
 				}
 
 				const deletedCustomer = await tx.customer.delete({
 					where: { customer_id: id },
-				})
+				});
 
 				if (customerWithAccount.account) {
 					await this.accountService.remove(
 						customerWithAccount.account.account_id
-					)
+					);
 				}
 
-				return deletedCustomer
-			})
+				return deletedCustomer;
+			});
 		} catch (error) {
-			this.handleDeleteError(error, id)
+			this.handleDeleteError(error, id);
 		}
 	}
 
@@ -342,60 +358,63 @@ export class CustomerService {
 	 */
 	private handleDeleteError(error: unknown, id: number): never {
 		if (error instanceof NotFoundException) {
-			throw error
+			throw error;
 		}
 
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
-					throw new ResourceNotFoundException('Customer', id)
+					throw new ResourceNotFoundException('Customer', id);
 				case 'P2003':
 					throw new ConflictException(
 						`Cannot delete customer with ID ${id} due to existing orders or other related data.`
-					)
+					);
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
 	 * Xóa nhiều customer theo danh sách ID
 	 */
 	async bulkDelete(bulkDeleteDto: BulkDeleteCustomerDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		const { ids } = bulkDeleteDto
+		const { ids } = bulkDeleteDto;
 
 		try {
 			return await this.prisma.$transaction(async (tx) => {
 				const customersWithAccounts = await tx.customer.findMany({
 					where: { customer_id: { in: ids } },
 					include: { account: true },
-				})
+				});
 
-				const foundIds = customersWithAccounts.map((c) => c.customer_id)
-				const notFoundIds = ids.filter((id) => !foundIds.includes(id))
+				const foundIds = customersWithAccounts.map(
+					(c) => c.customer_id
+				);
+				const notFoundIds = ids.filter((id) => !foundIds.includes(id));
 				const accountIds = customersWithAccounts
 					.filter((c) => c.account)
 					.map((c) => c.account?.account_id)
-					.filter((id): id is number => id !== undefined)
+					.filter((id): id is number => id !== undefined);
 
 				if (accountIds.length > 0) {
 					await tx.account.deleteMany({
 						where: { account_id: { in: accountIds } },
-					})
+					});
 				}
 
-				const failed: { id: number; reason: string }[] = notFoundIds.map(
-					(id) => ({
+				const failed: { id: number; reason: string }[] =
+					notFoundIds.map((id) => ({
 						id,
 						reason: `Khách hàng với ID ${id} không tồn tại`,
-					})
-				)
+					}));
 
 				return {
 					deleted: foundIds,
@@ -405,13 +424,16 @@ export class CustomerService {
 						success: foundIds.length,
 						failed: failed.length,
 					},
-				}
-			})
+				};
+			});
 		} catch (error) {
 			const failed: { id: number; reason: string }[] = ids.map((id) => ({
 				id,
-				reason: error instanceof Error ? error.message : 'Lỗi không xác định',
-			}))
+				reason:
+					error instanceof Error
+						? error.message
+						: 'Lỗi không xác định',
+			}));
 
 			return {
 				deleted: [],
@@ -421,7 +443,7 @@ export class CustomerService {
 					success: 0,
 					failed: ids.length,
 				},
-			}
+			};
 		}
 	}
 
@@ -435,8 +457,8 @@ export class CustomerService {
 		membership_type_id: number,
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<customer>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.customer.findMany({
@@ -448,9 +470,9 @@ export class CustomerService {
 			this.prisma.customer.count({
 				where: { membership_type_id },
 			}),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -462,7 +484,7 @@ export class CustomerService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	/**
@@ -488,19 +510,21 @@ export class CustomerService {
 					},
 				},
 			},
-		})
+		});
 
 		if (!customer) {
-			throw new NotFoundException(`Customer with ID ${customerId} not found`)
+			throw new NotFoundException(
+				`Customer with ID ${customerId} not found`
+			);
 		}
 
 		if (!customer.account) {
 			throw new NotFoundException(
 				`Customer with ID ${customerId} does not have a linked account`
-			)
+			);
 		}
 
-		return customer.account
+		return customer.account;
 	}
 
 	/**
@@ -516,19 +540,21 @@ export class CustomerService {
 		const customer = await this.prisma.customer.findUnique({
 			where: { customer_id: customerId },
 			include: { account: true },
-		})
+		});
 
 		if (!customer) {
-			throw new NotFoundException(`Customer with ID ${customerId} not found`)
+			throw new NotFoundException(
+				`Customer with ID ${customerId} not found`
+			);
 		}
 
 		if (customer.account) {
 			throw new ConflictException(
 				`Customer with ID ${customerId} already has a linked account`
-			)
+			);
 		}
 
-		const newAccount = await this.accountService.create(createAccountDto)
+		const newAccount = await this.accountService.create(createAccountDto);
 
 		const updatedCustomer = await this.prisma.customer.update({
 			where: { customer_id: customerId },
@@ -548,9 +574,9 @@ export class CustomerService {
 					},
 				},
 			},
-		})
+		});
 
-		return updatedCustomer.account
+		return updatedCustomer.account;
 	}
 
 	/**
@@ -566,22 +592,24 @@ export class CustomerService {
 		const customer = await this.prisma.customer.findUnique({
 			where: { customer_id: customerId },
 			include: { account: true },
-		})
+		});
 
 		if (!customer) {
-			throw new NotFoundException(`Customer with ID ${customerId} not found`)
+			throw new NotFoundException(
+				`Customer with ID ${customerId} not found`
+			);
 		}
 
 		if (!customer.account) {
 			throw new NotFoundException(
 				`Customer with ID ${customerId} does not have a linked account`
-			)
+			);
 		}
 
 		return this.accountService.update(
 			customer.account.account_id,
 			updateAccountDto
-		)
+		);
 	}
 
 	/**
@@ -594,20 +622,22 @@ export class CustomerService {
 		const customer = await this.prisma.customer.findUnique({
 			where: { customer_id: customerId },
 			include: { account: true },
-		})
+		});
 
 		if (!customer) {
-			throw new NotFoundException(`Customer with ID ${customerId} not found`)
+			throw new NotFoundException(
+				`Customer with ID ${customerId} not found`
+			);
 		}
 
 		if (!customer.account) {
 			throw new NotFoundException(
 				`Customer with ID ${customerId} does not have a linked account`
-			)
+			);
 		}
 
 		return this.accountService.update(customer.account.account_id, {
 			is_locked: isLocked,
-		})
+		});
 	}
 }

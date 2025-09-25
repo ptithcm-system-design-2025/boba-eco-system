@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common'
-import { PrismaClient } from '../generated/prisma/client'
+import { Injectable } from '@nestjs/common';
+import { PrismaClient } from '../generated/prisma/client';
 
 /**
  * PrismaService provides database access through Prisma ORM.
