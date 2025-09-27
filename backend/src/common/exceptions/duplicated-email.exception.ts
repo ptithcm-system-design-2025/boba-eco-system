@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common';
 
 /**
  * Exception thrown when an attempt is made to register or use an email address
@@ -15,6 +15,6 @@ import { BadRequestException } from '@nestjs/common'
  */
 export class DuplicatedEmailException extends BadRequestException {
 	constructor(email: string) {
-		super(`The email ${email} is already registered`)
+		super(`The email ${email} is already registered`);
 	}
 }

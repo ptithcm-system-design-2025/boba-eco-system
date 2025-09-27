@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
-import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class PaginationDto {
 	@ApiProperty({
@@ -14,7 +14,7 @@ export class PaginationDto {
 	@IsInt({ message: 'Page phải là số nguyên' })
 	@Min(1, { message: 'Page phải lớn hơn hoặc bằng 1' })
 	@Type(() => Number)
-	page?: number = 1
+	page?: number = 1;
 
 	@ApiProperty({
 		description: 'Số lượng bản ghi trên mỗi trang',
@@ -29,7 +29,7 @@ export class PaginationDto {
 	@Min(1, { message: 'Limit phải lớn hơn hoặc bằng 1' })
 	@Max(100, { message: 'Limit không được vượt quá 100' })
 	@Type(() => Number)
-	limit?: number = 10
+	limit?: number = 10;
 }
 
 // Class cho Swagger documentation của pagination metadata
@@ -39,7 +39,7 @@ export class PaginationMetadata {
 		example: 1,
 		minimum: 1,
 	})
-	page: number
+	page: number;
 
 	@ApiProperty({
 		description: 'Số lượng bản ghi trên mỗi trang',
@@ -47,46 +47,46 @@ export class PaginationMetadata {
 		minimum: 1,
 		maximum: 100,
 	})
-	limit: number
+	limit: number;
 
 	@ApiProperty({
 		description: 'Tổng số bản ghi',
 		example: 50,
 		minimum: 0,
 	})
-	total: number
+	total: number;
 
 	@ApiProperty({
 		description: 'Tổng số trang',
 		example: 5,
 		minimum: 0,
 	})
-	totalPages: number
+	totalPages: number;
 
 	@ApiProperty({
 		description: 'Có trang tiếp theo hay không',
 		example: true,
 	})
-	hasNext: boolean
+	hasNext: boolean;
 
 	@ApiProperty({
 		description: 'Có trang trước hay không',
 		example: false,
 	})
-	hasPrev: boolean
+	hasPrev: boolean;
 }
 
 // Interface chính cho việc sử dụng trong code
 export interface PaginatedResult<T> {
-	data: T[]
+	data: T[];
 	pagination: {
-		page: number
-		limit: number
-		total: number
-		totalPages: number
-		hasNext: boolean
-		hasPrev: boolean
-	}
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+		hasNext: boolean;
+		hasPrev: boolean;
+	};
 }
 
 // Helper function để tạo Swagger schema cho PaginatedResult
@@ -102,5 +102,5 @@ export function createPaginatedResponseSchema(dataType: { name: string }) {
 				$ref: '#/components/schemas/PaginationMetadata',
 			},
 		},
-	}
+	};
 }

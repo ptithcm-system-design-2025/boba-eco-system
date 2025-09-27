@@ -1,123 +1,163 @@
-import { apiClient } from "@/lib/api-client";
-import { 
-  Manager, 
-  BackendManagerResponse,
-  BackendPaginatedResponse,
-  BulkDeleteResponse,
-  transformManagerResponse,
-  PaginatedResponse 
-} from "@/types/api";
-import { 
-  transformCreateManagerFormData, 
-  transformUpdateManagerFormData,
-  CreateManagerFormData,
-  UpdateManagerFormData,
-  BulkDeleteManagerFormData 
-} from "@/lib/validations/manager";
+import { apiClient } from '@/lib/api-client';
+import {
+	extractJSendData,
+	transformJSendPaginatedResponse,
+} from '@/lib/utils/jsend';
+import {
+	type BulkDeleteManagerFormData,
+	type CreateManagerFormData,
+	transformCreateManagerFormData,
+	transformUpdateManagerFormData,
+	type UpdateManagerFormData,
+} from '@/lib/validations/manager';
+import type { BulkDeleteResponse, PaginatedResponse } from '@/types/common';
+import {
+	type BackendManagerResponse,
+	type Manager,
+	transformManagerResponse,
+} from '@/types/manager';
+
+import type {
+	JSendPaginatedSuccess,
+	JSendSuccess,
+} from '@/types/protocol/jsend';
 
 /**
  * Manager Service
- * Xử lý tất cả API calls liên quan đến managers
+ * Xử lý tất cả API calls liên quan đến managers với JSend response format
  */
 export class ManagerService {
-  private readonly endpoint = "/managers";
+	private readonly endpoint = '/managers';
 
-  /**
-   * Lấy danh sách managers với pagination
-   */
-  async getAll(params?: { 
-    page?: number; 
-    limit?: number;
-    search?: string;
-    isActive?: boolean;
-  }): Promise<PaginatedResponse<Manager>> {
-    const backendResponse = await apiClient.get<BackendPaginatedResponse<BackendManagerResponse>>(
-      this.endpoint, 
-      params
-    );
-    
-    // Transform backend response sang frontend format
-    return {
-      data: backendResponse.data.map(transformManagerResponse),
-      total: backendResponse.pagination.total,
-      page: backendResponse.pagination.page,
-      limit: backendResponse.pagination.limit,
-      totalPages: backendResponse.pagination.totalPages,
-    };
-  }
+	/**
+	 * Lấy danh sách managers với pagination
+	 */
+	async getAll(params?: {
+		page?: number;
+		limit?: number;
+		search?: string;
+		isActive?: boolean;
+	}): Promise<PaginatedResponse<Manager>> {
+		const jsendResponse = await apiClient.get<
+			JSendPaginatedSuccess<BackendManagerResponse>
+		>(this.endpoint, params);
 
-  /**
-   * Lấy manager theo ID
-   */
-  async getById(id: number): Promise<Manager> {
-    const backendResponse = await apiClient.get<BackendManagerResponse>(`${this.endpoint}/${id}`);
-    return transformManagerResponse(backendResponse);
-  }
+		// Transform JSend paginated response to frontend format
+		const paginatedData =
+			transformJSendPaginatedResponse<BackendManagerResponse>(
+				jsendResponse,
+			);
 
-  /**
-   * Lấy manager theo email
-   */
-  async getByEmail(email: string): Promise<Manager> {
-    const backendResponse = await apiClient.get<BackendManagerResponse>(`${this.endpoint}/email/${email}`);
-    return transformManagerResponse(backendResponse);
-  }
+		return {
+			data: paginatedData.data.map(transformManagerResponse),
+			total: paginatedData.total,
+			page: paginatedData.page,
+			limit: paginatedData.limit,
+			totalPages: paginatedData.totalPages,
+		};
+	}
 
-  /**
-   * Tạo manager mới
-   */
-  async create(formData: CreateManagerFormData): Promise<Manager> {
-    const backendData = transformCreateManagerFormData(formData);
-    const backendResponse = await apiClient.post<BackendManagerResponse>(this.endpoint, backendData);
-    return transformManagerResponse(backendResponse);
-  }
+	/**
+	 * Lấy manager theo ID
+	 */
+	async getById(id: number): Promise<Manager> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendManagerResponse>
+		>(`${this.endpoint}/${id}`);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformManagerResponse(backendResponse);
+	}
 
-  /**
-   * Cập nhật manager
-   */
-  async update(id: number, formData: UpdateManagerFormData): Promise<Manager> {
-    const backendData = transformUpdateManagerFormData(formData);
-    const backendResponse = await apiClient.patch<BackendManagerResponse>(`${this.endpoint}/${id}`, backendData);
-    return transformManagerResponse(backendResponse);
-  }
+	/**
+	 * Lấy manager theo email
+	 */
+	async getByEmail(email: string): Promise<Manager> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendManagerResponse>
+		>(`${this.endpoint}/email/${email}`);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformManagerResponse(backendResponse);
+	}
 
-  /**
-   * Xóa manager
-   */
-  async delete(id: number): Promise<void> {
-    return apiClient.delete<void>(`${this.endpoint}/${id}`);
-  }
+	/**
+	 * Tạo manager mới
+	 */
+	async create(formData: CreateManagerFormData): Promise<Manager> {
+		const backendData = transformCreateManagerFormData(formData);
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BackendManagerResponse>
+		>(this.endpoint, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformManagerResponse(backendResponse);
+	}
 
-  /**
-   * Xóa nhiều managers
-   */
-  async bulkDelete(formData: BulkDeleteManagerFormData): Promise<BulkDeleteResponse> {
-    return apiClient.delete<BulkDeleteResponse>(`${this.endpoint}/bulk`, formData);
-  }
+	/**
+	 * Cập nhật manager
+	 */
+	async update(
+		id: number,
+		formData: UpdateManagerFormData,
+	): Promise<Manager> {
+		const backendData = transformUpdateManagerFormData(formData);
+		const jsendResponse = await apiClient.patch<
+			JSendSuccess<BackendManagerResponse>
+		>(`${this.endpoint}/${id}`, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformManagerResponse(backendResponse);
+	}
 
-  /**
-   * Test API connection
-   */
-  async ping(): Promise<{ message: string }> {
-    return apiClient.get<{ message: string }>(`${this.endpoint}/test/ping`);
-  }
+	/**
+	 * Xóa manager
+	 */
+	async delete(id: number): Promise<void> {
+		const jsendResponse = await apiClient.delete<JSendSuccess<void>>(
+			`${this.endpoint}/${id}`,
+		);
+		extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Lấy thống kê managers
-   */
-  async getStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    recentlyCreated: number;
-  }> {
-    return apiClient.get<{
-      total: number;
-      active: number;
-      inactive: number;
-      recentlyCreated: number;
-    }>(`${this.endpoint}/stats`);
-  }
+	/**
+	 * Xóa nhiều managers
+	 */
+	async bulkDelete(
+		formData: BulkDeleteManagerFormData,
+	): Promise<BulkDeleteResponse> {
+		const jsendResponse = await apiClient.delete<
+			JSendSuccess<BulkDeleteResponse>
+		>(`${this.endpoint}/bulk`, formData);
+		return extractJSendData(jsendResponse);
+	}
+
+	/**
+	 * Test API connection
+	 */
+	async ping(): Promise<{ message: string }> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{ message: string }>
+		>(`${this.endpoint}/test/ping`);
+		return extractJSendData(jsendResponse);
+	}
+
+	/**
+	 * Lấy thống kê managers
+	 */
+	async getStats(): Promise<{
+		total: number;
+		active: number;
+		inactive: number;
+		recentlyCreated: number;
+	}> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{
+				total: number;
+				active: number;
+				inactive: number;
+				recentlyCreated: number;
+			}>
+		>(`${this.endpoint}/stats`);
+		return extractJSendData(jsendResponse);
+	}
 }
 
 // Export singleton instance
-export const managerService = new ManagerService(); 
+export const managerService = new ManagerService();

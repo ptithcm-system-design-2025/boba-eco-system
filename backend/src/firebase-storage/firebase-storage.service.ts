@@ -1,19 +1,19 @@
-import * as path from 'node:path'
+import * as path from 'node:path';
 import {
 	BadRequestException,
 	Injectable,
 	InternalServerErrorException,
-} from '@nestjs/common'
-import type { ConfigService } from '@nestjs/config'
-import * as admin from 'firebase-admin'
-import { v4 as uuidv4 } from 'uuid'
+} from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
+import * as admin from 'firebase-admin';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class FirebaseStorageService {
-	private bucket: admin.storage.Storage
+	private bucket: admin.storage.Storage;
 
 	constructor(private configService: ConfigService) {
-		this.initializeFirebase()
+		this.initializeFirebase();
 	}
 
 	/**
@@ -24,7 +24,9 @@ export class FirebaseStorageService {
 	private initializeFirebase() {
 		try {
 			if (!admin.apps.length) {
-				const serviceAccount = require(path.join(__dirname, 'key.json'))
+				const serviceAccount = require(
+					path.join(__dirname, 'key.json')
+				);
 
 				admin.initializeApp({
 					credential: admin.credential.cert(
@@ -33,13 +35,15 @@ export class FirebaseStorageService {
 					storageBucket: this.configService.get<string>(
 						'FIREBASE_STORAGE_BUCKET'
 					),
-				})
+				});
 			}
 
-			this.bucket = admin.storage()
+			this.bucket = admin.storage();
 		} catch (error) {
-			console.error('Firebase initialization error:', error)
-			throw new InternalServerErrorException('Firebase initialization failed')
+			console.error('Firebase initialization error:', error);
+			throw new InternalServerErrorException(
+				'Firebase initialization failed'
+			);
 		}
 	}
 
@@ -61,24 +65,26 @@ export class FirebaseStorageService {
 				'image/jpg',
 				'image/png',
 				'image/webp',
-			]
+			];
 			if (!allowedMimeTypes.includes(file.mimetype)) {
 				throw new BadRequestException(
 					'Chỉ chấp nhận file ảnh định dạng JPEG, PNG, hoặc WebP'
-				)
+				);
 			}
 
-			const maxSize = 5 * 1024 * 1024
+			const maxSize = 5 * 1024 * 1024;
 			if (file.size > maxSize) {
-				throw new BadRequestException('Kích thước file không được vượt quá 5MB')
+				throw new BadRequestException(
+					'Kích thước file không được vượt quá 5MB'
+				);
 			}
 
-			const fileExtension = file.originalname.split('.').pop()
-			const uniqueFileName = fileName || `${uuidv4()}.${fileExtension}`
-			const filePath = `${folder}/${uniqueFileName}`
+			const fileExtension = file.originalname.split('.').pop();
+			const uniqueFileName = fileName || `${uuidv4()}.${fileExtension}`;
+			const filePath = `${folder}/${uniqueFileName}`;
 
-			const bucketRef = this.bucket.bucket()
-			const fileRef = bucketRef.file(filePath)
+			const bucketRef = this.bucket.bucket();
+			const fileRef = bucketRef.file(filePath);
 
 			await fileRef.save(file.buffer, {
 				metadata: {
@@ -88,21 +94,21 @@ export class FirebaseStorageService {
 						uploadedAt: new Date().toISOString(),
 					},
 				},
-			})
+			});
 
-			await fileRef.makePublic()
+			await fileRef.makePublic();
 
 			const bucketName = this.configService.get<string>(
 				'FIREBASE_STORAGE_BUCKET'
-			)
-			const gsPath = `gs://${bucketName}/${filePath}`
-			return gsPath
+			);
+			const gsPath = `gs://${bucketName}/${filePath}`;
+			return gsPath;
 		} catch (error) {
-			console.error('Upload error:', error)
+			console.error('Upload error:', error);
 			if (error instanceof BadRequestException) {
-				throw error
+				throw error;
 			}
-			throw new InternalServerErrorException('Error uploading image')
+			throw new InternalServerErrorException('Error uploading image');
 		}
 	}
 
@@ -113,12 +119,14 @@ export class FirebaseStorageService {
 	 */
 	convertGsToPublicUrl(gsPath: string): string {
 		if (!gsPath || !gsPath.startsWith('gs://')) {
-			return gsPath // Return as-is if not a gs:// path
+			return gsPath; // Return as-is if not a gs:// path
 		}
 
-		const bucketName = this.configService.get<string>('FIREBASE_STORAGE_BUCKET')
-		const filePath = gsPath.replace(`gs://${bucketName}/`, '')
-		return `https://storage.googleapis.com/${bucketName}/${filePath}`
+		const bucketName = this.configService.get<string>(
+			'FIREBASE_STORAGE_BUCKET'
+		);
+		const filePath = gsPath.replace(`gs://${bucketName}/`, '');
+		return `https://storage.googleapis.com/${bucketName}/${filePath}`;
 	}
 
 	/**
@@ -130,39 +138,41 @@ export class FirebaseStorageService {
 		try {
 			const bucketName = this.configService.get<string>(
 				'FIREBASE_STORAGE_BUCKET'
-			)
-			let filePath: string
+			);
+			let filePath: string;
 
 			// Handle both gs:// paths and public URLs for backward compatibility
 			if (imagePath.startsWith('gs://')) {
-				filePath = imagePath.replace(`gs://${bucketName}/`, '')
+				filePath = imagePath.replace(`gs://${bucketName}/`, '');
 			} else if (
-				imagePath.startsWith(`https://storage.googleapis.com/${bucketName}/`)
+				imagePath.startsWith(
+					`https://storage.googleapis.com/${bucketName}/`
+				)
 			) {
 				filePath = imagePath.replace(
 					`https://storage.googleapis.com/${bucketName}/`,
 					''
-				)
+				);
 			} else {
-				throw new BadRequestException('Invalid image path format')
+				throw new BadRequestException('Invalid image path format');
 			}
 
-			const bucketRef = this.bucket.bucket()
-			const fileRef = bucketRef.file(filePath)
+			const bucketRef = this.bucket.bucket();
+			const fileRef = bucketRef.file(filePath);
 
-			const [exists] = await fileRef.exists()
+			const [exists] = await fileRef.exists();
 			if (!exists) {
-				throw new BadRequestException('File not found')
+				throw new BadRequestException('File not found');
 			}
 
-			await fileRef.delete()
-			return true
+			await fileRef.delete();
+			return true;
 		} catch (error) {
-			console.error('Delete error:', error)
+			console.error('Delete error:', error);
 			if (error instanceof BadRequestException) {
-				throw error
+				throw error;
 			}
-			throw new InternalServerErrorException('Error deleting image')
+			throw new InternalServerErrorException('Error deleting image');
 		}
 	}
 
@@ -173,20 +183,22 @@ export class FirebaseStorageService {
 	 */
 	async listProductImages(folder: string = 'products'): Promise<string[]> {
 		try {
-			const bucketRef = this.bucket.bucket()
+			const bucketRef = this.bucket.bucket();
 			const [files] = await bucketRef.getFiles({
 				prefix: `${folder}/`,
-			})
+			});
 
 			const bucketName = this.configService.get<string>(
 				'FIREBASE_STORAGE_BUCKET'
-			)
-			const gsPaths = files.map((file) => `gs://${bucketName}/${file.name}`)
+			);
+			const gsPaths = files.map(
+				(file) => `gs://${bucketName}/${file.name}`
+			);
 
-			return gsPaths
+			return gsPaths;
 		} catch (error) {
-			console.error('List images error:', error)
-			throw new InternalServerErrorException('Error listing images')
+			console.error('List images error:', error);
+			throw new InternalServerErrorException('Error listing images');
 		}
 	}
 
@@ -209,20 +221,23 @@ export class FirebaseStorageService {
 				newFile,
 				fileName,
 				folder
-			)
+			);
 
 			if (oldImagePath) {
 				try {
-					await this.deleteProductImage(oldImagePath)
+					await this.deleteProductImage(oldImagePath);
 				} catch (error) {
-					console.warn('Warning: Could not delete old image:', error.message)
+					console.warn(
+						'Warning: Could not delete old image:',
+						error.message
+					);
 				}
 			}
 
-			return newImagePath
+			return newImagePath;
 		} catch (error) {
-			console.error('Update image error:', error)
-			throw error
+			console.error('Update image error:', error);
+			throw error;
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * JSend Success Response DTO for OpenAPI documentation
@@ -9,14 +9,14 @@ export class JSendSuccessDto<T = unknown> {
 		example: 'success',
 		enum: ['success'],
 	})
-	status: 'success'
+	status: 'success';
 
 	@ApiProperty({
 		description: 'Response data',
 		type: 'object',
 		additionalProperties: true,
 	})
-	data: T
+	data: T;
 }
 
 /**
@@ -28,7 +28,7 @@ export class JSendFailDto<T = unknown> {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Error details and validation information',
@@ -39,7 +39,7 @@ export class JSendFailDto<T = unknown> {
 			validation: ['email must be a valid email address'],
 		},
 	})
-	data: T
+	data: T;
 }
 
 /**
@@ -51,26 +51,26 @@ export class JSendErrorDto {
 		example: 'error',
 		enum: ['error'],
 	})
-	status: 'error'
+	status: 'error';
 
 	@ApiProperty({
 		description: 'Error message',
 		example: 'Internal server error',
 	})
-	message: string
+	message: string;
 
 	@ApiProperty({
 		description: 'Error code (optional)',
 		example: 500,
 		required: false,
 	})
-	code?: string | number
+	code?: string | number;
 
 	@ApiProperty({
 		description: 'Additional error data (optional)',
 		required: false,
 	})
-	data?: unknown
+	data?: unknown;
 }
 
 /**
@@ -82,7 +82,7 @@ export class JSendPaginatedSuccessDto<T = unknown> {
 		example: 'success',
 		enum: ['success'],
 	})
-	status: 'success'
+	status: 'success';
 
 	@ApiProperty({
 		description: 'Paginated response data',
@@ -90,16 +90,16 @@ export class JSendPaginatedSuccessDto<T = unknown> {
 		additionalProperties: true,
 	})
 	data: {
-		items: T[]
+		items: T[];
 		pagination: {
-			page: number
-			limit: number
-			total: number
-			totalPages: number
-			hasNext: boolean
-			hasPrev: boolean
-		}
-	}
+			page: number;
+			limit: number;
+			total: number;
+			totalPages: number;
+			hasNext: boolean;
+			hasPrev: boolean;
+		};
+	};
 }
 
 /**
@@ -111,7 +111,7 @@ export class ValidationErrorDto {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Validation error details',
@@ -126,9 +126,9 @@ export class ValidationErrorDto {
 		},
 	})
 	data: {
-		validation: string[]
-		error: string
-	}
+		validation: string[];
+		error: string;
+	};
 }
 
 /**
@@ -140,7 +140,7 @@ export class UnauthorizedErrorDto {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Unauthorized error details',
@@ -150,9 +150,9 @@ export class UnauthorizedErrorDto {
 		},
 	})
 	data: {
-		message: string
-		statusCode: number
-	}
+		message: string;
+		statusCode: number;
+	};
 }
 
 export class ForbiddenErrorDto {
@@ -161,7 +161,7 @@ export class ForbiddenErrorDto {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Forbidden error details',
@@ -171,9 +171,9 @@ export class ForbiddenErrorDto {
 		},
 	})
 	data: {
-		message: string
-		statusCode: number
-	}
+		message: string;
+		statusCode: number;
+	};
 }
 
 export class NotFoundErrorDto {
@@ -182,7 +182,7 @@ export class NotFoundErrorDto {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Not found error details',
@@ -192,9 +192,9 @@ export class NotFoundErrorDto {
 		},
 	})
 	data: {
-		message: string
-		statusCode: number
-	}
+		message: string;
+		statusCode: number;
+	};
 }
 
 export class ConflictErrorDto {
@@ -203,7 +203,7 @@ export class ConflictErrorDto {
 		example: 'fail',
 		enum: ['fail'],
 	})
-	status: 'fail'
+	status: 'fail';
 
 	@ApiProperty({
 		description: 'Conflict error details',
@@ -213,9 +213,9 @@ export class ConflictErrorDto {
 		},
 	})
 	data: {
-		message: string
-		statusCode: number
-	}
+		message: string;
+		statusCode: number;
+	};
 }
 
 export class InternalServerErrorDto {
@@ -224,17 +224,17 @@ export class InternalServerErrorDto {
 		example: 'error',
 		enum: ['error'],
 	})
-	status: 'error'
+	status: 'error';
 
 	@ApiProperty({
 		description: 'Internal server error message',
 		example: 'Internal server error',
 	})
-	message: string
+	message: string;
 
 	@ApiProperty({
 		description: 'Error code',
 		example: 500,
 	})
-	code: number
+	code: number;
 }

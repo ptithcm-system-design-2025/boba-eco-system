@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -20,20 +20,20 @@ import {
 	ApiParam,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { payment_method } from '../generated/prisma/client'
-import { CreatePaymentMethodDto } from './dto/create-payment-method.dto'
-import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto'
-import type { PaymentMethodService } from './payment-method.service'
+} from '../common/dto/pagination.dto';
+import type { payment_method } from '../generated/prisma/client';
+import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
+import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
+import type { PaymentMethodService } from './payment-method.service';
 
 @ApiTags('payment-methods')
 @Controller('payment-methods')
@@ -75,7 +75,7 @@ export class PaymentMethodController {
 	async create(
 		@Body() createDto: CreatePaymentMethodDto
 	): Promise<payment_method> {
-		return this.paymentMethodService.create(createDto)
+		return this.paymentMethodService.create(createDto);
 	}
 
 	/**
@@ -110,7 +110,7 @@ export class PaymentMethodController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<payment_method>> {
-		return this.paymentMethodService.findAll(paginationDto)
+		return this.paymentMethodService.findAll(paginationDto);
 	}
 
 	/**
@@ -130,7 +130,7 @@ export class PaymentMethodController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<payment_method> {
-		return this.paymentMethodService.findOne(id)
+		return this.paymentMethodService.findOne(id);
 	}
 
 	/**
@@ -157,7 +157,7 @@ export class PaymentMethodController {
 	async findByName(
 		@Param('name') name: string
 	): Promise<payment_method | null> {
-		return this.paymentMethodService.findByName(name)
+		return this.paymentMethodService.findByName(name);
 	}
 
 	/**
@@ -192,7 +192,7 @@ export class PaymentMethodController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateDto: UpdatePaymentMethodDto
 	): Promise<payment_method> {
-		return this.paymentMethodService.update(id, updateDto)
+		return this.paymentMethodService.update(id, updateDto);
 	}
 
 	/**
@@ -222,6 +222,6 @@ export class PaymentMethodController {
 		description: 'Conflict (cannot delete if used by payments)',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.paymentMethodService.remove(id)
+		await this.paymentMethodService.remove(id);
 	}
 }

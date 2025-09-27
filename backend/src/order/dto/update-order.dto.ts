@@ -1,5 +1,5 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	ArrayMinSize,
 	IsInt,
@@ -8,10 +8,10 @@ import {
 	MaxLength,
 	Min,
 	ValidateNested,
-} from 'class-validator'
-import { CreateOrderDto } from './create-order.dto'
-import { CreateOrderDiscountDto } from './create-order-discount.dto' // Assuming discounts can be updated
-import { CreateOrderProductDto } from './create-order-product.dto' // Assuming products can be updated
+} from 'class-validator';
+import { CreateOrderDto } from './create-order.dto';
+import { CreateOrderDiscountDto } from './create-order-discount.dto'; // Assuming discounts can be updated
+import { CreateOrderProductDto } from './create-order-product.dto'; // Assuming products can be updated
 
 // May need UpdateOrderProductDto and UpdateOrderDiscountDto for more detailed update logic
 
@@ -25,7 +25,7 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 	@IsInt()
 	@Min(1)
 	@Type(() => Number)
-	employee_id?: number
+	employee_id?: number;
 
 	@ApiProperty({
 		description: 'The ID of the updating customer (if changed)',
@@ -36,7 +36,7 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 	@IsInt()
 	@Min(1)
 	@Type(() => Number)
-	customer_id?: number
+	customer_id?: number;
 
 	@ApiProperty({
 		description: 'Updated custom note',
@@ -47,7 +47,7 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 	@IsOptional()
 	@IsString()
 	@MaxLength(1000)
-	customize_note?: string
+	customize_note?: string;
 
 	// status can only be updated through business logic, not directly by the client
 
@@ -63,7 +63,7 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 	@ArrayMinSize(0) // Allows sending an empty array to delete all products (depending on service logic)
 	@ValidateNested({ each: true })
 	@Type(() => CreateOrderProductDto)
-	products?: CreateOrderProductDto[]
+	products?: CreateOrderProductDto[];
 
 	@ApiProperty({
 		description: '(Replacement) List of applied discount codes',
@@ -73,5 +73,5 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 	@IsOptional()
 	@ValidateNested({ each: true })
 	@Type(() => CreateOrderDiscountDto)
-	discounts?: CreateOrderDiscountDto[]
+	discounts?: CreateOrderDiscountDto[];
 }

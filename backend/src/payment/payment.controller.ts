@@ -13,7 +13,7 @@ import {
 	Query,
 	Req,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -23,29 +23,29 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import type { Request } from 'express'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import type { Request } from 'express';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { payment } from '../generated/prisma/client'
-import { CreatePaymentDto } from './dto/create-payment.dto'
-import { CreateStripePaymentDto } from './dto/create-stripe-payment.dto'
-import { UpdatePaymentDto } from './dto/update-payment.dto'
-import type { PaymentService } from './payment.service'
+} from '../common/dto/pagination.dto';
+import type { payment } from '../generated/prisma/client';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreateStripePaymentDto } from './dto/create-stripe-payment.dto';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
+import type { PaymentService } from './payment.service';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -89,7 +89,7 @@ export class PaymentController {
 		type: NotFoundErrorDto,
 	})
 	async create(@Body() createPaymentDto: CreatePaymentDto): Promise<payment> {
-		return this.paymentService.create(createPaymentDto)
+		return this.paymentService.create(createPaymentDto);
 	}
 
 	@Get()
@@ -136,14 +136,16 @@ export class PaymentController {
 		@Query() paginationDto: PaginationDto,
 		@Query('orderId') orderId?: string
 	): Promise<PaginatedResult<payment>> {
-		let orderIdNum: number | undefined
+		let orderIdNum: number | undefined;
 		if (orderId) {
-			orderIdNum = parseInt(orderId, 10)
+			orderIdNum = parseInt(orderId, 10);
 			if (Number.isNaN(orderIdNum)) {
-				throw new BadRequestException('Invalid Order ID. Must be a number.')
+				throw new BadRequestException(
+					'Invalid Order ID. Must be a number.'
+				);
 			}
 		}
-		return this.paymentService.findAll(paginationDto, orderIdNum)
+		return this.paymentService.findAll(paginationDto, orderIdNum);
 	}
 
 	@Get(':id')
@@ -176,7 +178,7 @@ export class PaymentController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<payment | null> {
-		return this.paymentService.findOne(id)
+		return this.paymentService.findOne(id);
 	}
 
 	@Patch(':id')
@@ -216,7 +218,7 @@ export class PaymentController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updatePaymentDto: UpdatePaymentDto
 	): Promise<payment> {
-		return this.paymentService.update(id, updatePaymentDto)
+		return this.paymentService.update(id, updatePaymentDto);
 	}
 
 	@Delete(':id')
@@ -246,7 +248,7 @@ export class PaymentController {
 		type: NotFoundErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.paymentService.remove(id)
+		await this.paymentService.remove(id);
 	}
 
 	@Post('stripe/create-payment-intent')
@@ -279,14 +281,14 @@ export class PaymentController {
 		@Body() createStripePaymentDto: CreateStripePaymentDto
 	): Promise<{ clientSecret: string; paymentIntentId: string }> {
 		const { orderId, currency, orderInfo, customerEmail } =
-			createStripePaymentDto
+			createStripePaymentDto;
 
 		return this.paymentService.createStripePaymentIntent(
 			orderId,
 			currency,
 			orderInfo,
 			customerEmail
-		)
+		);
 	}
 
 	@Post('stripe/confirm-payment')
@@ -312,11 +314,11 @@ export class PaymentController {
 	async confirmStripePayment(
 		@Body() body: { paymentIntentId: string }
 	): Promise<{
-		success: boolean
-		message: string
-		payment?: payment
+		success: boolean;
+		message: string;
+		payment?: payment;
 	}> {
-		return this.paymentService.confirmStripePayment(body.paymentIntentId)
+		return this.paymentService.confirmStripePayment(body.paymentIntentId);
 	}
 
 	@Post('stripe/webhook')
@@ -331,26 +333,26 @@ export class PaymentController {
 		@Req() req: Request
 	): Promise<{ received: boolean }> {
 		try {
-			const signature = req.headers['stripe-signature'] as string
-			const payload = req.body
+			const signature = req.headers['stripe-signature'] as string;
+			const payload = req.body;
 
 			if (!signature) {
-				throw new BadRequestException('Missing Stripe signature')
+				throw new BadRequestException('Missing Stripe signature');
 			}
 
 			const result = await this.paymentService.processStripeWebhook(
 				payload,
 				signature
-			)
+			);
 
 			if (result.success) {
-				return { received: true }
+				return { received: true };
 			} else {
-				throw new BadRequestException(result.message)
+				throw new BadRequestException(result.message);
 			}
 		} catch (error) {
-			console.error('Stripe webhook error:', error)
-			throw new BadRequestException('Webhook processing failed')
+			console.error('Stripe webhook error:', error);
+			throw new BadRequestException('Webhook processing failed');
 		}
 	}
 
@@ -380,7 +382,7 @@ export class PaymentController {
 	 * @returns A confirmation message.
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Payment controller is working!' }
+		return { message: 'Payment controller is working!' };
 	}
 
 	@Get('payment-method/:paymentMethodId')
@@ -423,6 +425,6 @@ export class PaymentController {
 		return this.paymentService.findByPaymentMethod(
 			paymentMethodId,
 			paginationDto
-		)
+		);
 	}
 }

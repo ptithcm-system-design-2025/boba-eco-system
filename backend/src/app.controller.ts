@@ -1,7 +1,7 @@
-import { Controller, Get } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
-import type { AppService } from './app.service'
-import { JSendSuccessDto } from './common/dto/jsend-response.dto'
+import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { AppService } from './app.service';
+import { JSendSuccessDto } from './common/dto/jsend-response.dto';
 
 /**
  * AppController handles the root application routes.
@@ -27,6 +27,6 @@ export class AppController {
 		type: JSendSuccessDto,
 	})
 	getHello(): string {
-		return this.appService.getHello()
+		return this.appService.getHello();
 	}
 }

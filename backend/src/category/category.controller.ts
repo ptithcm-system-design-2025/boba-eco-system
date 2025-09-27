@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,11 +21,11 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
@@ -34,17 +34,17 @@ import {
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { category } from '../generated/prisma/client'
-import type { CategoryService } from './category.service'
-import { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto'
-import { CreateCategoryDto } from './dto/create-category.dto'
-import { UpdateCategoryDto } from './dto/update-category.dto'
+} from '../common/dto/pagination.dto';
+import type { category } from '../generated/prisma/client';
+import type { CategoryService } from './category.service';
+import { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @ApiTags('categories')
 @Controller('categories')
@@ -63,7 +63,8 @@ export class CategoryController {
 	@HttpCode(HttpStatus.CREATED)
 	@ApiOperation({
 		summary: 'Create a new category - MANAGER and STAFF only',
-		description: 'Create a new product category with a name and description',
+		description:
+			'Create a new product category with a name and description',
 	})
 	@ApiBody({ type: CreateCategoryDto })
 	@ApiResponse({
@@ -99,7 +100,7 @@ export class CategoryController {
 	async create(
 		@Body() createCategoryDto: CreateCategoryDto
 	): Promise<category> {
-		return this.categoryService.create(createCategoryDto)
+		return this.categoryService.create(createCategoryDto);
 	}
 
 	@Get()
@@ -142,7 +143,7 @@ export class CategoryController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<category>> {
-		return this.categoryService.findAll(paginationDto)
+		return this.categoryService.findAll(paginationDto);
 	}
 
 	@Get(':id')
@@ -150,7 +151,8 @@ export class CategoryController {
 	@Roles(ROLES.MANAGER, ROLES.STAFF, ROLES.CUSTOMER)
 	@ApiOperation({
 		summary: 'Get category information by ID - All roles',
-		description: 'Get detailed information of a specific category by its ID',
+		description:
+			'Get detailed information of a specific category by its ID',
 	})
 	@ApiParam({
 		name: 'id',
@@ -181,7 +183,7 @@ export class CategoryController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<category | null> {
-		return this.categoryService.findOne(id)
+		return this.categoryService.findOne(id);
 	}
 
 	@Patch(':id')
@@ -239,7 +241,7 @@ export class CategoryController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateCategoryDto: UpdateCategoryDto
 	): Promise<category> {
-		return this.categoryService.update(id, updateCategoryDto)
+		return this.categoryService.update(id, updateCategoryDto);
 	}
 
 	@Delete('bulk')
@@ -278,11 +280,11 @@ export class CategoryController {
 	 * @returns Result of bulk deletion including deleted and failed IDs.
 	 */
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCategoryDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		return this.categoryService.bulkDelete(bulkDeleteDto)
+		return this.categoryService.bulkDelete(bulkDeleteDto);
 	}
 
 	@Delete(':id')
@@ -330,7 +332,7 @@ export class CategoryController {
 	 * @returns The deleted category entity.
 	 */
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<category> {
-		return this.categoryService.remove(id)
+		return this.categoryService.remove(id);
 	}
 
 	@Get('admin/test')
@@ -361,6 +363,6 @@ export class CategoryController {
 	 * @returns Confirmation message that the controller is working.
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Category controller is working!' }
+		return { message: 'Category controller is working!' };
 	}
 }

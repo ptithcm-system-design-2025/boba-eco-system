@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,30 +21,30 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { LockAccountDto } from '../account/dto/lock-account.dto'
-import { UpdateAccountDto } from '../account/dto/update-account.dto'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { LockAccountDto } from '../account/dto/lock-account.dto';
+import { UpdateAccountDto } from '../account/dto/update-account.dto';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { employee } from '../generated/prisma/client'
-import { BulkDeleteEmployeeDto } from './dto/bulk-delete-employee.dto'
-import { CreateEmployeeDto } from './dto/create-employee.dto'
-import { UpdateEmployeeDto } from './dto/update-employee.dto'
-import type { EmployeeService } from './employee.service'
+} from '../common/dto/pagination.dto';
+import type { employee } from '../generated/prisma/client';
+import { BulkDeleteEmployeeDto } from './dto/bulk-delete-employee.dto';
+import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import type { EmployeeService } from './employee.service';
 
 @ApiTags('employees')
 @Controller('employees')
@@ -91,7 +91,7 @@ export class EmployeeController {
 	async create(
 		@Body() createEmployeeDto: CreateEmployeeDto
 	): Promise<employee> {
-		return this.employeeService.create(createEmployeeDto)
+		return this.employeeService.create(createEmployeeDto);
 	}
 
 	@Get()
@@ -135,7 +135,7 @@ export class EmployeeController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<employee>> {
-		return this.employeeService.findAll(paginationDto)
+		return this.employeeService.findAll(paginationDto);
 	}
 
 	@Get('email/:email')
@@ -164,7 +164,8 @@ export class EmployeeController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - Only MANAGER can search for employees by email.',
+		description:
+			'Forbidden - Only MANAGER can search for employees by email.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -173,7 +174,7 @@ export class EmployeeController {
 		type: NotFoundErrorDto,
 	})
 	async findByEmail(@Param('email') email: string): Promise<employee | null> {
-		return this.employeeService.findByEmail(email)
+		return this.employeeService.findByEmail(email);
 	}
 
 	@Delete('bulk')
@@ -207,11 +208,11 @@ export class EmployeeController {
 		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteEmployeeDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		return this.employeeService.bulkDelete(bulkDeleteDto)
+		return this.employeeService.bulkDelete(bulkDeleteDto);
 	}
 
 	@Get(':id')
@@ -252,7 +253,7 @@ export class EmployeeController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<employee | null> {
-		return this.employeeService.findOne(id)
+		return this.employeeService.findOne(id);
 	}
 
 	@Patch(':id')
@@ -287,7 +288,8 @@ export class EmployeeController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - Only MANAGER can update employee information.',
+		description:
+			'Forbidden - Only MANAGER can update employee information.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -304,7 +306,7 @@ export class EmployeeController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateEmployeeDto: UpdateEmployeeDto
 	): Promise<employee> {
-		return this.employeeService.update(id, updateEmployeeDto)
+		return this.employeeService.update(id, updateEmployeeDto);
 	}
 
 	@Patch(':id/account/lock')
@@ -339,7 +341,8 @@ export class EmployeeController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - Only MANAGER can lock/unlock employee accounts.',
+		description:
+			'Forbidden - Only MANAGER can lock/unlock employee accounts.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -354,7 +357,7 @@ export class EmployeeController {
 		return this.employeeService.lockEmployeeAccount(
 			employeeId,
 			lockAccountDto.is_locked
-		)
+		);
 	}
 
 	@Patch(':id/account/:accountId')
@@ -402,7 +405,8 @@ export class EmployeeController {
 	})
 	@ApiResponse({
 		status: 404,
-		description: 'Không tìm thấy nhân viên hoặc tài khoản với ID được cung cấp',
+		description:
+			'Không tìm thấy nhân viên hoặc tài khoản với ID được cung cấp',
 		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
@@ -420,7 +424,7 @@ export class EmployeeController {
 			employeeId,
 			accountId,
 			updateAccountDto
-		)
+		);
 	}
 
 	@Delete(':id')
@@ -460,7 +464,7 @@ export class EmployeeController {
 			'Conflict - Cannot delete employee with associated orders or other important data.',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.employeeService.remove(id)
+		await this.employeeService.remove(id);
 	}
 
 	@Get('admin/test')
@@ -488,6 +492,6 @@ export class EmployeeController {
 		type: ForbiddenErrorDto,
 	})
 	async test(): Promise<{ message: string }> {
-		return { message: 'Employee controller is working!' }
+		return { message: 'Employee controller is working!' };
 	}
 }

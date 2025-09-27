@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import { useEffect, ReactNode, useState } from "react";
-import { useAuthStore } from "@/stores/auth";
-import { AuthLoading } from "@/components/ui/auth-loading";
+import { type ReactNode, useEffect, useState } from 'react';
+import { AuthLoading } from '@/components/ui/auth-loading';
+import { useAuthStore } from '@/stores/auth';
 
 interface AuthProviderProps {
-  children: ReactNode;
+	children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { isLoading, initializeAuth } = useAuthStore();
-  const [isInitializing, setIsInitializing] = useState(true);
+	const { isLoading, initializeAuth } = useAuthStore();
+	const [isInitializing, setIsInitializing] = useState(true);
 
-  useEffect(() => {
-    // Khởi tạo auth system
-    const cleanup = initializeAuth();
-    setIsInitializing(false);
-    
-    return cleanup;
-  }, [initializeAuth]);
+	useEffect(() => {
+		// Khởi tạo auth system
+		const cleanup = initializeAuth();
+		setIsInitializing(false);
 
-  if (isInitializing || isLoading) {
-    return <AuthLoading />;
-  }
+		return cleanup;
+	}, [initializeAuth]);
 
-  return <>{children}</>;
-} 
+	if (isInitializing || isLoading) {
+		return <AuthLoading />;
+	}
+
+	return <>{children}</>;
+}

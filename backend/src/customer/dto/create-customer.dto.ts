@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger';
 import {
 	IsIn,
 	IsNotEmpty,
@@ -6,7 +6,7 @@ import {
 	IsString,
 	MaxLength,
 	MinLength,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreateCustomerDto {
 	@ApiProperty({
@@ -16,7 +16,7 @@ export class CreateCustomerDto {
 	})
 	@IsNotEmpty({ message: 'Số điện thoại không được để trống' })
 	@IsString({ message: 'Số điện thoại phải là chuỗi ký tự' })
-	phone: string
+	phone: string;
 
 	@ApiProperty({
 		description: 'Họ của khách hàng',
@@ -27,7 +27,7 @@ export class CreateCustomerDto {
 	@IsOptional()
 	@IsString({ message: 'Họ phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Họ không được vượt quá 70 ký tự' })
-	last_name?: string
+	last_name?: string;
 
 	@ApiProperty({
 		description: 'Tên của khách hàng',
@@ -38,7 +38,7 @@ export class CreateCustomerDto {
 	@IsOptional()
 	@IsString({ message: 'Tên phải là chuỗi ký tự' })
 	@MaxLength(70, { message: 'Tên không được vượt quá 70 ký tự' })
-	first_name?: string
+	first_name?: string;
 
 	@ApiProperty({
 		description: 'Giới tính của khách hàng',
@@ -51,7 +51,7 @@ export class CreateCustomerDto {
 	@IsIn(['MALE', 'FEMALE', 'OTHER'], {
 		message: 'Giới tính phải là MALE, FEMALE hoặc OTHER',
 	})
-	gender?: 'MALE' | 'FEMALE' | 'OTHER'
+	gender?: 'MALE' | 'FEMALE' | 'OTHER';
 
 	@ApiProperty({
 		description:
@@ -64,5 +64,5 @@ export class CreateCustomerDto {
 	@IsString({ message: 'Tên đăng nhập phải là chuỗi ký tự' })
 	@MinLength(3, { message: 'Tên đăng nhập phải có ít nhất 3 ký tự' })
 	@IsOptional()
-	username?: string
+	username?: string;
 }

@@ -11,30 +11,30 @@ import {
 	Res,
 	UnauthorizedException,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
 	ApiOperation,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import type { Request as ExpressRequest, Response } from 'express'
+} from '@nestjs/swagger';
+import type { Request as ExpressRequest, Response } from 'express';
 import {
 	ConflictErrorDto,
 	JSendSuccessDto,
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
-import type { AuthService } from './auth.service'
-import type { AuthTokenService } from './auth-token.service'
-import { CurrentUser } from './decorators/current-user.decorator'
-import { LoginDto } from './dto/login.dto'
-import { RegisterDto } from './dto/register.dto'
-import { UpdateProfileDto } from './dto/update-profile.dto'
-import { JwtAuthGuard } from './guards/jwt-auth.guard'
-import type { JwtPayload } from './interfaces/jwt-payload.interface'
+} from '../common/dto/jsend-response.dto';
+import type { AuthService } from './auth.service';
+import type { AuthTokenService } from './auth-token.service';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import type { JwtPayload } from './interfaces/jwt-payload.interface';
 
 /**
  * Controller responsible for handling authentication and user profile operations.
@@ -69,7 +69,8 @@ export class AuthController {
 	})
 	@ApiResponse({
 		status: 409,
-		description: 'Conflict - Username, email, or phone number already exists',
+		description:
+			'Conflict - Username, email, or phone number already exists',
 		type: ConflictErrorDto,
 	})
 	/**
@@ -78,7 +79,7 @@ export class AuthController {
 	 * @returns Created user with account details and tokens
 	 */
 	async register(@Body() registerDto: RegisterDto) {
-		return this.authService.register(registerDto)
+		return this.authService.register(registerDto);
 	}
 
 	@Post('login')
@@ -113,23 +114,23 @@ export class AuthController {
 		@Body() loginDto: LoginDto,
 		@Res({ passthrough: true }) res: Response
 	) {
-		const result = await this.authService.login(loginDto)
+		const result = await this.authService.login(loginDto);
 
 		res.cookie('refresh_token', result.refresh_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 7 * 24 * 60 * 60 * 1000,
-		})
+		});
 
 		const userProfile = await this.authService.getProfile(
 			result.user.account_id
-		)
+		);
 
 		return {
 			access_token: result.access_token,
 			user: userProfile,
-		}
+		};
 	}
 
 	@Post('logout')
@@ -157,8 +158,8 @@ export class AuthController {
 	 * @returns A success message
 	 */
 	async logout(@Request() _req, @Res({ passthrough: true }) res: Response) {
-		res.clearCookie('refresh_token')
-		return { message: 'Logout successful' }
+		res.clearCookie('refresh_token');
+		return { message: 'Logout successful' };
 	}
 
 	@Get('profile')
@@ -190,7 +191,7 @@ export class AuthController {
 	 * @returns User profile data
 	 */
 	async getProfile(@CurrentUser() user: JwtPayload) {
-		return this.authService.getProfile(user.sub)
+		return this.authService.getProfile(user.sub);
 	}
 
 	@Patch('profile')
@@ -238,7 +239,7 @@ export class AuthController {
 		@CurrentUser() user: JwtPayload,
 		@Body() updateProfileDto: UpdateProfileDto
 	) {
-		return this.authService.updateProfile(user.sub, updateProfileDto)
+		return this.authService.updateProfile(user.sub, updateProfileDto);
 	}
 
 	@Post('refresh')
@@ -263,24 +264,24 @@ export class AuthController {
 		@Req() req: ExpressRequest,
 		@Res({ passthrough: true }) res: Response
 	) {
-		const refresh_token = req.cookies.refresh_token
+		const refresh_token = req.cookies.refresh_token;
 
 		if (!refresh_token) {
-			throw new UnauthorizedException('Refresh token not found')
+			throw new UnauthorizedException('Refresh token not found');
 		}
 
-		const result = await this.authTokenService.refreshToken(refresh_token)
+		const result = await this.authTokenService.refreshToken(refresh_token);
 
 		res.cookie('refresh_token', result.refresh_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 7 * 24 * 60 * 60 * 1000,
-		})
+		});
 
 		return {
 			access_token: result.access_token,
-		}
+		};
 	}
 
 	@Post('revoke')
@@ -308,8 +309,8 @@ export class AuthController {
 	 * @returns A success message
 	 */
 	async revokeToken(@Res({ passthrough: true }) res: Response) {
-		res.clearCookie('refresh_token')
-		return { message: 'Token has been revoked successfully' }
+		res.clearCookie('refresh_token');
+		return { message: 'Token has been revoked successfully' };
 	}
 
 	@Get('test')
@@ -329,6 +330,6 @@ export class AuthController {
 	 * @returns A success message
 	 */
 	async test() {
-		return { message: 'Auth controller is working!' }
+		return { message: 'Auth controller is working!' };
 	}
 }

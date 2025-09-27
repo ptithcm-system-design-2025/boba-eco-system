@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,11 +21,11 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
@@ -34,22 +34,22 @@ import {
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
+} from '../common/dto/pagination.dto';
 import type {
 	account,
 	customer,
 	employee,
 	manager,
 	role,
-} from '../generated/prisma/client'
-import type { AccountService } from './account.service'
-import { CreateAccountDto } from './dto/create-account.dto'
-import { UpdateAccountDto } from './dto/update-account.dto'
+} from '../generated/prisma/client';
+import type { AccountService } from './account.service';
+import { CreateAccountDto } from './dto/create-account.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 
 @ApiTags('accounts')
 @Controller('accounts')
@@ -96,7 +96,8 @@ export class AccountController {
 	})
 	@ApiResponse({
 		status: 409,
-		description: 'Conflict - Username, email, or phone number already exists.',
+		description:
+			'Conflict - Username, email, or phone number already exists.',
 		type: ConflictErrorDto,
 	})
 	/**
@@ -106,7 +107,7 @@ export class AccountController {
 	 * @returns Newly created account object
 	 */
 	async create(@Body() createAccountDto: CreateAccountDto): Promise<account> {
-		return this.accountService.create(createAccountDto)
+		return this.accountService.create(createAccountDto);
 	}
 
 	@Get()
@@ -154,7 +155,7 @@ export class AccountController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<Omit<account, 'password_hash'>>> {
-		return this.accountService.findAll(paginationDto)
+		return this.accountService.findAll(paginationDto);
 	}
 
 	@Get(':id')
@@ -200,13 +201,13 @@ export class AccountController {
 	 */
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<
 		Omit<account, 'password_hash'> & {
-			role?: role
-			customer?: customer[]
-			employee?: employee | null
-			manager?: manager | null
+			role?: role;
+			customer?: customer[];
+			employee?: employee | null;
+			manager?: manager | null;
 		}
 	> {
-		return this.accountService.findOne(id)
+		return this.accountService.findOne(id);
 	}
 
 	@Patch(':id')
@@ -251,7 +252,8 @@ export class AccountController {
 	})
 	@ApiResponse({
 		status: 409,
-		description: 'Conflict - Username, email, or phone number already exists.',
+		description:
+			'Conflict - Username, email, or phone number already exists.',
 		type: ConflictErrorDto,
 	})
 	/**
@@ -265,7 +267,7 @@ export class AccountController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateAccountDto: UpdateAccountDto
 	): Promise<account> {
-		return this.accountService.update(id, updateAccountDto)
+		return this.accountService.update(id, updateAccountDto);
 	}
 
 	@Delete(':id')
@@ -304,7 +306,7 @@ export class AccountController {
 		type: NotFoundErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<account> {
-		return this.accountService.remove(id)
+		return this.accountService.remove(id);
 	}
 
 	@Get('admin/test')
@@ -336,6 +338,6 @@ export class AccountController {
 	 * @returns Confirmation message
 	 */
 	adminTest(): { message: string } {
-		return { message: 'Account controller is working!' }
+		return { message: 'Account controller is working!' };
 	}
 }

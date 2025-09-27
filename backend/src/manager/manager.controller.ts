@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -20,30 +20,30 @@ import {
 	ApiParam,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { LockAccountDto } from '../account/dto/lock-account.dto'
-import { UpdateAccountDto } from '../account/dto/update-account.dto'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { LockAccountDto } from '../account/dto/lock-account.dto';
+import { UpdateAccountDto } from '../account/dto/update-account.dto';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { manager } from '../generated/prisma/client'
-import { BulkDeleteManagerDto } from './dto/bulk-delete-manager.dto'
-import { CreateManagerDto } from './dto/create-manager.dto'
-import { UpdateManagerDto } from './dto/update-manager.dto'
-import type { ManagerService } from './manager.service'
+} from '../common/dto/pagination.dto';
+import type { manager } from '../generated/prisma/client';
+import { BulkDeleteManagerDto } from './dto/bulk-delete-manager.dto';
+import { CreateManagerDto } from './dto/create-manager.dto';
+import { UpdateManagerDto } from './dto/update-manager.dto';
+import type { ManagerService } from './manager.service';
 
 @ApiTags('managers')
 @Controller('managers')
@@ -90,7 +90,7 @@ export class ManagerController {
 		type: ConflictErrorDto,
 	})
 	async create(@Body() createManagerDto: CreateManagerDto): Promise<manager> {
-		return this.managerService.create(createManagerDto)
+		return this.managerService.create(createManagerDto);
 	}
 
 	/**
@@ -121,7 +121,7 @@ export class ManagerController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<manager>> {
-		return this.managerService.findAll(paginationDto)
+		return this.managerService.findAll(paginationDto);
 	}
 
 	/**
@@ -158,7 +158,7 @@ export class ManagerController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<manager | null> {
-		return this.managerService.findOne(id)
+		return this.managerService.findOne(id);
 	}
 
 	/**
@@ -193,7 +193,7 @@ export class ManagerController {
 		type: NotFoundErrorDto,
 	})
 	async findByEmail(@Param('email') email: string): Promise<manager | null> {
-		return this.managerService.findByEmail(email)
+		return this.managerService.findByEmail(email);
 	}
 
 	/**
@@ -243,7 +243,7 @@ export class ManagerController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateManagerDto: UpdateManagerDto
 	): Promise<manager> {
-		return this.managerService.update(id, updateManagerDto)
+		return this.managerService.update(id, updateManagerDto);
 	}
 
 	/**
@@ -294,7 +294,7 @@ export class ManagerController {
 		return this.managerService.lockManagerAccount(
 			managerId,
 			lockAccountDto.is_locked
-		)
+		);
 	}
 
 	/**
@@ -355,7 +355,7 @@ export class ManagerController {
 			managerId,
 			accountId,
 			updateAccountDto
-		)
+		);
 	}
 
 	@Delete('bulk')
@@ -385,11 +385,11 @@ export class ManagerController {
 		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteManagerDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		return this.managerService.bulkDelete(bulkDeleteDto)
+		return this.managerService.bulkDelete(bulkDeleteDto);
 	}
 
 	@Delete(':id')
@@ -419,7 +419,7 @@ export class ManagerController {
 		type: NotFoundErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.managerService.remove(id)
+		await this.managerService.remove(id);
 	}
 
 	@Get('test/ping')
@@ -443,6 +443,6 @@ export class ManagerController {
 		type: ForbiddenErrorDto,
 	})
 	async test(): Promise<{ message: string }> {
-		return { message: 'Manager controller is working!' }
+		return { message: 'Manager controller is working!' };
 	}
 }

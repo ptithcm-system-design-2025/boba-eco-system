@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	ArrayMinSize,
 	ArrayNotEmpty,
@@ -11,8 +11,8 @@ import {
 	MaxLength,
 	Min,
 	ValidateNested,
-} from 'class-validator'
-import { CreateProductPriceForNewProductDto } from './create-product-price-for-new-product.dto'
+} from 'class-validator';
+import { CreateProductPriceForNewProductDto } from './create-product-price-for-new-product.dto';
 
 export class CreateProductDto {
 	@ApiProperty({
@@ -24,7 +24,7 @@ export class CreateProductDto {
 	@IsString({ message: 'Product name must be a string' })
 	@IsNotEmpty({ message: 'Product name cannot be empty' })
 	@MaxLength(100, { message: 'Product name cannot exceed 100 characters' })
-	name: string
+	name: string;
 
 	@ApiPropertyOptional({
 		description: 'A description of the product',
@@ -35,7 +35,7 @@ export class CreateProductDto {
 	@IsOptional()
 	@IsString({ message: 'Description must be a string' })
 	@MaxLength(1000, { message: 'Description cannot exceed 1000 characters' })
-	description?: string
+	description?: string;
 
 	@ApiPropertyOptional({
 		description: 'Whether the product is a signature item',
@@ -45,7 +45,7 @@ export class CreateProductDto {
 	})
 	@IsOptional()
 	@IsBoolean({ message: 'Signature status must be a boolean' })
-	is_signature?: boolean = false
+	is_signature?: boolean = false;
 
 	@ApiPropertyOptional({
 		description: 'The path to the product image',
@@ -58,7 +58,7 @@ export class CreateProductDto {
 	@MaxLength(255, {
 		message: 'Image path cannot exceed 255 characters',
 	})
-	image_path?: string
+	image_path?: string;
 
 	@ApiPropertyOptional({
 		description: 'The ID of the product category',
@@ -69,7 +69,7 @@ export class CreateProductDto {
 	@IsInt({ message: 'Category ID must be an integer' })
 	@Min(1, { message: 'Category ID must be greater than 0' })
 	@Type(() => Number)
-	category_id: number
+	category_id: number;
 
 	@ApiProperty({
 		description: 'A list of prices for different sizes of the product',
@@ -81,5 +81,5 @@ export class CreateProductDto {
 	@ArrayMinSize(1, { message: 'Product must have at least one price' })
 	@ValidateNested({ each: true, message: 'Invalid price data' })
 	@Type(() => CreateProductPriceForNewProductDto)
-	prices: CreateProductPriceForNewProductDto[]
+	prices: CreateProductPriceForNewProductDto[];
 }

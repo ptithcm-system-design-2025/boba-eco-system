@@ -3,18 +3,18 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-} from '@nestjs/common'
-import type { AccountService } from '../account/account.service'
-import { ROLES } from '../auth/constants/roles.constant'
+} from '@nestjs/common';
+import type { AccountService } from '../account/account.service';
+import { ROLES } from '../auth/constants/roles.constant';
 import type {
 	PaginatedResult,
 	PaginationDto,
-} from '../common/dto/pagination.dto'
-import { type manager, Prisma } from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { BulkDeleteManagerDto } from './dto/bulk-delete-manager.dto'
-import type { CreateManagerDto } from './dto/create-manager.dto'
-import type { UpdateManagerDto } from './dto/update-manager.dto'
+} from '../common/dto/pagination.dto';
+import { type manager, Prisma } from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { BulkDeleteManagerDto } from './dto/bulk-delete-manager.dto';
+import type { CreateManagerDto } from './dto/create-manager.dto';
+import type { UpdateManagerDto } from './dto/update-manager.dto';
 
 @Injectable()
 export class ManagerService {
@@ -24,15 +24,15 @@ export class ManagerService {
 	) {}
 
 	async create(createManagerDto: CreateManagerDto): Promise<manager> {
-		const { email, username, ...managerData } = createManagerDto
+		const { email, username, ...managerData } = createManagerDto;
 
 		const existingManagerByEmail = await this.prisma.manager.findUnique({
 			where: { email },
-		})
+		});
 		if (existingManagerByEmail) {
 			throw new ConflictException(
 				`Manager with email '${email}' already exists.`
-			)
+			);
 		}
 
 		try {
@@ -42,7 +42,7 @@ export class ManagerService {
 					password: '12345678',
 					role_id: await this.getManagerRoleId(),
 					is_active: true,
-				})
+				});
 
 				const data: Prisma.managerCreateInput = {
 					...managerData,
@@ -50,15 +50,15 @@ export class ManagerService {
 					account: {
 						connect: { account_id: account.account_id },
 					},
-				}
+				};
 
 				return await tx.manager.create({
 					data,
 					include: { account: true },
-				})
-			})
+				});
+			});
 		} catch (error) {
-			throw this.handleCreateError(error, email)
+			throw this.handleCreateError(error, email);
 		}
 	}
 
@@ -73,16 +73,21 @@ export class ManagerService {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2002': {
-					const fieldDescription = this.getUniqueConstraintField(error, email)
+					const fieldDescription = this.getUniqueConstraintField(
+						error,
+						email
+					);
 					throw new ConflictException(
 						`Manager already exists with ${fieldDescription}.`
-					)
+					);
 				}
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
@@ -96,10 +101,10 @@ export class ManagerService {
 		email: string
 	): string {
 		if (error.meta?.target) {
-			const target = error.meta.target as string[]
-			if (target.includes('email')) return `email '${email}'`
+			const target = error.meta.target as string[];
+			if (target.includes('email')) return `email '${email}'`;
 		}
-		return 'the provided unique information'
+		return 'the provided unique information';
 	}
 
 	/**
@@ -110,11 +115,13 @@ export class ManagerService {
 	private async getManagerRoleId(): Promise<number> {
 		const managerRole = await this.prisma.role.findFirst({
 			where: { name: ROLES.MANAGER },
-		})
+		});
 		if (!managerRole) {
-			throw new BadRequestException('MANAGER role not found in the system.')
+			throw new BadRequestException(
+				'MANAGER role not found in the system.'
+			);
 		}
-		return managerRole.role_id
+		return managerRole.role_id;
 	}
 
 	/**
@@ -125,8 +132,8 @@ export class ManagerService {
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<manager>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.manager.findMany({
@@ -135,9 +142,9 @@ export class ManagerService {
 				orderBy: { manager_id: 'desc' },
 			}),
 			this.prisma.manager.count(),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -149,7 +156,7 @@ export class ManagerService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	/**
@@ -176,11 +183,13 @@ export class ManagerService {
 					},
 				},
 			},
-		})
+		});
 		if (!mgr) {
-			throw new NotFoundException(`Manager with ID ${manager_id} not found`)
+			throw new NotFoundException(
+				`Manager with ID ${manager_id} not found`
+			);
 		}
-		return mgr
+		return mgr;
 	}
 
 	/**
@@ -192,7 +201,7 @@ export class ManagerService {
 		return this.prisma.manager.findUnique({
 			where: { email },
 			include: { account: true },
-		})
+		});
 	}
 
 	/**
@@ -208,18 +217,18 @@ export class ManagerService {
 		manager_id: number,
 		updateManagerDto: UpdateManagerDto
 	): Promise<manager> {
-		const { ...managerData } = updateManagerDto
+		const { ...managerData } = updateManagerDto;
 
-		const data: Prisma.managerUpdateInput = { ...managerData }
+		const data: Prisma.managerUpdateInput = { ...managerData };
 
 		try {
 			return await this.prisma.manager.update({
 				where: { manager_id },
 				data,
 				include: { account: true },
-			})
+			});
 		} catch (error) {
-			throw this.handleUpdateError(error, manager_id)
+			throw this.handleUpdateError(error, manager_id);
 		}
 	}
 
@@ -235,16 +244,20 @@ export class ManagerService {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
-					throw new NotFoundException(`Manager with ID ${manager_id} not found`)
+					throw new NotFoundException(
+						`Manager with ID ${manager_id} not found`
+					);
 				case 'P2002':
 					throw new ConflictException(
 						'Could not update manager, unique constraint violation (e.g., email already exists).'
-					)
+					);
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
@@ -260,26 +273,28 @@ export class ManagerService {
 				const managerWithAccount = await tx.manager.findUnique({
 					where: { manager_id },
 					include: { account: true },
-				})
+				});
 
 				if (!managerWithAccount) {
-					throw new NotFoundException(`Manager with ID ${manager_id} not found`)
+					throw new NotFoundException(
+						`Manager with ID ${manager_id} not found`
+					);
 				}
 
 				const deletedManager = await tx.manager.delete({
 					where: { manager_id },
-				})
+				});
 
 				if (managerWithAccount.account) {
 					await this.accountService.remove(
 						managerWithAccount.account.account_id
-					)
+					);
 				}
 
-				return deletedManager
-			})
+				return deletedManager;
+			});
 		} catch (error) {
-			throw this.handleDeleteError(error, manager_id)
+			throw this.handleDeleteError(error, manager_id);
 		}
 	}
 
@@ -293,22 +308,26 @@ export class ManagerService {
 	 */
 	private handleDeleteError(error: unknown, manager_id: number): never {
 		if (error instanceof NotFoundException) {
-			throw error // Re-throw already handled NotFoundException
+			throw error; // Re-throw already handled NotFoundException
 		}
 
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
 			switch (error.code) {
 				case 'P2025':
-					throw new NotFoundException(`Manager with ID ${manager_id} not found`)
+					throw new NotFoundException(
+						`Manager with ID ${manager_id} not found`
+					);
 				case 'P2003':
 					throw new ConflictException(
 						`Cannot delete manager with ID ${manager_id} due to related data.`
-					)
+					);
 				default:
-					throw new BadRequestException(`Database error: ${error.message}`)
+					throw new BadRequestException(
+						`Database error: ${error.message}`
+					);
 			}
 		}
-		throw error
+		throw error;
 	}
 
 	/**
@@ -317,41 +336,40 @@ export class ManagerService {
 	 * @returns An object containing lists of successfully deleted and failed IDs, along with a summary.
 	 */
 	async bulkDelete(bulkDeleteDto: BulkDeleteManagerDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		const { ids } = bulkDeleteDto
+		const { ids } = bulkDeleteDto;
 
 		try {
 			return await this.prisma.$transaction(async (tx) => {
 				const managersWithAccounts = await tx.manager.findMany({
 					where: { manager_id: { in: ids } },
 					include: { account: true },
-				})
+				});
 
-				const foundIds = managersWithAccounts.map((m) => m.manager_id)
-				const notFoundIds = ids.filter((id) => !foundIds.includes(id))
+				const foundIds = managersWithAccounts.map((m) => m.manager_id);
+				const notFoundIds = ids.filter((id) => !foundIds.includes(id));
 				const accountIds = managersWithAccounts
 					.filter((m) => m.account)
-					.map((m) => m.account.account_id)
+					.map((m) => m.account.account_id);
 
 				await tx.manager.deleteMany({
 					where: { manager_id: { in: foundIds } },
-				})
+				});
 
 				if (accountIds.length > 0) {
 					await tx.account.deleteMany({
 						where: { account_id: { in: accountIds } },
-					})
+					});
 				}
 
-				const failed: { id: number; reason: string }[] = notFoundIds.map(
-					(id) => ({
+				const failed: { id: number; reason: string }[] =
+					notFoundIds.map((id) => ({
 						id,
 						reason: `Manager with ID ${id} not found`,
-					})
-				)
+					}));
 
 				return {
 					deleted: foundIds,
@@ -361,13 +379,14 @@ export class ManagerService {
 						success: foundIds.length,
 						failed: failed.length,
 					},
-				}
-			})
+				};
+			});
 		} catch (error) {
 			const failed: { id: number; reason: string }[] = ids.map((id) => ({
 				id,
-				reason: error instanceof Error ? error.message : 'Unknown error',
-			}))
+				reason:
+					error instanceof Error ? error.message : 'Unknown error',
+			}));
 
 			return {
 				deleted: [],
@@ -377,7 +396,7 @@ export class ManagerService {
 					success: 0,
 					failed: ids.length,
 				},
-			}
+			};
 		}
 	}
 
@@ -392,15 +411,17 @@ export class ManagerService {
 		const manager = await this.prisma.manager.findUnique({
 			where: { manager_id: managerId },
 			include: { account: true },
-		})
+		});
 
 		if (!manager) {
-			throw new NotFoundException(`Manager with ID ${managerId} not found`)
+			throw new NotFoundException(
+				`Manager with ID ${managerId} not found`
+			);
 		}
 
 		return this.accountService.update(manager.account.account_id, {
 			is_locked: isLocked,
-		})
+		});
 	}
 
 	/**
@@ -420,18 +441,20 @@ export class ManagerService {
 		const manager = await this.prisma.manager.findUnique({
 			where: { manager_id: managerId },
 			include: { account: true },
-		})
+		});
 
 		if (!manager) {
-			throw new NotFoundException(`Manager with ID ${managerId} not found`)
+			throw new NotFoundException(
+				`Manager with ID ${managerId} not found`
+			);
 		}
 
 		if (manager.account.account_id !== accountId) {
 			throw new BadRequestException(
 				`Account with ID ${accountId} does not belong to Manager with ID ${managerId}`
-			)
+			);
 		}
 
-		return this.accountService.update(accountId, updateData)
+		return this.accountService.update(accountId, updateData);
 	}
 }

@@ -2,16 +2,16 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-} from '@nestjs/common'
-import { Decimal } from '@prisma/client/runtime/library' // Import Decimal
+} from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime/library'; // Import Decimal
 import type {
 	PaginatedResult,
 	PaginationDto,
-} from '../common/dto/pagination.dto'
-import { type membership_type, Prisma } from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { CreateMembershipTypeDto } from './dto/create-membership-type.dto'
-import type { UpdateMembershipTypeDto } from './dto/update-membership-type.dto'
+} from '../common/dto/pagination.dto';
+import { type membership_type, Prisma } from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { CreateMembershipTypeDto } from './dto/create-membership-type.dto';
+import type { UpdateMembershipTypeDto } from './dto/update-membership-type.dto';
 
 @Injectable()
 export class MembershipTypeService {
@@ -19,7 +19,7 @@ export class MembershipTypeService {
 
 	async create(createDto: CreateMembershipTypeDto): Promise<membership_type> {
 		const { type, discount_value, required_point, valid_until, ...rest } =
-			createDto
+			createDto;
 
 		const data: Prisma.membership_typeCreateInput = {
 			...rest,
@@ -27,31 +27,35 @@ export class MembershipTypeService {
 			discount_value: new Decimal(discount_value), // Chuyển đổi sang Decimal
 			required_point,
 			...(valid_until && { valid_until: new Date(valid_until) }),
-		}
+		};
 
 		try {
 			return await this.prisma.membership_type.create({
 				data,
-			})
+			});
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				error.code === 'P2002'
 			) {
 				if ((error.meta?.target as string[])?.includes('type')) {
-					throw new ConflictException(`Loại thành viên '${type}' đã tồn tại.`)
+					throw new ConflictException(
+						`Loại thành viên '${type}' đã tồn tại.`
+					);
 				}
-				throw new ConflictException('A unique constraint violation occurred.')
+				throw new ConflictException(
+					'A unique constraint violation occurred.'
+				);
 			}
-			throw error
+			throw error;
 		}
 	}
 
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<membership_type>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.membership_type.findMany({
@@ -60,9 +64,9 @@ export class MembershipTypeService {
 				orderBy: { required_point: 'desc' },
 			}),
 			this.prisma.membership_type.count(),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -74,7 +78,7 @@ export class MembershipTypeService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	async findOne(
@@ -84,11 +88,13 @@ export class MembershipTypeService {
 		const membershipType = await this.prisma.membership_type.findUnique({
 			where: { membership_type_id: id },
 			include: { customer: includeCustomers },
-		})
+		});
 		if (!membershipType) {
-			throw new NotFoundException(`Loại thành viên với ID ${id} không tồn tại.`)
+			throw new NotFoundException(
+				`Loại thành viên với ID ${id} không tồn tại.`
+			);
 		}
-		return membershipType
+		return membershipType;
 	}
 
 	async findByType(
@@ -98,59 +104,67 @@ export class MembershipTypeService {
 		const membershipType = await this.prisma.membership_type.findUnique({
 			where: { type: type },
 			include: { customer: includeCustomers },
-		})
+		});
 		if (!membershipType) {
 			throw new NotFoundException(
 				`Loại thành viên với loại '${type}' không tồn tại.`
-			)
+			);
 		}
-		return membershipType
+		return membershipType;
 	}
 
 	async update(
 		id: number,
 		updateDto: UpdateMembershipTypeDto
 	): Promise<membership_type> {
-		await this.findOne(id) // Check for existence
-		const { type, discount_value, valid_until, ...rest } = updateDto
+		await this.findOne(id); // Check for existence
+		const { type, discount_value, valid_until, ...rest } = updateDto;
 
-		const data: Prisma.membership_typeUpdateInput = { ...rest }
-		if (type) data.type = type
+		const data: Prisma.membership_typeUpdateInput = { ...rest };
+		if (type) data.type = type;
 		if (discount_value !== undefined)
-			data.discount_value = new Decimal(discount_value)
-		if (valid_until) data.valid_until = new Date(valid_until)
+			data.discount_value = new Decimal(discount_value);
+		if (valid_until) data.valid_until = new Date(valid_until);
 		// Nếu valid_until được gửi là null, thì cũng cần xử lý để xóa ngày hết hạn
-		else if (Object.hasOwn(updateDto, 'valid_until') && valid_until === null) {
-			data.valid_until = null
+		else if (
+			Object.hasOwn(updateDto, 'valid_until') &&
+			valid_until === null
+		) {
+			data.valid_until = null;
 		}
 
 		try {
 			return await this.prisma.membership_type.update({
 				where: { membership_type_id: id },
 				data,
-			})
+			});
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				error.code === 'P2002'
 			) {
-				if ((error.meta?.target as string[])?.includes('type') && type) {
-					throw new ConflictException(`Loại thành viên '${type}' đã tồn tại.`)
+				if (
+					(error.meta?.target as string[])?.includes('type') &&
+					type
+				) {
+					throw new ConflictException(
+						`Loại thành viên '${type}' đã tồn tại.`
+					);
 				}
 				throw new ConflictException(
 					'A unique constraint violation occurred during update.'
-				)
+				);
 			}
-			throw error
+			throw error;
 		}
 	}
 
 	async remove(id: number): Promise<membership_type> {
-		await this.findOne(id) // Check for existence
+		await this.findOne(id); // Check for existence
 		try {
 			return await this.prisma.membership_type.delete({
 				where: { membership_type_id: id },
-			})
+			});
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -158,9 +172,9 @@ export class MembershipTypeService {
 			) {
 				throw new ConflictException(
 					`Cannot delete membership type with ID ${id} as it is associated with existing customers.`
-				)
+				);
 			}
-			throw error
+			throw error;
 		}
 	}
 }

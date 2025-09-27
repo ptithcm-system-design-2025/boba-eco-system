@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	IsDateString,
 	IsInt,
@@ -7,7 +7,7 @@ import {
 	IsNumber,
 	IsOptional,
 	Min,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreatePaymentDto {
 	@ApiProperty({ description: 'ID của đơn hàng liên quan', example: 1 })
@@ -15,21 +15,21 @@ export class CreatePaymentDto {
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	order_id: number
+	order_id: number;
 
 	@ApiProperty({ description: 'ID của phương thức thanh toán', example: 1 })
 	@IsInt()
 	@IsNotEmpty()
 	@Min(1)
 	@Type(() => Number)
-	payment_method_id: number
+	payment_method_id: number;
 
 	@ApiProperty({ description: 'Số tiền khách hàng trả', example: 150000 })
 	@IsNumber({ maxDecimalPlaces: 2 })
 	@IsNotEmpty()
 	@Min(0)
 	@Type(() => Number)
-	amount_paid: number
+	amount_paid: number;
 
 	@ApiProperty({
 		description:
@@ -39,5 +39,5 @@ export class CreatePaymentDto {
 	})
 	@IsOptional()
 	@IsDateString()
-	payment_time?: string
+	payment_time?: string;
 }

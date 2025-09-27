@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from '@nestjs/swagger'
-import { IsBoolean, IsInt, IsOptional } from 'class-validator'
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsInt, IsOptional } from 'class-validator';
 
 export class UpdateProductPriceDto {
 	@ApiPropertyOptional({
@@ -9,7 +9,7 @@ export class UpdateProductPriceDto {
 	})
 	@IsOptional()
 	@IsInt({ message: 'price must be an integer' })
-	price?: number
+	price?: number;
 
 	@ApiPropertyOptional({
 		description: 'The active status of the price',
@@ -18,5 +18,5 @@ export class UpdateProductPriceDto {
 	})
 	@IsOptional()
 	@IsBoolean({ message: 'is_active must be a boolean value' })
-	is_active?: boolean
+	is_active?: boolean;
 }

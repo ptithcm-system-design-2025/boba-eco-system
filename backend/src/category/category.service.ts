@@ -2,16 +2,16 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import type {
 	PaginatedResult,
 	PaginationDto,
-} from '../common/dto/pagination.dto'
-import { type category, Prisma } from '../generated/prisma/client'
-import type { PrismaService } from '../prisma/prisma.service'
-import type { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto'
-import type { CreateCategoryDto } from './dto/create-category.dto'
-import type { UpdateCategoryDto } from './dto/update-category.dto'
+} from '../common/dto/pagination.dto';
+import { type category, Prisma } from '../generated/prisma/client';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { BulkDeleteCategoryDto } from './dto/bulk-delete-category.dto';
+import type { CreateCategoryDto } from './dto/create-category.dto';
+import type { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 /**
@@ -30,16 +30,16 @@ export class CategoryService {
 		try {
 			return await this.prisma.category.create({
 				data: createCategoryDto,
-			})
+			});
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2002') {
 					throw new ConflictException(
 						`Category with name '${createCategoryDto.name}' already exists.`
-					)
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 
@@ -51,8 +51,8 @@ export class CategoryService {
 	async findAll(
 		paginationDto: PaginationDto
 	): Promise<PaginatedResult<category>> {
-		const { page = 1, limit = 10 } = paginationDto
-		const skip = (page - 1) * limit
+		const { page = 1, limit = 10 } = paginationDto;
+		const skip = (page - 1) * limit;
 
 		const [data, total] = await Promise.all([
 			this.prisma.category.findMany({
@@ -61,9 +61,9 @@ export class CategoryService {
 				orderBy: { category_id: 'desc' },
 			}),
 			this.prisma.category.count(),
-		])
+		]);
 
-		const totalPages = Math.ceil(total / limit)
+		const totalPages = Math.ceil(total / limit);
 
 		return {
 			data,
@@ -75,7 +75,7 @@ export class CategoryService {
 				hasNext: page < totalPages,
 				hasPrev: page > 1,
 			},
-		}
+		};
 	}
 
 	/**
@@ -86,11 +86,11 @@ export class CategoryService {
 	async findOne(id: number): Promise<category | null> {
 		const category = await this.prisma.category.findUnique({
 			where: { category_id: id },
-		})
+		});
 		if (!category) {
-			throw new NotFoundException(`Category with ID ${id} not found`)
+			throw new NotFoundException(`Category with ID ${id} not found`);
 		}
-		return category
+		return category;
 	}
 
 	/**
@@ -107,19 +107,21 @@ export class CategoryService {
 			return await this.prisma.category.update({
 				where: { category_id: id },
 				data: updateCategoryDto,
-			})
+			});
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
-					throw new NotFoundException(`Category with ID ${id} not found`)
+					throw new NotFoundException(
+						`Category with ID ${id} not found`
+					);
 				}
 				if (error.code === 'P2002' && updateCategoryDto.name) {
 					throw new ConflictException(
 						`Category with name '${updateCategoryDto.name}' already exists.`
-					)
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 
@@ -129,16 +131,16 @@ export class CategoryService {
 	 * @returns Result of bulk deletion including deleted and failed IDs.
 	 */
 	async bulkDelete(bulkDeleteDto: BulkDeleteCategoryDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		const { ids } = bulkDeleteDto
+		const { ids } = bulkDeleteDto;
 
 		try {
 			const _deleteResult = await this.prisma.category.deleteMany({
 				where: { category_id: { in: ids } },
-			})
+			});
 
 			return {
 				deleted: ids,
@@ -148,7 +150,7 @@ export class CategoryService {
 					success: ids.length,
 					failed: 0,
 				},
-			}
+			};
 		} catch (error) {
 			return {
 				deleted: [],
@@ -161,7 +163,7 @@ export class CategoryService {
 					success: 0,
 					failed: ids.length,
 				},
-			}
+			};
 		}
 	}
 
@@ -174,19 +176,21 @@ export class CategoryService {
 		try {
 			return await this.prisma.category.delete({
 				where: { category_id: id },
-			})
+			});
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if (error.code === 'P2025') {
-					throw new NotFoundException(`Category with ID ${id} not found`)
+					throw new NotFoundException(
+						`Category with ID ${id} not found`
+					);
 				}
 				if (error.code === 'P2003') {
 					throw new ConflictException(
 						`Category with ID ${id} cannot be deleted because it is associated with existing products.`
-					)
+					);
 				}
 			}
-			throw error
+			throw error;
 		}
 	}
 }

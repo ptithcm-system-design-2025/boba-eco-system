@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,32 +21,32 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
+} from '@nestjs/swagger';
 
-import { CreateAccountDto } from '../account/dto/create-account.dto'
-import { LockAccountDto } from '../account/dto/lock-account.dto'
-import { UpdateAccountDto } from '../account/dto/update-account.dto'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+import { CreateAccountDto } from '../account/dto/create-account.dto';
+import { LockAccountDto } from '../account/dto/lock-account.dto';
+import { UpdateAccountDto } from '../account/dto/update-account.dto';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	ConflictErrorDto,
 	ForbiddenErrorDto,
 	JSendSuccessDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { customer } from '../generated/prisma/client'
-import type { CustomerService } from './customer.service'
-import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto'
-import { CreateCustomerDto } from './dto/create-customer.dto'
-import { UpdateCustomerDto } from './dto/update-customer.dto'
+} from '../common/dto/pagination.dto';
+import type { customer } from '../generated/prisma/client';
+import type { CustomerService } from './customer.service';
+import { BulkDeleteCustomerDto } from './dto/bulk-delete-customer.dto';
+import { CreateCustomerDto } from './dto/create-customer.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @ApiTags('customers')
 @Controller('customers')
@@ -73,7 +73,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Invalid request - Input data is not in the correct format.',
+		description:
+			'Invalid request - Input data is not in the correct format.',
 		type: ValidationErrorDto,
 	})
 	@ApiResponse({
@@ -94,7 +95,7 @@ export class CustomerController {
 	async create(
 		@Body() createCustomerDto: CreateCustomerDto
 	): Promise<customer> {
-		return this.customerService.create(createCustomerDto)
+		return this.customerService.create(createCustomerDto);
 	}
 
 	@Get()
@@ -138,7 +139,7 @@ export class CustomerController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<customer>> {
-		return this.customerService.findAll(paginationDto)
+		return this.customerService.findAll(paginationDto);
 	}
 
 	@Delete('bulk')
@@ -173,11 +174,11 @@ export class CustomerController {
 		type: ForbiddenErrorDto,
 	})
 	async bulkDelete(@Body() bulkDeleteDto: BulkDeleteCustomerDto): Promise<{
-		deleted: number[]
-		failed: { id: number; reason: string }[]
-		summary: { total: number; success: number; failed: number }
+		deleted: number[];
+		failed: { id: number; reason: string }[];
+		summary: { total: number; success: number; failed: number };
 	}> {
-		return this.customerService.bulkDelete(bulkDeleteDto)
+		return this.customerService.bulkDelete(bulkDeleteDto);
 	}
 
 	@Get(':id')
@@ -207,7 +208,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - CUSTOMER can only view their own information.',
+		description:
+			'Forbidden - CUSTOMER can only view their own information.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -218,7 +220,7 @@ export class CustomerController {
 	async findOne(
 		@Param('id', ParseIntPipe) id: number
 	): Promise<customer | null> {
-		return this.customerService.findOne(id)
+		return this.customerService.findOne(id);
 	}
 
 	@Get('phone/:phone')
@@ -247,7 +249,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - Only MANAGER and STAFF can search for customers.',
+		description:
+			'Forbidden - Only MANAGER and STAFF can search for customers.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -256,7 +259,7 @@ export class CustomerController {
 		type: NotFoundErrorDto,
 	})
 	async findByPhone(@Param('phone') phone: string): Promise<customer | null> {
-		return this.customerService.findByPhone(phone)
+		return this.customerService.findByPhone(phone);
 	}
 
 	@Get(':id/account')
@@ -296,7 +299,7 @@ export class CustomerController {
 		type: NotFoundErrorDto,
 	})
 	async getCustomerAccount(@Param('id', ParseIntPipe) customerId: number) {
-		return this.customerService.getCustomerAccount(customerId)
+		return this.customerService.getCustomerAccount(customerId);
 	}
 
 	@Post(':id/account')
@@ -322,7 +325,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Invalid request - Account data is not in the correct format.',
+		description:
+			'Invalid request - Account data is not in the correct format.',
 		type: ValidationErrorDto,
 	})
 	@ApiResponse({
@@ -353,7 +357,7 @@ export class CustomerController {
 		return this.customerService.createCustomerAccount(
 			customerId,
 			createAccountDto
-		)
+		);
 	}
 
 	@Patch(':id/account')
@@ -379,7 +383,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Invalid request - Update data is not in the correct format.',
+		description:
+			'Invalid request - Update data is not in the correct format.',
 		type: ValidationErrorDto,
 	})
 	@ApiResponse({
@@ -410,7 +415,7 @@ export class CustomerController {
 		return this.customerService.updateCustomerAccount(
 			customerId,
 			updateAccountDto
-		)
+		);
 	}
 
 	@Patch(':id/account/lock')
@@ -435,7 +440,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Invalid request - Lock status is not in the correct format.',
+		description:
+			'Invalid request - Lock status is not in the correct format.',
 		type: ValidationErrorDto,
 	})
 	@ApiResponse({
@@ -461,7 +467,7 @@ export class CustomerController {
 		return this.customerService.lockCustomerAccount(
 			customerId,
 			lockAccountDto.is_locked
-		)
+		);
 	}
 
 	@Patch(':id')
@@ -487,7 +493,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 400,
-		description: 'Invalid request - Update data is not in the correct format.',
+		description:
+			'Invalid request - Update data is not in the correct format.',
 		type: ValidationErrorDto,
 	})
 	@ApiResponse({
@@ -497,7 +504,8 @@ export class CustomerController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - CUSTOMER can only update their own information.',
+		description:
+			'Forbidden - CUSTOMER can only update their own information.',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -514,7 +522,7 @@ export class CustomerController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateCustomerDto: UpdateCustomerDto
 	): Promise<customer> {
-		return this.customerService.update(id, updateCustomerDto)
+		return this.customerService.update(id, updateCustomerDto);
 	}
 
 	@Delete(':id')
@@ -558,7 +566,7 @@ export class CustomerController {
 		type: ConflictErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.customerService.remove(id)
+		await this.customerService.remove(id);
 	}
 
 	@Get('test/ping')
@@ -586,7 +594,7 @@ export class CustomerController {
 		type: ForbiddenErrorDto,
 	})
 	test(): Promise<{ message: string }> {
-		return Promise.resolve({ message: 'Customer controller is working!' })
+		return Promise.resolve({ message: 'Customer controller is working!' });
 	}
 
 	@Get('membership-type/:membershipTypeId')
@@ -647,6 +655,6 @@ export class CustomerController {
 		return this.customerService.findByMembershipType(
 			membershipTypeId,
 			paginationDto
-		)
+		);
 	}
 }

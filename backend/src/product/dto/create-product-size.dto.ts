@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { Type } from 'class-transformer'
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
 	IsInt,
 	IsNotEmpty,
@@ -7,7 +7,7 @@ import {
 	IsString,
 	MaxLength,
 	Min,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreateProductSizeForProductDto {
 	@ApiProperty({
@@ -18,7 +18,7 @@ export class CreateProductSizeForProductDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(50)
-	name: string
+	name: string;
 
 	@ApiProperty({
 		description: 'The unit of measurement',
@@ -28,7 +28,7 @@ export class CreateProductSizeForProductDto {
 	@IsString()
 	@IsNotEmpty()
 	@MaxLength(20)
-	unit: string
+	unit: string;
 
 	@ApiProperty({
 		description: 'The quantity or size value',
@@ -38,7 +38,7 @@ export class CreateProductSizeForProductDto {
 	@IsInt()
 	@Min(1)
 	@Type(() => Number)
-	quantity: number
+	quantity: number;
 
 	@ApiProperty({
 		description: 'A description of the product size',
@@ -49,5 +49,5 @@ export class CreateProductSizeForProductDto {
 	@IsOptional()
 	@IsString()
 	@MaxLength(255)
-	description?: string
+	description?: string;
 }

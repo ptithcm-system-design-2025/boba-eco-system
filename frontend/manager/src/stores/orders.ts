@@ -1,288 +1,363 @@
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
-import { Order } from "@/types/api";
-import { orderService } from "@/lib/services/order-service";
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { orderService } from '@/lib/services/order-service';
+import { extractErrorMessage } from '@/lib/utils/jsend';
+import type { Order } from '@/types/order';
 
 interface OrdersState {
-  // State
-  orders: Order[];
-  currentOrder: Order | null;
-  isLoading: boolean;
-  isCreating: boolean;
-  isUpdating: boolean;
-  isDeleting: boolean;
-  error: string | null;
-  
-  // Pagination
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  
-  // Filters
-  statusFilter: 'ALL' | 'PROCESSING' | 'CANCELLED' | 'COMPLETED';
-  customerIdFilter?: number;
-  employeeIdFilter?: number;
+	// State
+	orders: Order[];
+	currentOrder: Order | null;
+	isLoading: boolean;
+	isCreating: boolean;
+	isUpdating: boolean;
+	isDeleting: boolean;
+	error: string | null;
 
-  // Actions
-  fetchOrders: (params?: { page?: number; limit?: number; }) => Promise<void>;
-  fetchOrdersByStatus: (status: 'PROCESSING' | 'CANCELLED' | 'COMPLETED', params?: { page?: number; limit?: number; }) => Promise<void>;
-  fetchOrdersByEmployee: (employeeId: number, params?: { page?: number; limit?: number; }) => Promise<void>;
-  fetchOrdersByCustomer: (customerId: number, params?: { page?: number; limit?: number; }) => Promise<void>;
-  fetchOrderById: (id: number) => Promise<void>;
-  cancelOrder: (id: number) => Promise<void>;
-  deleteOrder: (id: number) => Promise<void>;
-  
-  // Filter actions
-  setStatusFilter: (status: 'ALL' | 'PROCESSING' | 'CANCELLED' | 'COMPLETED') => void;
-  setCustomerFilter: (customerId?: number) => void;
-  setEmployeeFilter: (employeeId?: number) => void;
-  clearFilters: () => void;
-  
-  // Utility actions
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
+	// Pagination
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+
+	// Filters
+	statusFilter: 'ALL' | 'PROCESSING' | 'CANCELLED' | 'COMPLETED';
+	customerIdFilter?: number;
+	employeeIdFilter?: number;
+
+	// Actions
+	fetchOrders: (params?: { page?: number; limit?: number }) => Promise<void>;
+	fetchOrdersByStatus: (
+		status: 'PROCESSING' | 'CANCELLED' | 'COMPLETED',
+		params?: { page?: number; limit?: number },
+	) => Promise<void>;
+	fetchOrdersByEmployee: (
+		employeeId: number,
+		params?: { page?: number; limit?: number },
+	) => Promise<void>;
+	fetchOrdersByCustomer: (
+		customerId: number,
+		params?: { page?: number; limit?: number },
+	) => Promise<void>;
+	fetchOrderById: (id: number) => Promise<void>;
+	cancelOrder: (id: number) => Promise<void>;
+	deleteOrder: (id: number) => Promise<void>;
+
+	// Filter actions
+	setStatusFilter: (
+		status: 'ALL' | 'PROCESSING' | 'CANCELLED' | 'COMPLETED',
+	) => void;
+	setCustomerFilter: (customerId?: number) => void;
+	setEmployeeFilter: (employeeId?: number) => void;
+	clearFilters: () => void;
+
+	// Utility actions
+	setError: (error: string | null) => void;
+	clearError: () => void;
+	reset: () => void;
 }
 
 const initialState = {
-  orders: [],
-  currentOrder: null,
-  isLoading: false,
-  isCreating: false,
-  isUpdating: false,
-  isDeleting: false,
-  error: null,
-  page: 1,
-  limit: 10,
-  total: 0,
-  totalPages: 0,
-  statusFilter: 'ALL' as const,
-  customerIdFilter: undefined,
-  employeeIdFilter: undefined,
+	orders: [],
+	currentOrder: null,
+	isLoading: false,
+	isCreating: false,
+	isUpdating: false,
+	isDeleting: false,
+	error: null,
+	page: 1,
+	limit: 10,
+	total: 0,
+	totalPages: 0,
+	statusFilter: 'ALL' as const,
+	customerIdFilter: undefined,
+	employeeIdFilter: undefined,
 };
 
 export const useOrdersStore = create<OrdersState>()(
-  devtools(
-    (set, get) => ({
-      ...initialState,
+	devtools(
+		(set, get) => ({
+			...initialState,
 
-      fetchOrders: async (params) => {
-        try {
-          set({ isLoading: true, error: null });
-          const { statusFilter, customerIdFilter, employeeIdFilter } = get();
-          
-          const response = await orderService.getOrders({
-            page: params?.page || get().page,
-            limit: params?.limit || get().limit,
-            ...(statusFilter !== 'ALL' && { status: statusFilter }),
-            ...(customerIdFilter && { customerId: customerIdFilter }),
-            ...(employeeIdFilter && { employeeId: employeeIdFilter }),
-          });
+			fetchOrders: async (params) => {
+				try {
+					set({ isLoading: true, error: null });
+					const { statusFilter, customerIdFilter, employeeIdFilter } =
+						get();
 
-          set({
-            orders: response.data,
-            page: response.page,
-            limit: response.limit,
-            total: response.total,
-            totalPages: response.totalPages,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Lỗi khi tải danh sách đơn hàng:", error);
-          set({
-            error: "Không thể tải danh sách đơn hàng",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+					const response = await orderService.getOrders({
+						page: params?.page || get().page,
+						limit: params?.limit || get().limit,
+						...(statusFilter !== 'ALL' && { status: statusFilter }),
+						...(customerIdFilter && {
+							customerId: customerIdFilter,
+						}),
+						...(employeeIdFilter && {
+							employeeId: employeeIdFilter,
+						}),
+					});
 
-      fetchOrdersByStatus: async (status, params) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await orderService.getOrdersByStatus(status, {
-            page: params?.page || get().page,
-            limit: params?.limit || get().limit,
-          });
+					set({
+						orders: response.data,
+						page: response.page,
+						limit: response.limit,
+						total: response.total,
+						totalPages: response.totalPages,
+						isLoading: false,
+					});
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể tải danh sách đơn hàng',
+					);
+					console.error(
+						'Lỗi khi tải danh sách đơn hàng:',
+						errorMessage,
+					);
+					set({
+						error: errorMessage,
+						isLoading: false,
+					});
+					throw error;
+				}
+			},
 
-          set({
-            orders: response.data,
-            page: response.page,
-            limit: response.limit,
-            total: response.total,
-            totalPages: response.totalPages,
-            statusFilter: status,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Lỗi khi tải đơn hàng theo trạng thái:", error);
-          set({
-            error: "Không thể tải đơn hàng theo trạng thái",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+			fetchOrdersByStatus: async (status, params) => {
+				try {
+					set({ isLoading: true, error: null });
 
-      fetchOrdersByEmployee: async (employeeId, params) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await orderService.getOrdersByEmployee(employeeId, {
-            page: params?.page || get().page,
-            limit: params?.limit || get().limit,
-          });
+					const response = await orderService.getOrdersByStatus(
+						status,
+						{
+							page: params?.page || get().page,
+							limit: params?.limit || get().limit,
+						},
+					);
 
-          set({
-            orders: response.data,
-            page: response.page,
-            limit: response.limit,
-            total: response.total,
-            totalPages: response.totalPages,
-            employeeIdFilter: employeeId,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Lỗi khi tải đơn hàng theo nhân viên:", error);
-          set({
-            error: "Không thể tải đơn hàng theo nhân viên",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+					set({
+						orders: response.data,
+						page: response.page,
+						limit: response.limit,
+						total: response.total,
+						totalPages: response.totalPages,
+						statusFilter: status,
+						isLoading: false,
+					});
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể tải đơn hàng theo trạng thái',
+					);
+					console.error(
+						'Lỗi khi tải đơn hàng theo trạng thái:',
+						errorMessage,
+					);
+					set({
+						error: errorMessage,
+						isLoading: false,
+					});
+					throw error;
+				}
+			},
 
-      fetchOrdersByCustomer: async (customerId, params) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await orderService.getOrdersByCustomer(customerId, {
-            page: params?.page || get().page,
-            limit: params?.limit || get().limit,
-          });
+			fetchOrdersByEmployee: async (employeeId, params) => {
+				try {
+					set({ isLoading: true, error: null });
 
-          set({
-            orders: response.data,
-            page: response.page,
-            limit: response.limit,
-            total: response.total,
-            totalPages: response.totalPages,
-            customerIdFilter: customerId,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Lỗi khi tải đơn hàng theo khách hàng:", error);
-          set({
-            error: "Không thể tải đơn hàng theo khách hàng",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+					const response = await orderService.getOrdersByEmployee(
+						employeeId,
+						{
+							page: params?.page || get().page,
+							limit: params?.limit || get().limit,
+						},
+					);
 
-      fetchOrderById: async (id) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const order = await orderService.getById(id);
-          
-          set({
-            currentOrder: order,
-            isLoading: false,
-          });
-        } catch (error) {
-          console.error("Lỗi khi tải chi tiết đơn hàng:", error);
-          set({
-            error: "Không thể tải chi tiết đơn hàng",
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+					set({
+						orders: response.data,
+						page: response.page,
+						limit: response.limit,
+						total: response.total,
+						totalPages: response.totalPages,
+						employeeIdFilter: employeeId,
+						isLoading: false,
+					});
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể tải đơn hàng theo nhân viên',
+					);
+					console.error(
+						'Lỗi khi tải đơn hàng theo nhân viên:',
+						errorMessage,
+					);
+					set({
+						error: errorMessage,
+						isLoading: false,
+					});
+					throw error;
+				}
+			},
 
-      cancelOrder: async (id) => {
-        try {
-          set({ isUpdating: true, error: null });
-          
-          const updatedOrder = await orderService.cancelOrder(id);
-          
-          // Update trong list orders
-          set((state) => ({
-            orders: state.orders.map((order) =>
-              order.id === id ? updatedOrder : order
-            ),
-            currentOrder: state.currentOrder?.id === id ? updatedOrder : state.currentOrder,
-            isUpdating: false,
-          }));
-        } catch (error) {
-          console.error("Lỗi khi hủy đơn hàng:", error);
-          set({
-            error: "Không thể hủy đơn hàng",
-            isUpdating: false,
-          });
-          throw error;
-        }
-      },
+			fetchOrdersByCustomer: async (customerId, params) => {
+				try {
+					set({ isLoading: true, error: null });
 
-      deleteOrder: async (id) => {
-        try {
-          set({ isDeleting: true, error: null });
-          
-          await orderService.deleteOrder(id);
-          
-          // Remove từ list orders
-          set((state) => ({
-            orders: state.orders.filter((order) => order.id !== id),
-            currentOrder: state.currentOrder?.id === id ? null : state.currentOrder,
-            total: state.total - 1,
-            isDeleting: false,
-          }));
-        } catch (error) {
-          console.error("Lỗi khi xóa đơn hàng:", error);
-          set({
-            error: "Không thể xóa đơn hàng",
-            isDeleting: false,
-          });
-          throw error;
-        }
-      },
+					const response = await orderService.getOrdersByCustomer(
+						customerId,
+						{
+							page: params?.page || get().page,
+							limit: params?.limit || get().limit,
+						},
+					);
 
-      setStatusFilter: (status) => {
-        set({ statusFilter: status });
-      },
+					set({
+						orders: response.data,
+						page: response.page,
+						limit: response.limit,
+						total: response.total,
+						totalPages: response.totalPages,
+						customerIdFilter: customerId,
+						isLoading: false,
+					});
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể tải đơn hàng theo khách hàng',
+					);
+					console.error(
+						'Lỗi khi tải đơn hàng theo khách hàng:',
+						errorMessage,
+					);
+					set({
+						error: errorMessage,
+						isLoading: false,
+					});
+					throw error;
+				}
+			},
 
-      setCustomerFilter: (customerId) => {
-        set({ customerIdFilter: customerId });
-      },
+			fetchOrderById: async (id) => {
+				try {
+					set({ isLoading: true, error: null });
 
-      setEmployeeFilter: (employeeId) => {
-        set({ employeeIdFilter: employeeId });
-      },
+					const order = await orderService.getById(id);
 
-      clearFilters: () => {
-        set({
-          statusFilter: 'ALL',
-          customerIdFilter: undefined,
-          employeeIdFilter: undefined,
-        });
-      },
+					set({
+						currentOrder: order,
+						isLoading: false,
+					});
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể tải chi tiết đơn hàng',
+					);
+					console.error(
+						'Lỗi khi tải chi tiết đơn hàng:',
+						errorMessage,
+					);
+					set({
+						error: errorMessage,
+						isLoading: false,
+					});
+					throw error;
+				}
+			},
 
-      setError: (error) => {
-        set({ error });
-      },
+			cancelOrder: async (id) => {
+				try {
+					set({ isUpdating: true, error: null });
 
-      clearError: () => {
-        set({ error: null });
-      },
+					const updatedOrder = await orderService.cancelOrder(id);
 
-      reset: () => {
-        set(initialState);
-      },
-    }),
-    {
-      name: "orders-store",
-    }
-  )
-); 
+					// Update trong list orders
+					set((state) => ({
+						orders: state.orders.map((order) =>
+							order.id === id ? updatedOrder : order,
+						),
+						currentOrder:
+							state.currentOrder?.id === id
+								? updatedOrder
+								: state.currentOrder,
+						isUpdating: false,
+					}));
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể hủy đơn hàng',
+					);
+					console.error('Lỗi khi hủy đơn hàng:', errorMessage);
+					set({
+						error: errorMessage,
+						isUpdating: false,
+					});
+					throw error;
+				}
+			},
+
+			deleteOrder: async (id) => {
+				try {
+					set({ isDeleting: true, error: null });
+
+					await orderService.deleteOrder(id);
+
+					// Remove từ list orders
+					set((state) => ({
+						orders: state.orders.filter((order) => order.id !== id),
+						currentOrder:
+							state.currentOrder?.id === id
+								? null
+								: state.currentOrder,
+						total: state.total - 1,
+						isDeleting: false,
+					}));
+				} catch (error) {
+					const errorMessage = extractErrorMessage(
+						error,
+						'Không thể xóa đơn hàng',
+					);
+					console.error('Lỗi khi xóa đơn hàng:', errorMessage);
+					set({
+						error: errorMessage,
+						isDeleting: false,
+					});
+					throw error;
+				}
+			},
+
+			setStatusFilter: (status) => {
+				set({ statusFilter: status });
+			},
+
+			setCustomerFilter: (customerId) => {
+				set({ customerIdFilter: customerId });
+			},
+
+			setEmployeeFilter: (employeeId) => {
+				set({ employeeIdFilter: employeeId });
+			},
+
+			clearFilters: () => {
+				set({
+					statusFilter: 'ALL',
+					customerIdFilter: undefined,
+					employeeIdFilter: undefined,
+				});
+			},
+
+			setError: (error) => {
+				set({ error });
+			},
+
+			clearError: () => {
+				set({ error: null });
+			},
+
+			reset: () => {
+				set(initialState);
+			},
+		}),
+		{
+			name: 'orders-store',
+		},
+	),
+);

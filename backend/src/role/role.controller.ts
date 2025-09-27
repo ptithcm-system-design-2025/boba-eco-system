@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -20,20 +20,20 @@ import {
 	ApiParam,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { role } from '../generated/prisma/client'
-import { CreateRoleDto } from './dto/create-role.dto'
-import { UpdateRoleDto } from './dto/update-role.dto'
-import type { RoleService } from './role.service'
+} from '../common/dto/pagination.dto';
+import type { role } from '../generated/prisma/client';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import type { RoleService } from './role.service';
 
 @ApiTags('roles')
 @Controller('roles')
@@ -73,7 +73,7 @@ export class RoleController {
 		description: 'Conflict. Role name already exists.',
 	})
 	async create(@Body() createRoleDto: CreateRoleDto): Promise<role> {
-		return this.roleService.create(createRoleDto)
+		return this.roleService.create(createRoleDto);
 	}
 
 	/**
@@ -110,7 +110,7 @@ export class RoleController {
 	async findAll(
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<role>> {
-		return this.roleService.findAll(paginationDto)
+		return this.roleService.findAll(paginationDto);
 	}
 
 	/**
@@ -135,7 +135,7 @@ export class RoleController {
 		description: 'Not Found. Role with the given ID not found.',
 	})
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<role | null> {
-		return this.roleService.findOne(id)
+		return this.roleService.findOne(id);
 	}
 
 	/**
@@ -173,7 +173,7 @@ export class RoleController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateRoleDto: UpdateRoleDto
 	): Promise<role> {
-		return this.roleService.update(id, updateRoleDto)
+		return this.roleService.update(id, updateRoleDto);
 	}
 
 	/**
@@ -206,6 +206,6 @@ export class RoleController {
 		description: 'Conflict. The role is associated with existing accounts.',
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-		await this.roleService.remove(id)
+		await this.roleService.remove(id);
 	}
 }

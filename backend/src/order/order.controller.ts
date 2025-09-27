@@ -11,7 +11,7 @@ import {
 	Post,
 	Query,
 	UseGuards,
-} from '@nestjs/common'
+} from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -21,27 +21,27 @@ import {
 	ApiQuery,
 	ApiResponse,
 	ApiTags,
-} from '@nestjs/swagger'
-import { ROLES } from '../auth/constants/roles.constant'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
-import { RolesGuard } from '../auth/guards/roles.guard'
+} from '@nestjs/swagger';
+import { ROLES } from '../auth/constants/roles.constant';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import {
 	JSendSuccessDto,
 	NotFoundErrorDto,
 	UnauthorizedErrorDto,
 	ValidationErrorDto,
-} from '../common/dto/jsend-response.dto'
+} from '../common/dto/jsend-response.dto';
 import {
 	type PaginatedResult,
 	type PaginationDto,
 	PaginationMetadata,
-} from '../common/dto/pagination.dto'
-import type { order_status_enum } from '../generated/prisma/client'
-import { CreateOrderDto } from './dto/create-order.dto'
-import { UpdateOrderDto } from './dto/update-order.dto'
-import { ValidateDiscountDto } from './dto/validate-discount.dto'
-import type { OrderService } from './order.service'
+} from '../common/dto/pagination.dto';
+import type { order_status_enum } from '../generated/prisma/client';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { ValidateDiscountDto } from './dto/validate-discount.dto';
+import type { OrderService } from './order.service';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -84,7 +84,7 @@ export class OrderController {
 		type: ValidationErrorDto,
 	})
 	async create(@Body() createOrderDto: CreateOrderDto): Promise<order> {
-		return this.orderService.create(createOrderDto)
+		return this.orderService.create(createOrderDto);
 	}
 
 	@Get()
@@ -122,7 +122,8 @@ export class OrderController {
 		name: 'status',
 		required: false,
 		type: String,
-		description: 'Filter by order status (PROCESSING, CANCELLED, COMPLETED)',
+		description:
+			'Filter by order status (PROCESSING, CANCELLED, COMPLETED)',
 	})
 	@ApiResponse({
 		status: 200,
@@ -149,9 +150,9 @@ export class OrderController {
 			...(customerId && { customerId: parseInt(customerId, 10) }),
 			...(employeeId && { employeeId: parseInt(employeeId, 10) }),
 			...(status && { status }),
-		}
+		};
 
-		return this.orderService.findAll(paginationDto, filters)
+		return this.orderService.findAll(paginationDto, filters);
 	}
 
 	@Get(':id')
@@ -183,7 +184,7 @@ export class OrderController {
 		type: NotFoundErrorDto,
 	})
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<order> {
-		return this.orderService.findOne(id)
+		return this.orderService.findOne(id);
 	}
 
 	@Patch(':id')
@@ -216,7 +217,8 @@ export class OrderController {
 	})
 	@ApiResponse({
 		status: 404,
-		description: 'Order not found or related entity not found during update',
+		description:
+			'Order not found or related entity not found during update',
 		type: NotFoundErrorDto,
 	})
 	@ApiResponse({
@@ -229,7 +231,7 @@ export class OrderController {
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateOrderDto: UpdateOrderDto
 	): Promise<order> {
-		return this.orderService.update(id, updateOrderDto)
+		return this.orderService.update(id, updateOrderDto);
 	}
 
 	@Patch(':id/cancel')
@@ -260,7 +262,8 @@ export class OrderController {
 	})
 	@ApiResponse({
 		status: 403,
-		description: 'Forbidden - Insufficient permissions to cancel this order',
+		description:
+			'Forbidden - Insufficient permissions to cancel this order',
 		type: ForbiddenErrorDto,
 	})
 	@ApiResponse({
@@ -269,7 +272,7 @@ export class OrderController {
 		type: NotFoundErrorDto,
 	})
 	async cancelOrder(@Param('id', ParseIntPipe) id: number): Promise<order> {
-		return this.orderService.cancelOrder(id)
+		return this.orderService.cancelOrder(id);
 	}
 
 	@Delete(':id')
@@ -299,7 +302,7 @@ export class OrderController {
 		type: NotFoundErrorDto,
 	})
 	async remove(@Param('id', ParseIntPipe) id: number): Promise<order> {
-		return this.orderService.remove(id)
+		return this.orderService.remove(id);
 	}
 
 	@Get('employee/:employeeId')
@@ -328,7 +331,7 @@ export class OrderController {
 		@Param('employeeId', ParseIntPipe) employeeId: number,
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<order>> {
-		return this.orderService.findByEmployee(employeeId, paginationDto)
+		return this.orderService.findByEmployee(employeeId, paginationDto);
 	}
 
 	@Get('customer/:customerId')
@@ -357,7 +360,7 @@ export class OrderController {
 		@Param('customerId', ParseIntPipe) customerId: number,
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<order>> {
-		return this.orderService.findByCustomer(customerId, paginationDto)
+		return this.orderService.findByCustomer(customerId, paginationDto);
 	}
 
 	@Get('status/:status')
@@ -402,7 +405,7 @@ export class OrderController {
 		@Param('status') status: order_status_enum,
 		@Query() paginationDto: PaginationDto
 	): Promise<PaginatedResult<order>> {
-		return this.orderService.findByStatus(status, paginationDto)
+		return this.orderService.findByStatus(status, paginationDto);
 	}
 
 	@Post('validate-discounts')
@@ -436,6 +439,6 @@ export class OrderController {
 		type: ForbiddenErrorDto,
 	})
 	async validateDiscounts(@Body() validateDiscountDto: ValidateDiscountDto) {
-		return this.orderService.validateDiscounts(validateDiscountDto)
+		return this.orderService.validateDiscounts(validateDiscountDto);
 	}
 }
