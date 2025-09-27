@@ -1,84 +1,128 @@
 import { apiClient } from '@/lib/api-client';
-import { ProductSize, BackendPaginatedResponse, BulkDeleteResponse, transformProductSize } from '@/types/api';
-import { 
-  CreateProductSizeFormData, 
-  UpdateProductSizeFormData,
-  BulkDeleteProductSizeFormData 
+import {
+	extractJSendData,
+	transformJSendPaginatedResponse,
+} from '@/lib/utils/jsend';
+import type {
+	BulkDeleteProductSizeFormData,
+	CreateProductSizeFormData,
+	UpdateProductSizeFormData,
 } from '@/lib/validations/product-size';
+import type { BulkDeleteResponse } from '@/types/common';
+import {
+	type BackendProductSizeResponse,
+	type ProductSize,
+	transformProductSize,
+} from '@/types/product';
+import type {
+	JSendPaginatedSuccess,
+	JSendSuccess,
+} from '@/types/protocol/jsend';
 
 export interface ProductSizeQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
+	page?: number;
+	limit?: number;
+	search?: string;
 }
 
 export interface PaginatedProductSizeResponse {
-  data: ProductSize[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
+	data: ProductSize[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
 }
 
 class ProductSizeService {
-  private readonly baseUrl = '/product-sizes';
+	private readonly baseUrl = '/product-sizes';
 
-  async getAll(params?: ProductSizeQueryParams): Promise<PaginatedProductSizeResponse> {
-    const searchParams = new URLSearchParams();
-    
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.search) searchParams.append('search', params.search);
+	async getAll(
+		params?: ProductSizeQueryParams,
+	): Promise<PaginatedProductSizeResponse> {
+		const searchParams = new URLSearchParams();
 
-    const response = await apiClient.get<BackendPaginatedResponse<any>>(
-      `${this.baseUrl}?${searchParams.toString()}`
-    );
+		if (params?.page) searchParams.append('page', params.page.toString());
+		if (params?.limit)
+			searchParams.append('limit', params.limit.toString());
+		if (params?.search) searchParams.append('search', params.search);
 
-    return {
-      data: response.data.map(transformProductSize),
-      page: response.pagination.page,
-      limit: response.pagination.limit,
-      total: response.pagination.total,
-      totalPages: response.pagination.totalPages || Math.ceil(response.pagination.total / response.pagination.limit),
-    };
-  }
+		const jsendResponse = await apiClient.get<
+			JSendPaginatedSuccess<ProductSize>
+		>(`${this.baseUrl}?${searchParams.toString()}`);
 
-  async getById(id: number): Promise<ProductSize> {
-    const response = await apiClient.get<any>(`${this.baseUrl}/${id}`);
-    return transformProductSize(response);
-  }
+		const paginatedData =
+			transformJSendPaginatedResponse<BackendProductSizeResponse>(
+				jsendResponse,
+			);
 
-  async create(data: CreateProductSizeFormData): Promise<ProductSize> {
-    const response = await apiClient.post<any>(this.baseUrl, data);
-    return transformProductSize(response);
-  }
+		return {
+			data: paginatedData.data.map(transformProductSize),
+			page: paginatedData.page,
+			limit: paginatedData.limit,
+			total: paginatedData.total,
+			totalPages: paginatedData.totalPages,
+		};
+	}
 
-  async update(id: number, data: UpdateProductSizeFormData): Promise<ProductSize> {
-    const response = await apiClient.patch<any>(`${this.baseUrl}/${id}`, data);
-    return transformProductSize(response);
-  }
+	async getById(id: number): Promise<ProductSize> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendProductSizeResponse>
+		>(`${this.baseUrl}/${id}`);
+		const response = extractJSendData(jsendResponse);
+		return transformProductSize(response);
+	}
 
-  async delete(id: number): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${id}`);
-  }
+	async create(data: CreateProductSizeFormData): Promise<ProductSize> {
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BackendProductSizeResponse>
+		>(this.baseUrl, data);
+		const response = extractJSendData(jsendResponse);
+		return transformProductSize(response);
+	}
 
-  async bulkDelete(data: BulkDeleteProductSizeFormData): Promise<BulkDeleteResponse> {
-    const response = await apiClient.post<BulkDeleteResponse>(`${this.baseUrl}/bulk-delete`, data);
-    return response;
-  }
+	async update(
+		id: number,
+		data: UpdateProductSizeFormData,
+	): Promise<ProductSize> {
+		const jsendResponse = await apiClient.patch<
+			JSendSuccess<BackendProductSizeResponse>
+		>(`${this.baseUrl}/${id}`, data);
+		const response = extractJSendData(jsendResponse);
+		return transformProductSize(response);
+	}
 
-  async getProductPricesBySize(sizeId: number, params?: ProductSizeQueryParams): Promise<any> {
-    const searchParams = new URLSearchParams();
-    
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
+	async delete(id: number): Promise<void> {
+		const jsendResponse = await apiClient.delete<JSendSuccess<void>>(
+			`${this.baseUrl}/${id}`,
+		);
+		extractJSendData(jsendResponse);
+	}
 
-    const response = await apiClient.get<BackendPaginatedResponse<any>>(
-      `${this.baseUrl}/${sizeId}/product-prices?${searchParams.toString()}`
-    );
+	async bulkDelete(
+		data: BulkDeleteProductSizeFormData,
+	): Promise<BulkDeleteResponse> {
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BulkDeleteResponse>
+		>(`${this.baseUrl}/bulk-delete`, data);
+		return extractJSendData(jsendResponse);
+	}
 
-    return response;
-  }
+	async getProductPricesBySize(
+		sizeId: number,
+		params?: ProductSizeQueryParams,
+	): Promise<unknown> {
+		const searchParams = new URLSearchParams();
+
+		if (params?.page) searchParams.append('page', params.page.toString());
+		if (params?.limit)
+			searchParams.append('limit', params.limit.toString());
+
+		const jsendResponse = await apiClient.get<JSendSuccess<unknown>>(
+			`${this.baseUrl}/${sizeId}/product-prices?${searchParams.toString()}`,
+		);
+
+		return extractJSendData(jsendResponse);
+	}
 }
 
-export const productSizeService = new ProductSizeService(); 
+export const productSizeService = new ProductSizeService();

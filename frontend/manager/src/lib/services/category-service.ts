@@ -1,114 +1,150 @@
-import { apiClient } from "@/lib/api-client";
-import { 
-  Category, 
-  BackendCategoryResponse,
-  BackendPaginatedResponse,
-  BulkDeleteResponse,
-  transformCategoryResponse,
-  PaginatedResponse 
-} from "@/types/api";
-import { 
-  transformCreateCategoryFormData, 
-  transformUpdateCategoryFormData,
-  CreateCategoryFormData,
-  UpdateCategoryFormData,
-  BulkDeleteCategoryFormData 
-} from "@/lib/validations/category";
+import { apiClient } from '@/lib/api-client';
+import {
+	extractJSendData,
+	transformJSendPaginatedResponse,
+} from '@/lib/utils/jsend';
+import {
+	type BulkDeleteCategoryFormData,
+	type CreateCategoryFormData,
+	transformCreateCategoryFormData,
+	transformUpdateCategoryFormData,
+	type UpdateCategoryFormData,
+} from '@/lib/validations/category';
+import {
+	type BackendCategoryResponse,
+	type Category,
+	transformCategoryResponse,
+} from '@/types/category';
+import type { BulkDeleteResponse, PaginatedResponse } from '@/types/common';
+import type {
+	JSendPaginatedSuccess,
+	JSendSuccess,
+} from '@/types/protocol/jsend';
 
 /**
  * Category Service
  * Xử lý tất cả API calls liên quan đến categories
  */
 export class CategoryService {
-  private readonly endpoint = "/categories";
+	private readonly endpoint = '/categories';
 
-  /**
-   * Lấy danh sách categories với pagination
-   */
-  async getAll(params?: { 
-    page?: number; 
-    limit?: number;
-    search?: string;
-  }): Promise<PaginatedResponse<Category>> {
-    const backendResponse = await apiClient.get<BackendPaginatedResponse<BackendCategoryResponse>>(
-      this.endpoint, 
-      params
-    );
-    
-    // Transform backend response sang frontend format
-    return {
-      data: backendResponse.data.map(transformCategoryResponse),
-      total: backendResponse.pagination.total,
-      page: backendResponse.pagination.page,
-      limit: backendResponse.pagination.limit,
-      totalPages: backendResponse.pagination.totalPages,
-    };
-  }
+	/**
+	 * Lấy danh sách categories với pagination
+	 */
+	async getAll(params?: {
+		page?: number;
+		limit?: number;
+		search?: string;
+	}): Promise<PaginatedResponse<Category>> {
+		const jsendResponse = await apiClient.get<
+			JSendPaginatedSuccess<BackendCategoryResponse>
+		>(this.endpoint, params);
 
-  /**
-   * Lấy category theo ID
-   */
-  async getById(id: number): Promise<Category> {
-    const backendResponse = await apiClient.get<BackendCategoryResponse>(`${this.endpoint}/${id}`);
-    return transformCategoryResponse(backendResponse);
-  }
+		// Transform JSend paginated response to frontend format
+		const paginatedData =
+			transformJSendPaginatedResponse<BackendCategoryResponse>(
+				jsendResponse,
+			);
 
-  /**
-   * Tạo category mới
-   */
-  async create(formData: CreateCategoryFormData): Promise<Category> {
-    const backendData = transformCreateCategoryFormData(formData);
-    const backendResponse = await apiClient.post<BackendCategoryResponse>(this.endpoint, backendData);
-    return transformCategoryResponse(backendResponse);
-  }
+		return {
+			data: paginatedData.data.map(transformCategoryResponse),
+			total: paginatedData.total,
+			page: paginatedData.page,
+			limit: paginatedData.limit,
+			totalPages: paginatedData.totalPages,
+		};
+	}
 
-  /**
-   * Cập nhật category
-   */
-  async update(id: number, formData: UpdateCategoryFormData): Promise<Category> {
-    const backendData = transformUpdateCategoryFormData(formData);
-    const backendResponse = await apiClient.patch<BackendCategoryResponse>(`${this.endpoint}/${id}`, backendData);
-    return transformCategoryResponse(backendResponse);
-  }
+	/**
+	 * Lấy category theo ID
+	 */
+	async getById(id: number): Promise<Category> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendCategoryResponse>
+		>(`${this.endpoint}/${id}`);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformCategoryResponse(backendResponse);
+	}
 
-  /**
-   * Xóa category
-   */
-  async delete(id: number): Promise<void> {
-    return apiClient.delete<void>(`${this.endpoint}/${id}`);
-  }
+	/**
+	 * Tạo category mới
+	 */
+	async create(formData: CreateCategoryFormData): Promise<Category> {
+		const backendData = transformCreateCategoryFormData(formData);
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BackendCategoryResponse>
+		>(this.endpoint, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformCategoryResponse(backendResponse);
+	}
 
-  /**
-   * Xóa nhiều categories
-   */
-  async bulkDelete(formData: BulkDeleteCategoryFormData): Promise<BulkDeleteResponse> {
-    return apiClient.delete<BulkDeleteResponse>(`${this.endpoint}/bulk`, formData);
-  }
+	/**
+	 * Cập nhật category
+	 */
+	async update(
+		id: number,
+		formData: UpdateCategoryFormData,
+	): Promise<Category> {
+		const backendData = transformUpdateCategoryFormData(formData);
+		const jsendResponse = await apiClient.patch<
+			JSendSuccess<BackendCategoryResponse>
+		>(`${this.endpoint}/${id}`, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformCategoryResponse(backendResponse);
+	}
 
-  /**
-   * Test API connection
-   */
-  async ping(): Promise<{ message: string }> {
-    return apiClient.get<{ message: string }>(`${this.endpoint}/admin/test`);
-  }
+	/**
+	 * Xóa category
+	 */
+	async delete(id: number): Promise<void> {
+		const jsendResponse = await apiClient.delete<JSendSuccess<void>>(
+			`${this.endpoint}/${id}`,
+		);
+		extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Lấy thống kê categories
-   */
-  async getStats(): Promise<{
-    total: number;
-    withProducts: number;
-    withoutProducts: number;
-    recentlyCreated: number;
-  }> {
-    return apiClient.get<{
-      total: number;
-      withProducts: number;
-      withoutProducts: number;
-      recentlyCreated: number;
-    }>(`${this.endpoint}/stats`);
-  }
+	/**
+	 * Xóa nhiều categories
+	 */
+	async bulkDelete(
+		formData: BulkDeleteCategoryFormData,
+	): Promise<BulkDeleteResponse> {
+		const jsendResponse = await apiClient.delete<
+			JSendSuccess<BulkDeleteResponse>
+		>(`${this.endpoint}/bulk`, formData);
+		return extractJSendData(jsendResponse);
+	}
+
+	/**
+	 * Test API connection
+	 */
+	async ping(): Promise<{ message: string }> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{ message: string }>
+		>(`${this.endpoint}/admin/test`);
+		return extractJSendData(jsendResponse);
+	}
+
+	/**
+	 * Lấy thống kê categories
+	 */
+	async getStats(): Promise<{
+		total: number;
+		withProducts: number;
+		withoutProducts: number;
+		recentlyCreated: number;
+	}> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{
+				total: number;
+				withProducts: number;
+				withoutProducts: number;
+				recentlyCreated: number;
+			}>
+		>(`${this.endpoint}/stats`);
+		return extractJSendData(jsendResponse);
+	}
 }
 
 // Export singleton instance
-export const categoryService = new CategoryService(); 
+export const categoryService = new CategoryService();

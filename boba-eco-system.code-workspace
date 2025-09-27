@@ -36,7 +36,7 @@
             "editor.wordWrapColumn": 72,
             "editor.formatOnPaste": true,
             "editor.wrappingIndent": "indent",
-            "editor.defaultFormatter": "biomejs.biome"
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
         "scm.inputFontFamily": "mono",
         "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Source Code Pro', 'Fira Code', Menlo, Monaco, 'Courier New', monospace",
@@ -54,7 +54,7 @@
                 "comments": false
             }
         },
-        "[typescript][javascript][css][json][typescriptreact]": {
+        "[typescript][javascript][css][typescriptreact]": {
             "editor.defaultFormatter": "biomejs.biome",
             "editor.codeActionsOnSave": {
                 "source.organizeImports": "explicit",
@@ -71,6 +71,11 @@
         "editor.defaultFormatter": "biomejs.biome",
         "[jsonc]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
-        }
+        },
+        "github.copilot.chat.commitMessageGeneration.instructions": [
+            {
+                "file": ".github/instructions/.copilot-commit-message-instructions.md"
+            }
+        ]
     }
 }

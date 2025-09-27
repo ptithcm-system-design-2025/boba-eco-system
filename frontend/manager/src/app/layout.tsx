@@ -1,39 +1,39 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { NotificationProvider } from "@/components/ui/notifications";
-import { AuthProvider } from "@/components/providers/auth-provider";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/components/providers/auth-provider';
+import { NotificationProvider } from '@/components/ui/notifications';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+	variable: '--font-geist-sans',
+	subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+	variable: '--font-geist-mono',
+	subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Cake POS Manager",
-  description: "Hệ thống quản lý tiệm bánh chuyên nghiệp",
+	title: 'Cake POS Manager',
+	description: 'Hệ thống quản lý tiệm bánh chuyên nghiệp',
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="vi">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AuthProvider>
-          <NotificationProvider />
-          {children}
-        </AuthProvider>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="vi">
+			<body
+				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+			>
+				<AuthProvider>
+					<NotificationProvider />
+					{children}
+				</AuthProvider>
+			</body>
+		</html>
+	);
 }

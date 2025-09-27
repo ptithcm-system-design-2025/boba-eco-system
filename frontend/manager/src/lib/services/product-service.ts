@@ -1,196 +1,264 @@
-import { apiClient } from "@/lib/api-client";
-import { 
-  Product, 
-  ProductPrice,
-  BackendProductResponse,
-  BackendProductPriceResponse,
-  BackendPaginatedResponse,
-  BulkDeleteResponse,
-  transformProductResponse,
-  transformProductPriceResponse,
-  PaginatedResponse 
-} from "@/types/api";
-import { 
-  transformCreateProductFormData, 
-  transformUpdateProductFormData,
-  CreateProductFormData,
-  UpdateProductFormData,
-  CreateProductPriceFormData,
-  UpdateProductPriceFormData,
-  BulkDeleteProductFormData 
-} from "@/lib/validations/product";
+import { apiClient } from '@/lib/api-client';
+import {
+	extractJSendData,
+	transformJSendPaginatedResponse,
+} from '@/lib/utils/jsend';
+import {
+	type BulkDeleteProductFormData,
+	type CreateProductFormData,
+	type CreateProductPriceFormData,
+	transformCreateProductFormData,
+	transformUpdateProductFormData,
+	type UpdateProductFormData,
+	type UpdateProductPriceFormData,
+} from '@/lib/validations/product';
+import type { BulkDeleteResponse, PaginatedResponse } from '@/types/common';
+import {
+	type BackendProductPriceResponse,
+	type BackendProductResponse,
+	type Product,
+	type ProductPrice,
+	transformProductPriceResponse,
+	transformProductResponse,
+} from '@/types/product';
+import type {
+	JSendPaginatedSuccess,
+	JSendSuccess,
+} from '@/types/protocol/jsend';
 
 /**
  * Product Service
- * Xử lý tất cả API calls liên quan đến products
+ * Xử lý tất cả API calls liên quan đến products với JSend response format
  */
 export class ProductService {
-  private readonly endpoint = "/products";
+	private readonly endpoint = '/products';
 
-  /**
-   * Lấy danh sách products với pagination
-   */
-  async getAll(params?: { 
-    page?: number; 
-    limit?: number;
-    search?: string;
-    category_id?: number;
-    is_signature?: boolean;
-  }): Promise<PaginatedResponse<Product>> {
-    const backendResponse = await apiClient.get<BackendPaginatedResponse<BackendProductResponse>>(
-      this.endpoint, 
-      params
-    );
-    
-    // Transform backend response sang frontend format
-    return {
-      data: backendResponse.data.map(transformProductResponse),
-      total: backendResponse.pagination.total,
-      page: backendResponse.pagination.page,
-      limit: backendResponse.pagination.limit,
-      totalPages: backendResponse.pagination.totalPages,
-    };
-  }
+	/**
+	 * Lấy danh sách products với pagination
+	 */
+	async getAll(params?: {
+		page?: number;
+		limit?: number;
+		search?: string;
+		category_id?: number;
+		is_signature?: boolean;
+	}): Promise<PaginatedResponse<Product>> {
+		const jsendResponse = await apiClient.get<
+			JSendPaginatedSuccess<BackendProductResponse>
+		>(this.endpoint, params);
 
-  /**
-   * Lấy product theo ID
-   */
-  async getById(id: number): Promise<Product> {
-    const backendResponse = await apiClient.get<BackendProductResponse>(`${this.endpoint}/${id}`);
-    return transformProductResponse(backendResponse);
-  }
+		// Transform JSend paginated response to frontend format
+		const paginatedData =
+			transformJSendPaginatedResponse<BackendProductResponse>(
+				jsendResponse,
+			);
 
-  /**
-   * Lấy products theo category ID
-   */
-  async getByCategory(categoryId: number, params?: { 
-    page?: number; 
-    limit?: number;
-    search?: string;
-  }): Promise<PaginatedResponse<Product>> {
-    const backendResponse = await apiClient.get<BackendPaginatedResponse<BackendProductResponse>>(
-      `${this.endpoint}/category/${categoryId}`, 
-      params
-    );
-    
-    // Transform backend response sang frontend format
-    return {
-      data: backendResponse.data.map(transformProductResponse),
-      total: backendResponse.pagination.total,
-      page: backendResponse.pagination.page,
-      limit: backendResponse.pagination.limit,
-      totalPages: backendResponse.pagination.totalPages,
-    };
-  }
+		return {
+			data: paginatedData.data.map(transformProductResponse),
+			total: paginatedData.total,
+			page: paginatedData.page,
+			limit: paginatedData.limit,
+			totalPages: paginatedData.totalPages,
+		};
+	}
 
-  /**
-   * Tạo product mới
-   */
-  async create(formData: CreateProductFormData): Promise<Product> {
-    const backendData = transformCreateProductFormData(formData);
-    const backendResponse = await apiClient.post<BackendProductResponse>(this.endpoint, backendData);
-    return transformProductResponse(backendResponse);
-  }
+	/**
+	 * Lấy product theo ID
+	 */
+	async getById(id: number): Promise<Product> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendProductResponse>
+		>(`${this.endpoint}/${id}`);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformProductResponse(backendResponse);
+	}
 
-  /**
-   * Cập nhật product
-   */
-  async update(id: number, formData: UpdateProductFormData): Promise<Product> {
-    const backendData = transformUpdateProductFormData(formData);
-    const backendResponse = await apiClient.patch<BackendProductResponse>(`${this.endpoint}/${id}`, backendData);
-    return transformProductResponse(backendResponse);
-  }
+	/**
+	 * Lấy products theo category ID
+	 */
+	async getByCategory(
+		categoryId: number,
+		params?: {
+			page?: number;
+			limit?: number;
+			search?: string;
+		},
+	): Promise<PaginatedResponse<Product>> {
+		const jsendResponse = await apiClient.get<
+			JSendPaginatedSuccess<BackendProductResponse>
+		>(`${this.endpoint}/category/${categoryId}`, params);
 
-  /**
-   * Xóa product
-   */
-  async delete(id: number): Promise<void> {
-    return apiClient.delete<void>(`${this.endpoint}/${id}`);
-  }
+		// Transform JSend paginated response to frontend format
+		const paginatedData =
+			transformJSendPaginatedResponse<BackendProductResponse>(
+				jsendResponse,
+			);
 
-  /**
-   * Xóa nhiều products
-   */
-  async bulkDelete(formData: BulkDeleteProductFormData): Promise<BulkDeleteResponse> {
-    return apiClient.delete<BulkDeleteResponse>(`${this.endpoint}/bulk`, formData);
-  }
+		return {
+			data: paginatedData.data.map(transformProductResponse),
+			total: paginatedData.total,
+			page: paginatedData.page,
+			limit: paginatedData.limit,
+			totalPages: paginatedData.totalPages,
+		};
+	}
 
-  /**
-   * Test API connection
-   */
-  async ping(): Promise<{ message: string }> {
-    return apiClient.get<{ message: string }>(`${this.endpoint}/admin/test`);
-  }
+	/**
+	 * Tạo product mới
+	 */
+	async create(formData: CreateProductFormData): Promise<Product> {
+		const backendData = transformCreateProductFormData(formData);
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BackendProductResponse>
+		>(this.endpoint, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformProductResponse(backendResponse);
+	}
 
-  /**
-   * Lấy thống kê products
-   */
-  async getStats(): Promise<{
-    total: number;
-    signature: number;
-    withCategory: number;
-    withoutCategory: number;
-    recentlyCreated: number;
-  }> {
-    return apiClient.get<{
-      total: number;
-      signature: number;
-      withCategory: number;
-      withoutCategory: number;
-      recentlyCreated: number;
-    }>(`${this.endpoint}/stats`);
-  }
+	/**
+	 * Cập nhật product
+	 */
+	async update(
+		id: number,
+		formData: UpdateProductFormData,
+	): Promise<Product> {
+		const backendData = transformUpdateProductFormData(formData);
+		const jsendResponse = await apiClient.patch<
+			JSendSuccess<BackendProductResponse>
+		>(`${this.endpoint}/${id}`, backendData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformProductResponse(backendResponse);
+	}
 
-  /**
-   * Upload product image
-   */
-  async uploadImage(file: File): Promise<{ image_path: string }> {
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    return apiClient.post<{ image_path: string }>(`${this.endpoint}/upload-image`, formData);
-  }
+	/**
+	 * Xóa product
+	 */
+	async delete(id: number): Promise<void> {
+		const jsendResponse = await apiClient.delete<JSendSuccess<void>>(
+			`${this.endpoint}/${id}`,
+		);
+		extractJSendData(jsendResponse);
+	}
 
-  // === PRODUCT PRICE MANAGEMENT ===
+	/**
+	 * Xóa nhiều products
+	 */
+	async bulkDelete(
+		formData: BulkDeleteProductFormData,
+	): Promise<BulkDeleteResponse> {
+		const jsendResponse = await apiClient.delete<
+			JSendSuccess<BulkDeleteResponse>
+		>(`${this.endpoint}/bulk`, formData);
+		return extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Lấy danh sách giá của sản phẩm
-   */
-  async getProductPrices(productId: number): Promise<ProductPrice[]> {
-    const backendResponse = await apiClient.get<BackendProductPriceResponse[]>(`${this.endpoint}/${productId}/prices`);
-    return backendResponse.map(transformProductPriceResponse);
-  }
+	/**
+	 * Test API connection
+	 */
+	async ping(): Promise<{ message: string }> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{ message: string }>
+		>(`${this.endpoint}/admin/test`);
+		return extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Tạo giá mới cho sản phẩm
-   */
-  async createProductPrice(formData: CreateProductPriceFormData): Promise<ProductPrice> {
-    const backendResponse = await apiClient.post<BackendProductPriceResponse>(`${this.endpoint}/prices`, formData);
-    return transformProductPriceResponse(backendResponse);
-  }
+	/**
+	 * Lấy thống kê products
+	 */
+	async getStats(): Promise<{
+		total: number;
+		signature: number;
+		withCategory: number;
+		withoutCategory: number;
+		recentlyCreated: number;
+	}> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<{
+				total: number;
+				signature: number;
+				withCategory: number;
+				withoutCategory: number;
+				recentlyCreated: number;
+			}>
+		>(`${this.endpoint}/stats`);
+		return extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Cập nhật giá sản phẩm
-   */
-  async updateProductPrice(priceId: number, formData: UpdateProductPriceFormData): Promise<ProductPrice> {
-    const backendResponse = await apiClient.patch<BackendProductPriceResponse>(`${this.endpoint}/prices/${priceId}`, formData);
-    return transformProductPriceResponse(backendResponse);
-  }
+	/**
+	 * Upload product image
+	 */
+	async uploadImage(file: File): Promise<{ image_path: string }> {
+		const formData = new FormData();
+		formData.append('image', file);
 
-  /**
-   * Xóa giá sản phẩm
-   */
-  async deleteProductPrice(priceId: number): Promise<void> {
-    return apiClient.delete<void>(`${this.endpoint}/prices/${priceId}`);
-  }
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<{ image_path: string }>
+		>(`${this.endpoint}/upload-image`, formData);
+		return extractJSendData(jsendResponse);
+	}
 
-  /**
-   * Xóa nhiều giá sản phẩm
-   */
-  async bulkDeleteProductPrices(priceIds: number[]): Promise<BulkDeleteResponse> {
-    return apiClient.delete<BulkDeleteResponse>(`${this.endpoint}/prices/bulk`, { ids: priceIds });
-  }
+	// === PRODUCT PRICE MANAGEMENT ===
+
+	/**
+	 * Lấy danh sách giá của sản phẩm
+	 */
+	async getProductPrices(productId: number): Promise<ProductPrice[]> {
+		const jsendResponse = await apiClient.get<
+			JSendSuccess<BackendProductPriceResponse[]>
+		>(`${this.endpoint}/${productId}/prices`);
+		const backendResponse = extractJSendData(jsendResponse);
+		return backendResponse.map(transformProductPriceResponse);
+	}
+
+	/**
+	 * Tạo giá mới cho sản phẩm
+	 */
+	async createProductPrice(
+		formData: CreateProductPriceFormData,
+	): Promise<ProductPrice> {
+		const jsendResponse = await apiClient.post<
+			JSendSuccess<BackendProductPriceResponse>
+		>(`${this.endpoint}/prices`, formData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformProductPriceResponse(backendResponse);
+	}
+
+	/**
+	 * Cập nhật giá sản phẩm
+	 */
+	async updateProductPrice(
+		priceId: number,
+		formData: UpdateProductPriceFormData,
+	): Promise<ProductPrice> {
+		const jsendResponse = await apiClient.patch<
+			JSendSuccess<BackendProductPriceResponse>
+		>(`${this.endpoint}/prices/${priceId}`, formData);
+		const backendResponse = extractJSendData(jsendResponse);
+		return transformProductPriceResponse(backendResponse);
+	}
+
+	/**
+	 * Xóa giá sản phẩm
+	 */
+	async deleteProductPrice(priceId: number): Promise<void> {
+		const jsendResponse = await apiClient.delete<JSendSuccess<void>>(
+			`${this.endpoint}/prices/${priceId}`,
+		);
+		extractJSendData(jsendResponse);
+	}
+
+	/**
+	 * Xóa nhiều giá sản phẩm
+	 */
+	async bulkDeleteProductPrices(
+		priceIds: number[],
+	): Promise<BulkDeleteResponse> {
+		const jsendResponse = await apiClient.delete<
+			JSendSuccess<BulkDeleteResponse>
+		>(`${this.endpoint}/prices/bulk`, { ids: priceIds });
+		return extractJSendData(jsendResponse);
+	}
 }
 
 // Export singleton instance
-export const productService = new ProductService(); 
+export const productService = new ProductService();
